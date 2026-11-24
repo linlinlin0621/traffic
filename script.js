@@ -1,66 +1,193 @@
-/**
+script_js = """/**
  * ============================================================================
- * 《駕照別忘光！》核心資料與互動邏輯 (script.js)
- * 說明：
- *   1. 所有題庫、交通標誌、知識單元、情境關卡均以獨立陣列／物件儲存於檔案上半部，
- *      初學者只需依照格式新增物件，即可輕鬆擴充題目與關卡！
- *   2. 學習紀錄與積分全面整合 localStorage，重新整理網頁後依然完整保留。
- *   3. 所有交通規則均依據台灣現行法規（道路交通安全規則、處罰條例、標誌標線號誌設置規則）。
+ * 《駕照別忘光！交通標誌辨識大挑戰》核心資料結構與互動程式 (script.js)
+ *
+ * 【交通法規與官方標準依據】
+ * 1. 中華民國交通部《道路交通標誌標線號誌設置規則》
+ * 2. 中華民國《道路交通安全規則》
+ * 3. 中華民國《道路交通管理處罰條例》
+ *
+ * 【程式架構說明】
+ * 一、獨立資料結構區（方便日後擴充與修改）：
+ *     1. SIGNS_CATALOG       ：台灣交通標誌圖鑑（警告、禁制、指示、輔助四大類）
+ *     2. MARKINGS_CATALOG    ：台灣道路標線圖鑑（黃白實虛線、停止線、枕木紋、指向線等）
+ *     3. SIGNALS_CATALOG     ：台灣交通號誌教學（三色燈、閃光號誌、箭頭號誌、行人號誌）
+ *     4. CHALLENGE_BANK      ：互動闖關統一題庫（支援看圖猜意思、看意思找標誌、真假辨識、限時挑戰）
+ *     5. BADGES_LIST         ：成就徽章設定
+ * 二、localStorage 學習紀錄與錯題重練系統
+ * 三、四大互動闖關遊戲引擎（模式 A / B / C / D）
  * ============================================================================
  */
 
 /* ============================================================================
-   一、獨立資料結構區（方便日後維護與擴充題庫）
+   一、獨立資料結構區
    ============================================================================ */
 
 /**
- * 1. 台灣常見交通標誌資料庫 (TRAFFIC_SIGNS_DATA)
- * 類別 category：'warning'(警告標誌) | 'prohibit'(禁制標誌) | 'guide'(指示標誌)
+ * 1. 台灣交通標誌圖鑑 (SIGNS_CATALOG)
+ * category: 'warning'(警告標誌) | 'prohibit'(禁制標誌) | 'guide'(指示標誌) | 'auxiliary'(輔助標誌)
  */
-const TRAFFIC_SIGNS_DATA = [
+const SIGNS_CATALOG = [
+  // ---------- (一) 警告標誌：紅邊白底正三角形 ----------
+  {
+    id: "sign_fork_road",
+    topic: "signs",
+    category: "warning",
+    categoryName: "警告標誌",
+    name: "岔路標誌（十字交叉）",
+    meaning: "警告車輛駕駛人前方為十字交岔路口，應減速慢行並注意橫向來車。",
+    usage: "設於視線不良或無號誌之交岔路口前，提醒駕駛人提前降速並確認路權順序。",
+    lawRef: "設置規則第 24 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M50 34 V74 M32 54 H68" stroke="#0F172A" stroke-width="8" stroke-linecap="square"/>
+    </svg>`
+  },
+  {
+    id: "sign_winding",
+    topic: "signs",
+    category: "warning",
+    categoryName: "警告標誌",
+    name: "連續彎路標誌",
+    meaning: "警告車輛駕駛人前方有連續彎道，應減速慢行並靠右行駛。",
+    usage: "常見於山區或丘陵道路連續彎道前，進入彎道前應完成減速，嚴禁跨越雙黃線超車。",
+    lawRef: "設置規則第 20 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M54 76 L54 64 L41 55 L58 45 L46 34" fill="none" stroke="#0F172A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <polygon points="46,24 38,37 54,37" fill="#0F172A"/>
+    </svg>`
+  },
+  {
+    id: "sign_narrow_road",
+    topic: "signs",
+    category: "warning",
+    categoryName: "警告標誌",
+    name: "路幅漸縮標誌（雙側縮減）",
+    meaning: "警告車輛駕駛人前方道路寬度縮減，應減速慢行並注意會車安全。",
+    usage: "設於雙向車道寬度變窄或車道數減少路段前，避免併行搶道。",
+    lawRef: "設置規則第 33 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M36 76 V58 L43 46 V32 M64 76 V58 L57 46 V32" fill="none" stroke="#0F172A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`
+  },
+  {
+    id: "sign_pedestrian",
+    topic: "signs",
+    category: "warning",
+    categoryName: "警告標誌",
+    name: "當心行人標誌",
+    meaning: "警告車輛駕駛人前方有行人穿越道或行人頻繁活動，應減速慢行並隨時準備停讓。",
+    usage: "設於行人穿越道前或行人較多路段，遇有行人穿越時必須暫停禮讓。",
+    lawRef: "設置規則第 44 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
+      <circle cx="50" cy="40" r="5.5" fill="#0F172A"/>
+      <path d="M50 46 L50 63 M39 53 L61 53 M50 63 L41 76 M50 63 L59 76" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+    </svg>`
+  },
+  {
+    id: "sign_children",
+    topic: "signs",
+    category: "warning",
+    categoryName: "警告標誌",
+    name: "當心兒童標誌",
+    meaning: "用以促使車輛駕駛人減速慢行，特別注意學童及兒童通行安全。",
+    usage: "設於小學、幼兒園、兒童遊樂場等學童經常出入處所附近道路。",
+    lawRef: "設置規則第 45 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
+      <circle cx="42" cy="43" r="5" fill="#0F172A"/>
+      <circle cx="58" cy="48" r="4.5" fill="#0F172A"/>
+      <path d="M42 49 L42 65 M34 55 L58 57 M42 65 L36 76 M42 65 L48 76 M58 53 L58 66 M58 66 L53 76 M58 66 L63 76" stroke="#0F172A" stroke-width="3.8" stroke-linecap="round"/>
+    </svg>`
+  },
+  {
+    id: "sign_road_work",
+    topic: "signs",
+    category: "warning",
+    categoryName: "警告標誌",
+    name: "道路施工標誌（橙底警告）",
+    meaning: "警告車輛駕駛人前方道路正在施工，應減速慢行並依現場指引改道或小心通過。",
+    usage: "施工期間臨時設置於工區前方，提醒駕駛人注意路面開挖、機具與施工人員。",
+    lawRef: "設置規則第 54 條（施工標誌採用橙底黑邊黑色圖案）",
+    svg: `<svg viewBox="0 0 100 100">
+      <polygon points="50,10 92,85 8,85" fill="#F97316" stroke="#0F172A" stroke-width="6" stroke-linejoin="round"/>
+      <circle cx="46" cy="41" r="5" fill="#0F172A"/>
+      <path d="M46 47 L42 62 L35 75 M42 62 L51 75 M45 52 L58 58 L66 74" fill="none" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>
+      <polygon points="58,76 68,64 76,76" fill="#0F172A"/>
+    </svg>`
+  },
+
+  // ---------- (二) 禁制標誌：遵行、禁止、限制 ----------
   {
     id: "sign_stop",
-    name: "停車再開標誌",
+    topic: "signs",
     category: "prohibit",
-    categoryLabel: "禁制標誌（遵行）",
-    meaning: "表示車輛行至交岔路口前，必須完全停止（車輪完全靜止），確認幹線道無來車且安全後，方得再開。",
-    precaution: "常見於支線道與幹線道交會處。未完全停車即滑行通過屬於違規行為；若與閃光紅燈併設，同樣必須先停車再行駛。",
+    categoryName: "禁制標誌（遵行）",
+    name: "停車再開標誌",
+    meaning: "告示車輛駕駛人行至交岔路口前必須「完全停止」（車輪靜止），確認幹線道無來車且安全後，方得再開。",
+    usage: "全台唯一八角形標誌！設於支線道與幹線道交會口，僅減速滑行而未完全停下即屬違規。",
+    lawRef: "設置規則第 58 條",
     svg: `<svg viewBox="0 0 100 100">
       <polygon points="30,6 70,6 94,30 94,70 70,94 30,94 6,70 6,30" fill="#DC2626" stroke="#FFFFFF" stroke-width="3"/>
-      <text x="50" y="58" text-anchor="middle" fill="#FFFFFF" font-size="30" font-weight="900">停</text>
+      <text x="50" y="60" text-anchor="middle" fill="#FFFFFF" font-size="32" font-weight="900">停</text>
     </svg>`
   },
   {
     id: "sign_yield",
-    name: "讓路標誌",
+    topic: "signs",
     category: "prohibit",
-    categoryLabel: "禁制標誌（遵行）",
-    meaning: "表示支線道車輛應減速慢行，禮讓幹線道車輛優先通行。",
-    precaution: "白底紅邊倒三角形是全台唯一倒三角形標誌！看到此標誌代表你位於支線道，務必減速觀察左右幹線道來車。",
+    categoryName: "禁制標誌（遵行）",
+    name: "讓路標誌",
+    meaning: "告示支線道車輛應減速慢行，禮讓幹線道車輛優先通行。",
+    usage: "全台唯一倒三角形標誌！看到此標誌表示你位於支線道，應減速觀察左右幹線道來車並禮讓先行。",
+    lawRef: "設置規則第 59 條",
     svg: `<svg viewBox="0 0 100 100">
       <polygon points="8,14 92,14 50,88" fill="#FFFFFF" stroke="#DC2626" stroke-width="9" stroke-linejoin="round"/>
-      <text x="50" y="45" text-anchor="middle" fill="#0F172A" font-size="22" font-weight="900">讓</text>
+      <text x="50" y="46" text-anchor="middle" fill="#0F172A" font-size="22" font-weight="900">讓</text>
     </svg>`
   },
   {
     id: "sign_no_entry",
-    name: "禁止進入標誌",
+    topic: "signs",
     category: "prohibit",
-    categoryLabel: "禁制標誌（禁止）",
+    categoryName: "禁制標誌（禁止）",
+    name: "禁止進入標誌",
     meaning: "告示任何車輛（含汽車、機車、自行車）均禁止進入該路段。",
-    precaution: "常見於單行道出口或管制區域入口，誤闖將構成逆向行駛，極易發生對撞事故。",
+    usage: "常見於單行道出口端或特定管制道路入口，誤闖將構成逆向行駛。",
+    lawRef: "設置規則第 60 條",
     svg: `<svg viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="42" fill="#DC2626"/>
       <rect x="18" y="42" width="64" height="16" rx="3" fill="#FFFFFF"/>
     </svg>`
   },
   {
-    id: "sign_two_stage",
-    name: "機慢車兩段左轉標誌",
+    id: "sign_no_left_turn",
+    topic: "signs",
     category: "prohibit",
-    categoryLabel: "禁制標誌（遵行）",
+    categoryName: "禁制標誌（禁止）",
+    name: "禁止左轉標誌",
+    meaning: "告示車輛行至該交岔路口時禁止向左轉彎。",
+    usage: "設於車流量大或易因左轉造成壅塞事故之路口前，欲左轉車輛應依指示改道繞行。",
+    lawRef: "設置規則第 62 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="#FFFFFF" stroke="#DC2626" stroke-width="9"/>
+      <path d="M60 72 L60 44 Q60 34 50 34 L36 34" fill="none" stroke="#0F172A" stroke-width="7" stroke-linecap="round"/>
+      <polygon points="38,25 25,34 38,43" fill="#0F172A"/>
+      <line x1="22" y1="22" x2="78" y2="78" stroke="#DC2626" stroke-width="8"/>
+    </svg>`
+  },
+  {
+    id: "sign_two_stage_left",
+    topic: "signs",
+    category: "prohibit",
+    categoryName: "禁制標誌（遵行）",
+    name: "機慢車兩段左轉標誌",
     meaning: "告示普通重型機車、輕型機車及慢車行經該路口左轉時，應遵照兩段式左轉規定行駛。",
-    precaution: "看到此藍底圓形標誌，或內側車道劃有「禁行機車」標字時，應先靠右行駛至右側待轉區停等，待橫向綠燈亮起後再直行通過。",
+    usage: "看到此藍底圓形標誌時，機車左轉應先靠右行駛至右側待轉區停等，待橫向綠燈亮起後再直行通過。",
+    lawRef: "設置規則第 65 條",
     svg: `<svg viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="42" fill="#0284C7" stroke="#FFFFFF" stroke-width="3"/>
       <path d="M62 72 L62 35 L32 35" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -69,78 +196,74 @@ const TRAFFIC_SIGNS_DATA = [
     </svg>`
   },
   {
-    id: "sign_no_right_turn",
-    name: "禁止右轉標誌",
+    id: "sign_no_parking",
+    topic: "signs",
     category: "prohibit",
-    categoryLabel: "禁制標誌（禁止）",
-    meaning: "告示車輛行至該路口時禁止向右轉彎。",
-    precaution: "部分路口僅於特定時段（如尖峰時間）禁止右轉，請留意標誌下方是否附掛時段說明牌。",
+    categoryName: "禁制標誌（禁止）",
+    name: "禁止停車標誌",
+    meaning: "告示車輛禁止在該路段停放車輛，但可以「臨時停車」（停車時間未滿 3 分鐘，保持立即行駛狀態）。",
+    usage: "藍底紅邊單斜線為「禁止停車」（對應黃線）；若為雙交叉斜線（✕）則為「禁止臨時停車」（對應紅線）。",
+    lawRef: "設置規則第 79 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="#0284C7" stroke="#DC2626" stroke-width="10"/>
+      <line x1="23" y1="23" x2="77" y2="77" stroke="#DC2626" stroke-width="10"/>
+    </svg>`
+  },
+  {
+    id: "sign_no_stopping",
+    topic: "signs",
+    category: "prohibit",
+    categoryName: "禁制標誌（禁止）",
+    name: "禁止臨時停車標誌",
+    meaning: "告示車輛嚴禁在該路段臨時停車及停車（連上下客或臨停 10 秒都不行）。",
+    usage: "藍底紅邊雙交叉斜線（✕），通常與路邊「紅線」配合設置於消防栓、路口 10 公尺內或公車站區。",
+    lawRef: "設置規則第 80 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="#0284C7" stroke="#DC2626" stroke-width="10"/>
+      <line x1="23" y1="23" x2="77" y2="77" stroke="#DC2626" stroke-width="9"/>
+      <line x1="77" y1="23" x2="23" y2="77" stroke="#DC2626" stroke-width="9"/>
+    </svg>`
+  },
+  {
+    id: "sign_max_speed",
+    topic: "signs",
+    category: "prohibit",
+    categoryName: "禁制標誌（限制）",
+    name: "最高速限標誌（50）",
+    meaning: "告示車輛行車時速不得超過標誌所示數字（本圖為每小時 50 公里）。",
+    usage: "白底紅邊圓形內標註黑色數字，超過該速率即構成超速違規。",
+    lawRef: "設置規則第 76 條",
     svg: `<svg viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="42" fill="#FFFFFF" stroke="#DC2626" stroke-width="9"/>
-      <path d="M40 72 L40 44 Q40 34 50 34 L64 34" fill="none" stroke="#0F172A" stroke-width="7" stroke-linecap="round"/>
-      <polygon points="62,25 75,34 62,43" fill="#0F172A"/>
-      <line x1="22" y1="22" x2="78" y2="78" stroke="#DC2626" stroke-width="8"/>
+      <text x="50" y="61" text-anchor="middle" fill="#0F172A" font-size="32" font-weight="900">50</text>
     </svg>`
   },
+
+  // ---------- (三) 指示標誌：藍底 / 綠底方形 ----------
   {
-    id: "sign_pedestrian_warn",
-    name: "當心行人標誌",
-    category: "warning",
-    categoryLabel: "警告標誌",
-    meaning: "警告駕駛人前方有行人穿越道或行人頻繁活動路段，應減速慢行並隨時準備停讓。",
-    precaution: "三角形紅邊為警告標誌，提醒駕駛人提前降速、擴大視線掃描道路兩側行人動向。",
+    id: "sign_one_way",
+    topic: "signs",
+    category: "guide",
+    categoryName: "指示標誌",
+    name: "單行道指示標誌",
+    meaning: "指示該道路僅准車輛依箭頭所指方向單向行駛。",
+    usage: "藍底白箭頭方形標誌，設於單行道入口及沿途路口，提醒駕駛人依單一方向前進。",
+    lawRef: "設置規則第 96 條",
     svg: `<svg viewBox="0 0 100 100">
-      <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
-      <circle cx="50" cy="40" r="6" fill="#0F172A"/>
-      <path d="M50 47 L50 64 M39 54 L61 54 M50 64 L41 77 M50 64 L59 77" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
-    </svg>`
-  },
-  {
-    id: "sign_children_warn",
-    name: "當心兒童標誌",
-    category: "warning",
-    categoryLabel: "警告標誌",
-    meaning: "用以促使車輛駕駛人減速慢行，注意學童及兒童安全。",
-    precaution: "多設於國小、幼兒園或公園周邊道路。兒童身高較矮容易進入車輛視線死角，且可能突然衝出，務必放慢車速。",
-    svg: `<svg viewBox="0 0 100 100">
-      <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
-      <circle cx="42" cy="44" r="5" fill="#0F172A"/>
-      <circle cx="58" cy="48" r="4.5" fill="#0F172A"/>
-      <path d="M42 50 L42 66 M35 56 L58 58 M42 66 L36 77 M42 66 L48 77 M58 53 L58 67 M58 67 L53 77 M58 67 L63 77" stroke="#0F172A" stroke-width="3.8" stroke-linecap="round"/>
-    </svg>`
-  },
-  {
-    id: "sign_winding_road",
-    name: "連續彎路標誌",
-    category: "warning",
-    categoryLabel: "警告標誌",
-    meaning: "警告車輛駕駛人前方有連續彎道，應減速慢行並靠右行駛。",
-    precaution: "進入彎道前應先完成減速（切勿在彎中急煞），並嚴禁跨越雙黃線超車。",
-    svg: `<svg viewBox="0 0 100 100">
-      <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
-      <path d="M54 76 L54 64 L42 55 L58 45 L46 34" fill="none" stroke="#0F172A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-      <polygon points="46,24 38,37 54,37" fill="#0F172A"/>
-    </svg>`
-  },
-  {
-    id: "sign_slippery",
-    name: "路面顛簸／易滑警示",
-    category: "warning",
-    categoryLabel: "警告標誌",
-    meaning: "警告前方路面不平或易滑，車輛應減速慢行，避免急轉向或急煞車。",
-    precaution: "雨天行經山區、橋面或施工路段時，胎紋不足極易打滑失控，務必拉長與前車距離。",
-    svg: `<svg viewBox="0 0 100 100">
-      <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
-      <path d="M22 72 L36 72 Q43 58 50 72 Q57 58 64 72 L78 72" fill="none" stroke="#0F172A" stroke-width="5.5" stroke-linecap="round"/>
+      <rect x="14" y="14" width="72" height="72" rx="10" fill="#0284C7"/>
+      <path d="M50 74 L50 32" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/>
+      <polygon points="50,20 34,38 66,38" fill="#FFFFFF"/>
     </svg>`
   },
   {
     id: "sign_crosswalk_guide",
-    name: "行人穿越道指示標誌",
+    topic: "signs",
     category: "guide",
-    categoryLabel: "指示標誌",
-    meaning: "指示前方設有行人穿越道（斑馬線），提醒駕駛人與行人注意穿越位置。",
-    precaution: "藍底方形為一般道路指示標誌。只要斑馬線上有行人正在穿越，車輛就必須暫停禮讓。",
+    categoryName: "指示標誌",
+    name: "行人穿越道指示標誌",
+    meaning: "指示前方設有行人穿越道（斑馬線），提醒用路人注意行人穿越位置。",
+    usage: "藍底方形內嵌白色三角形與行人圖案，設於行人穿越道兩側。",
+    lawRef: "設置規則第 98 條",
     svg: `<svg viewBox="0 0 100 100">
       <rect x="12" y="12" width="76" height="76" rx="10" fill="#0284C7"/>
       <polygon points="50,20 82,76 18,76" fill="#FFFFFF"/>
@@ -149,1036 +272,867 @@ const TRAFFIC_SIGNS_DATA = [
     </svg>`
   },
   {
-    id: "sign_one_way",
-    name: "單行道指示標誌",
+    id: "sign_parking_area",
+    topic: "signs",
     category: "guide",
-    categoryLabel: "指示標誌",
-    meaning: "指示該道路僅准車輛依箭頭所指方向單向行駛。",
-    precaution: "駛出單行道準備轉彎時，應依規定靠向欲轉彎側車道（左轉靠左、右轉靠右），避免與同向車輛交織碰撞。",
+    categoryName: "指示標誌",
+    name: "停車場指示標誌",
+    meaning: "指示附近設有公眾停車場，供駕駛人依箭頭方向前往停放車輛。",
+    usage: "藍底白色「P」字方形標誌，常見於商圈、車站及觀光區周邊道路。",
+    lawRef: "設置規則第 102 條",
     svg: `<svg viewBox="0 0 100 100">
       <rect x="14" y="14" width="72" height="72" rx="10" fill="#0284C7"/>
-      <path d="M50 74 L50 32" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/>
-      <polygon points="50,20 34,38 66,38" fill="#FFFFFF"/>
+      <text x="50" y="68" text-anchor="middle" fill="#FFFFFF" font-size="52" font-weight="900">P</text>
     </svg>`
   },
   {
-    id: "sign_speed_limit",
-    name: "最高速限標誌（50）",
-    category: "prohibit",
-    categoryLabel: "禁制標誌（限制）",
-    meaning: "告示車輛行車時速不得超過標誌所示數字（本圖為每小時 50 公里）。",
-    precaution: "市區道路若無特別標誌，一般最高速限通常為 50 公里（未劃分車道或慢車道另有規定）；超速不僅危險亦會受罰。",
+    id: "sign_provincial_hwy",
+    topic: "signs",
+    category: "guide",
+    categoryName: "指示標誌（路線編號）",
+    name: "省道編號標誌（盾牌形）",
+    meaning: "指示該道路為省道公路及其路線編號（如台 1 線）。",
+    usage: "藍底白邊白字盾牌形為一般省道；紅底白邊白字盾牌形則為「省道快速公路」（如台 61 線、台 74 線）。",
+    lawRef: "設置規則第 89 條",
     svg: `<svg viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="42" fill="#FFFFFF" stroke="#DC2626" stroke-width="9"/>
-      <text x="50" y="61" text-anchor="middle" fill="#0F172A" font-size="32" font-weight="900">50</text>
+      <path d="M22 16 H78 V52 Q78 78 50 88 Q22 78 22 52 Z" fill="#0284C7" stroke="#FFFFFF" stroke-width="4"/>
+      <text x="50" y="58" text-anchor="middle" fill="#FFFFFF" font-size="34" font-weight="900">1</text>
+    </svg>`
+  },
+
+  // ---------- (四) 輔助標誌：附掛於主標誌下方之白底黑字附牌 ----------
+  {
+    id: "sign_aux_time",
+    topic: "signs",
+    category: "auxiliary",
+    categoryName: "輔助標誌",
+    name: "管制時間輔助標誌",
+    meaning: "附設於禁制標誌（如禁止左轉、禁止停車）下方，說明該管制僅在標示之特定時段生效。",
+    usage: "白底黑邊黑字長方形附牌，非管制時段內車輛即可依一般規定通行或停放。",
+    lawRef: "設置規則第 128 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <rect x="10" y="28" width="80" height="44" rx="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="4"/>
+      <text x="50" y="48" text-anchor="middle" fill="#0F172A" font-size="13" font-weight="800">07:00-09:00</text>
+      <text x="50" y="64" text-anchor="middle" fill="#DC2626" font-size="12" font-weight="800">例假日除外</text>
+    </svg>`
+  },
+  {
+    id: "sign_aux_distance",
+    topic: "signs",
+    category: "auxiliary",
+    categoryName: "輔助標誌",
+    name: "前方距離輔助標誌",
+    meaning: "附設於警告或指示標誌下方，告示駕駛人距離前方危險路段或設施還有多少公尺。",
+    usage: "幫助駕駛人預估減速距離（例如配合「道路施工」或「當心行人」標誌使用）。",
+    lawRef: "設置規則第 127 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <rect x="14" y="30" width="72" height="40" rx="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="4"/>
+      <text x="50" y="56" text-anchor="middle" fill="#0F172A" font-size="20" font-weight="900">前方 200M</text>
+    </svg>`
+  },
+  {
+    id: "sign_aux_tow",
+    topic: "signs",
+    category: "auxiliary",
+    categoryName: "輔助標誌",
+    name: "違規停車拖吊輔助標誌",
+    meaning: "附設於禁止停車或禁止臨時停車標誌下方，警告違規停放車輛將依法拖吊移置。",
+    usage: "提醒駕駛人切勿心存僥倖違規停車，以免遭開單並拖吊。",
+    lawRef: "設置規則第 129 條",
+    svg: `<svg viewBox="0 0 100 100">
+      <rect x="12" y="28" width="76" height="44" rx="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="4"/>
+      <text x="50" y="48" text-anchor="middle" fill="#DC2626" font-size="14" font-weight="900">違規停車</text>
+      <text x="50" y="65" text-anchor="middle" fill="#0F172A" font-size="14" font-weight="900">依法拖吊</text>
     </svg>`
   }
 ];
 
 /**
- * 2. 交通知識五大單元資料庫 (KNOWLEDGE_UNITS)
+ * 2. 台灣道路標線圖鑑 (MARKINGS_CATALOG)
+ * category: 'longitudinal'(黃線與白線) | 'transverse'(橫向標線) | 'special'(指向線與禁止停車標線)
  */
-const KNOWLEDGE_UNITS = [
+const MARKINGS_CATALOG = [
   {
-    id: "unit_signs",
-    title: "🚦 交通標誌認識",
-    subtitle: "用「形狀與顏色」一秒辨識警告、禁制與指示標誌！",
-    isSignUnit: true,
-    summary: "台灣交通標誌主要分為三大類：【三角形紅邊】代表警告前方危險；【圓形／八角形／倒三角】代表禁制與遵行義務；【方形藍底／綠底】代表路線與設施指示。點擊下方任一標誌卡片，查看詳細意義與注意事項！",
-    points: []
-  },
-  {
-    id: "unit_rules",
-    title: "⚖️ 道路交通規則",
-    subtitle: "掌握路權優先順序與號誌規範，不再在路口猶豫！",
-    isSignUnit: false,
-    summary: "多數路口事故源自「不清楚誰該讓誰」。記住支線讓幹線、少線讓多線、轉彎讓直行、左方讓右方四大路權口訣。",
-    points: [
-      {
-        title: "無號誌路口路權順序",
-        desc: "1. 支線道車讓幹線道車（看「停」「讓」標誌標線）。2. 未分干支線時，少線道讓多線道。3. 車道數相同時，轉彎車讓直行車。4. 同為直行或轉彎時，左方車讓右方車。",
-        tip: "法規依據：《道路交通安全規則》第 102 條",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#E0F2FE"/><rect x="30" y="5" width="20" height="70" fill="#475569"/><rect x="5" y="30" width="70" height="20" fill="#475569"/><path d="M40 65 L40 22" stroke="#22C55E" stroke-width="4" stroke-linecap="round"/><polygon points="40,14 34,24 46,24" fill="#22C55E"/><path d="M62 40 L26 40" stroke="#FACC15" stroke-width="3" stroke-dasharray="4 3"/></svg>`
-      },
-      {
-        title: "閃光紅燈 vs 閃光黃燈",
-        desc: "閃光紅燈＝「停車再開」，車輛必須在停止線前完全停下確認安全再通過；閃光黃燈＝「警告」，車輛應減速接近，小心通過。",
-        tip: "法規依據：《道路交通標誌標線號誌設置規則》第 211 條",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#1E293B"/><circle cx="26" cy="40" r="14" fill="#EF4444"/><circle cx="54" cy="40" r="14" fill="#FACC15"/></svg>`
-      },
-      {
-        title: "聽見緊急車輛警號立即避讓",
-        desc: "聞有消防車、救護車、警備車、工程救險車警號時，不論來自何方均應立即避讓，不得在後尾隨急駛或併行競速。",
-        tip: "未立即避讓處 3,600 元罰鍰並吊銷駕照（道交條例第 45 條）",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#FEE2E2"/><rect x="16" y="28" width="48" height="28" rx="6" fill="#FFFFFF" stroke="#DC2626" stroke-width="3"/><rect x="34" y="20" width="12" height="8" rx="2" fill="#DC2626"/><path d="M35 42 H45 M40 37 V47" stroke="#DC2626" stroke-width="4"/></svg>`
-      },
-      {
-        title: "轉彎前 30 公尺提前打方向燈",
-        desc: "車輛右轉應於路口前 30 公尺顯示方向燈並換入外側車道；左轉應於路口前 30 公尺顯示方向燈並換入內側車道，切勿臨時跨車道急轉。",
-        tip: "法規依據：《道路交通安全規則》第 102 條",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#FEF9C3"/><path d="M28 64 L28 36 Q28 24 40 24 L58 24" fill="none" stroke="#0284C7" stroke-width="7" stroke-linecap="round"/><polygon points="56,15 68,24 56,33" fill="#0284C7"/></svg>`
-      }
-    ]
-  },
-  {
-    id: "unit_car",
-    title: "🚗 汽車行車安全",
-    subtitle: "消除視野死角、落實停讓行人與安全跟車距離",
-    isSignUnit: false,
-    summary: "汽車車體較大，存在 A 柱死角與內輪差風險。養成「轉彎擺頭確認」與「路口停讓行人」習慣，是保護自己與他人的關鍵。",
-    points: [
-      {
-        title: "路口停讓行人「3 公尺基準」",
-        desc: "汽車行近行人穿越道有行人穿越時，無論有無號誌均應暫停讓行人先行。車頭距離行人行進方向 3 公尺（約 3 條枕木紋或一個車道寬）以內未停讓即屬違規。",
-        tip: "未停讓行人最高可罰 6,000 元、記 3 點並須上道安講習",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#E0F2FE"/><rect x="14" y="48" width="52" height="10" fill="#FFFFFF"/><circle cx="40" cy="24" r="6" fill="#0F172A"/><path d="M40 31 V44 M33 36 H47" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/></svg>`
-      },
-      {
-        title: "警惕 A 柱死角與轉彎擺頭",
-        desc: "汽車前擋風玻璃兩側的 A 柱在轉彎時容易遮擋行人或機車。轉彎前除了看後視鏡，應身體微幅前傾擺頭確認 A 柱後方盲區。",
-        tip: "安全口訣：慢、看、停，轉彎必擺頭",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#F1F5F9"/><path d="M20 58 L30 24 L50 24 L60 58 Z" fill="#38BDF8"/><line x1="20" y1="58" x2="30" y2="24" stroke="#DC2626" stroke-width="5"/></svg>`
-      },
-      {
-        title: "保持安全跟車距離",
-        desc: "在高速或快速公路行駛時，小型車與前車應保持「速度除以 2（公尺）」以上距離（例如時速 100 公里應保持至少 50 公尺）；雨天或夜間應再加倍。",
-        tip: "法規依據：《高速公路及快速公路交通管制規則》第 6 條",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#E0F2FE"/><rect x="10" y="32" width="22" height="16" rx="4" fill="#0284C7"/><line x1="35" y1="40" x2="46" y2="40" stroke="#DC2626" stroke-width="3" stroke-dasharray="3 2"/><rect x="49" y="32" width="22" height="16" rx="4" fill="#F59E0B"/></svg>`
-      },
-      {
-        title: "兩段式開門法（荷蘭式開門）",
-        desc: "路邊停車後開車門前，先確認後視鏡與轉頭查看後方來車，先將車門微開約 10～15 公分確認無機車或自行車接近，再完全推開下車。",
-        tip: "不當開車門肇事，駕駛人須負民刑事責任及罰鍰",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#FEF9C3"/><rect x="24" y="20" width="26" height="42" rx="6" fill="#0284C7"/><line x1="50" y1="34" x2="64" y2="24" stroke="#DC2626" stroke-width="4" stroke-linecap="round"/></svg>`
-      }
-    ]
-  },
-  {
-    id: "unit_scooter",
-    title: "🛵 機車行車安全",
-    subtitle: "防禦性駕駛、遠離大型車內輪差與正確變換車道",
-    isSignUnit: false,
-    summary: "機車機動性高但缺乏車體保護，切勿鑽車縫、切勿緊貼大型車側邊，變換車道務必提前打方向燈並轉頭確認死角。",
-    points: [
-      {
-        title: "遠離大型車「內輪差」與視野死角",
-        desc: "遊覽車、砂石車與貨車轉彎時，後輪會向內偏移形成「內輪差」，且車頭前、兩側及正後方均有巨大盲區。遇大型車準備轉彎時，寧可退後等待，絕不從內側超車。",
-        tip: "防禦駕駛原則：不併行、不搶快、保持距離",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#FEE2E2"/><rect x="18" y="16" width="26" height="48" rx="4" fill="#475569"/><path d="M44 36 Q62 44 44 64 Z" fill="#EF4444" opacity="0.45"/></svg>`
-      },
-      {
-        title: "變換車道三步驟：燈、鏡、頭",
-        desc: "欲向左或向右變換車道（例如繞過臨停車輛）時，應先開啟方向燈、查看後視鏡，並快速轉頭確認側後方視線死角無直行車，確認安全再切出。",
-        tip: "直行車擁有優先路權，變換車道不得迫使直行車急煞",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#E0F2FE"/><line x1="40" y1="10" x2="40" y2="70" stroke="#94A3B8" stroke-width="2" stroke-dasharray="5 5"/><path d="M54 62 C54 44, 26 42, 26 22" fill="none" stroke="#0284C7" stroke-width="5" stroke-linecap="round"/><polygon points="26,14 20,24 32,24" fill="#0284C7"/></svg>`
-      },
-      {
-        title: "兩段式左轉判定原則",
-        desc: "1. 路口設有「機慢車兩段左轉標誌」或地上繪有待轉區。2. 內側車道繪有「禁行機車」標字。3. 三快車道以上單行道行駛於右側車道時，均須依兩段式左轉。",
-        tip: "待轉時應將車輛完整停入待轉區格線內，避免車尾超出影響橫向車流",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#E0F2FE"/><rect x="44" y="18" width="22" height="16" fill="none" stroke="#0284C7" stroke-width="3"/><path d="M55 64 L55 26 L22 26" fill="none" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/></svg>`
-      },
-      {
-        title: "雨天避開標線與人孔蓋急煞",
-        desc: "白色／黃色道路標線、金屬人孔蓋及積水處在雨天摩擦係數極低。雨天騎車應降低車速、前後煞車同時漸進點煞，避免單獨急按前煞鎖死打滑。",
-        tip: "安全帽扣帶務必扣緊，雨衣下擺避免過長捲入車輪",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#DBEAFE"/><path d="M26 22 L22 32 M42 18 L38 28 M58 22 L54 32" stroke="#0284C7" stroke-width="3" stroke-linecap="round"/><rect x="16" y="50" width="48" height="10" rx="4" fill="#FFFFFF"/></svg>`
-      }
-    ]
-  },
-  {
-    id: "unit_pedestrian",
-    title: "🚶 行人安全",
-    subtitle: "走行人穿越道、秒數不足不搶快、提高夜間能見度",
-    isSignUnit: false,
-    summary: "「行人優先」是法律保障，但建立「防禦性步行」意識、與轉彎車輛保持安全目光接觸，能讓每一次過馬路都更安心。",
-    points: [
-      {
-        title: "100 公尺內有斑馬線不得任意穿越",
-        desc: "在設有行人穿越道、人行天橋或人行地下道之處，100 公尺範圍內行人必須經由該設施穿越道路，不得跨越護欄或直接橫越馬路。",
-        tip: "法規依據：《道路交通安全規則》第 134 條",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#E0F2FE"/><rect x="16" y="26" width="48" height="8" fill="#FFFFFF"/><rect x="16" y="40" width="48" height="8" fill="#FFFFFF"/><rect x="16" y="54" width="48" height="8" fill="#FFFFFF"/></svg>`
-      },
-      {
-        title: "綠燈秒數不足時，寧等下一輪",
-        desc: "行人專用號誌綠燈閃爍時，表示警告行人尚未進入道路者禁止跨入；已進入道路者應快速通過。切勿在最後幾秒衝刺過馬路。",
-        tip: "法規依據：《道路交通標誌標線號誌設置規則》第 207 條",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#1E293B"/><text x="40" y="48" text-anchor="middle" fill="#22C55E" font-size="26" font-weight="900">05</text></svg>`
-      },
-      {
-        title: "過馬路不滑手機、留意轉彎車",
-        desc: "即使行人號誌為綠燈，仍可能有未注意視線死角的右轉或左轉車輛。通行時應收起手機、左右擺頭觀察來車動向。",
-        tip: "與駕駛人進行眼神確認，確保對方已減速停讓再通過",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#FEF9C3"/><circle cx="40" cy="40" r="22" fill="none" stroke="#DC2626" stroke-width="5"/><rect x="33" y="28" width="14" height="24" rx="2" fill="#334155"/><line x1="25" y1="25" x2="55" y2="55" stroke="#DC2626" stroke-width="5"/></svg>`
-      },
-      {
-        title: "清晨與夜間穿著亮色或反光衣物",
-        desc: "天色昏暗或雨霧天氣時，深色衣物在車燈下極難被察覺。夜間外出散步或運動時，建議穿著淺色、亮色衣物或配戴反光飾品。",
-        tip: "反光材質可讓駕駛人在百公尺外提前發現行人",
-        svg: `<svg viewBox="0 0 80 80"><rect width="80" height="80" rx="12" fill="#1E293B"/><circle cx="40" cy="24" r="7" fill="#FACC15"/><rect x="31" y="34" width="18" height="26" rx="6" fill="#FACC15"/></svg>`
-      }
-    ]
-  }
-];
-
-/**
- * 3. 駕照筆試測驗題庫 (QUIZ_BANK)
- * category：'car'(汽車題庫) | 'scooter'(機車題庫)
- * answer：正確選項索引 (0, 1, 2, 3)
- */
-const QUIZ_BANK = [
-  {
-    id: "q_01",
-    category: "car",
-    categoryLabel: "🚗 汽車筆試題庫",
-    question: "汽車行近行人穿越道，遇有行人穿越時，下列何者為正確駕駛行為？",
-    options: [
-      "鳴按喇叭提醒行人快速通過後加速駛離",
-      "無論有無交通指揮人員指揮或號誌指示，均應暫停讓行人先行通過",
-      "只要車輛未直接撞到行人，即可從行人身旁 1 公尺內繞過",
-      "只有行人號誌為綠燈時才需要禮讓行人"
-    ],
-    answer: 1,
-    explanation: "依據《道路交通安全規則》第 103 條，汽車行近行人穿越道，遇有行人穿越時，無論有無交通指揮人員指揮或號誌指示，均應暫停讓行人先行通過（現行執法基準為距離行人行進方向 3 公尺以內即應停讓）。"
-  },
-  {
-    id: "q_02",
-    category: "car",
-    categoryLabel: "🚗 汽車筆試題庫",
-    question: "汽車行駛至交岔路口準備右轉彎時，應於距交岔路口多少公尺前顯示方向燈，並換入外側車道或右轉車道？",
-    options: [
-      "10 公尺前",
-      "20 公尺前",
-      "30 公尺前",
-      "抵達停止線前再打方向燈即可"
-    ],
-    answer: 2,
-    explanation: "依據《道路交通安全規則》第 102 條第 1 項第 4 款，汽車右轉彎時，應距交岔路口 30 公尺前顯示方向燈或手勢，換入外側車道、右轉車道或慢車道，駛至路口後再行右轉。"
-  },
-  {
-    id: "q_03",
-    category: "car",
-    categoryLabel: "🚗 汽車筆試題庫",
-    question: "在未劃分干、支線道，且車道數相同的無號誌交岔路口，兩輛同為直行車交會時，路權優先順序為何？",
-    options: [
-      "左方車應暫停讓右方車先行",
-      "右方車應暫停讓左方車先行",
-      "車速較快的一方優先通行",
-      "車身較大的汽車優先通行"
-    ],
-    answer: 0,
-    explanation: "依據《道路交通安全規則》第 102 條第 1 項第 2 款，未設標誌、標線或號誌劃分干、支線道者，少線道車讓多線道車；車道數相同時，轉彎車讓直行車；同為直行車或轉彎車者，「左方車應暫停讓右方車先行」。"
-  },
-  {
-    id: "q_04",
-    category: "car",
-    categoryLabel: "🚗 汽車筆試題庫",
-    signId: "sign_stop",
-    question: "駕駛汽車行經設有如圖所示「八角形紅底白字『停』」標誌之交岔路口時，應該怎麼做？",
-    options: [
-      "只要左右看沒車，減速至時速 20 公里滑行通過即可",
-      "必須在交岔路口前完全停止，確認幹線道無來車安全後，方得再開",
-      "鳴按兩聲喇叭後直接通過",
-      "僅在白天車多時需要停車"
-    ],
-    answer: 1,
-    explanation: "此標誌為「停車再開標誌」（禁制標誌），表示支線道車輛行至交岔路口前必須「完全停止」（車輪靜止），確認幹線道無來車且安全後，方得再開。"
-  },
-  {
-    id: "q_05",
-    category: "car",
-    categoryLabel: "🚗 汽車筆試題庫",
-    question: "夜間駕駛汽車在市區道路行駛，前方 100 公尺內有同向車輛行駛或對向有來車會車時，應如何正確使用燈光？",
-    options: [
-      "持續開啟遠光燈以保持最大視野",
-      "應使用近光燈，避免強光造成前車與對向駕駛眩光",
-      "將頭燈全部關閉僅開小燈",
-      "不斷閃爍遠光燈要求前車讓道"
-    ],
-    answer: 1,
-    explanation: "依據《道路交通安全規則》第 109 條，夜間會車或前方 100 公尺內有車輛行駛時，應使用近光燈，以免遠光燈直射造成其他駕駛人視線眩盲發生危險。"
-  },
-  {
-    id: "q_06",
-    category: "car",
-    categoryLabel: "🚗 汽車筆試題庫",
-    question: "駕駛人路邊停車後準備開啟左側車門下車時，最安全的做法為何？",
-    options: [
-      "直接一次將車門推到最開，讓後方車輛看見",
-      "先看後視鏡並轉頭確認後方無來車，採用「兩段式開門法」微開車門確認安全後再推開",
-      "按下雙黃警示燈後就可以直接開門",
-      "請車上乘客幫忙看前方路況即可"
-    ],
-    answer: 1,
-    explanation: "依據《道路交通安全規則》第 112 條，停車後開啟或關閉車門時，應注意行人、其他車輛，並讓其先行。「兩段式開門法」先微開約 10～15 公分再次確認後方無機車或自行車接近，可大幅降低開門肇事風險。"
-  },
-  {
-    id: "q_07",
-    category: "scooter",
-    categoryLabel: "🛵 機車筆試題庫",
-    signId: "sign_two_stage",
-    question: "騎乘普通重型機車行經設有如圖標誌，或內側車道劃有「禁行機車」標字之路口欲左轉時，應如何行駛？",
-    options: [
-      "直接切入最內側快車道跟隨汽車一起左轉",
-      "應依兩段式左轉規定，先靠右行駛至右側機慢車左轉待轉區停等",
-      "在斑馬線上直接推行左轉",
-      "在路口中心直接迴轉"
-    ],
-    answer: 1,
-    explanation: "依據《道路交通安全規則》第 99 條，內側車道設有禁行機車標誌或標線，或路口設有「機慢車兩段左轉標誌」時，普通重型機車應依兩段方式進行左轉，不得由內側車道直接左轉。"
-  },
-  {
-    id: "q_08",
-    category: "scooter",
-    categoryLabel: "🛵 機車筆試題庫",
-    question: "騎乘機車在道路上欲向左變換車道繞過前方路邊臨停車輛時，下列何者正確？",
-    options: [
-      "直接加速向左切出，後方車輛自然會閃避",
-      "先顯示左方向燈，查看後視鏡並轉頭確認左側後方盲點無直行來車後再變換車道",
-      "舉起左手示意即可，不需要打方向燈",
-      "等切入左側車道後再補打方向燈"
-    ],
-    answer: 1,
-    explanation: "依據《道路交通安全規則》第 98 條及第 102 條，變換車道時應先顯示方向燈（全程顯示至完成變換），並注意安全距離與後視鏡盲點，讓直行車先行，確認安全後始得變換。"
-  },
-  {
-    id: "q_09",
-    category: "scooter",
-    categoryLabel: "🛵 機車筆試題庫",
-    question: "騎乘機車遇見大型貨車或公車在前方準備右轉彎時，最安全的應對方式為何？",
-    options: [
-      "趁大型車還沒完全轉過去，趕快從大型車右側縫隙加速超車",
-      "減速退後並與大型車保持安全距離，切勿進入大型車右側「內輪差」與視線死角",
-      "緊貼在大型車右後輪旁並鳴按喇叭",
-      "與大型車併排同時右轉"
-    ],
-    answer: 1,
-    explanation: "大型車轉彎時前後輪行進軌跡不同會產生「內輪差」，且右側為駕駛人嚴重視野死角。機車若搶快鑽入大型車右側極易被捲入車底，務必減速退讓保持距離。"
-  },
-  {
-    id: "q_10",
-    category: "scooter",
-    categoryLabel: "🛵 機車筆試題庫",
-    question: "騎乘機車行經「閃光紅燈」號誌路口時，應遵守何種規定？",
-    options: [
-      "減速慢行直接通過即可",
-      "與一般綠燈相同，可依原速通過",
-      "應減速接近，先停止於交岔路口前，讓幹線道車優先通行後認為安全時，方得續行",
-      "只需注意左方有無來車"
-    ],
-    answer: 2,
-    explanation: "依據《道路交通標誌標線號誌設置規則》第 211 條，閃光紅燈表示「停車再開」，車輛應先停止於交岔路口前，禮讓幹線道車優先通行並確認安全後才可繼續行駛。"
-  },
-  {
-    id: "q_11",
-    category: "scooter",
-    categoryLabel: "🛵 機車筆試題庫",
-    question: "行車途中聽見後方傳來救護車的警笛聲時，駕駛人（含汽機車）應如何處置？",
-    options: [
-      "加速行駛在救護車前方替它開道",
-      "立即向道路兩側減速避讓，讓救護車優先通行，且不得在後尾隨急駛",
-      "停在路中央原地不動讓救護車自己繞過去",
-      "只有看到救護車閃紅燈才要讓，只聽見聲音不用讓"
-    ],
-    answer: 1,
-    explanation: "依據《道路交通安全規則》第 101 條第 3 項，聞有消防車、救護車、警備車等警號時，不論來自何方均應立即避讓，並不得在後尾隨急駛。"
-  },
-  {
-    id: "q_12",
-    category: "scooter",
-    categoryLabel: "🛵 機車筆試題庫",
-    signId: "sign_yield",
-    question: "騎車在巷道出口看到如圖所示「白底紅邊倒三角形」標誌時，代表什麼意思？",
-    options: [
-      "前方有連續下坡",
-      "讓路標誌：你所在的是支線道，應減速禮讓幹線道車輛優先通行",
-      "前方禁止機車通行",
-      "前方設有測速照相"
-    ],
-    answer: 1,
-    explanation: "白底紅邊倒三角形為「讓路標誌」（禁制標誌），告示支線道車輛應減速慢行，禮讓幹線道車輛優先通行。"
-  }
-];
-
-/**
- * 4. 道路情境闖關關卡資料 (SCENARIO_LEVELS)
- * 共 7 大真實台灣道路情境關卡，涵蓋所有指定題型
- */
-const SCENARIO_LEVELS = [
-  {
-    id: 1,
-    shortTitle: "十字路口通行",
-    title: "第 1 關｜十字路口綠燈直行，遇對向車搶快左轉",
-    reward: 50,
-    description: "你駕駛藍色汽車沿市區雙向道路直行，前方號誌剛轉為綠燈，你正準備通過十字路口。此時對向車道一輛橘色轎車卻打著左轉燈，看似想搶在直行車流啟動前直接左轉切過你的車頭！",
-    lawBasis: "依據：《道路交通安全規則》第 102 條（轉彎車應讓直行車先行；防衛駕駛原則）",
-    options: [
-      {
-        text: "A. 我是直行車擁有絕對路權，踩油門加速衝過去逼對方停下來",
-        correct: false,
-        feedback: "❌ 危險發生碰撞！雖然法規上「轉彎車應讓直行車先行」，但路權不能拿來硬碰硬。對向車已搶快切出時若硬加速，極易在路口中央發生高速側撞。"
-      },
-      {
-        text: "B. 立即鬆開油門、腳備煞車減速並閃燈／短鳴喇叭警示，確認對方停讓後再安全通過",
-        correct: true,
-        feedback: "✅ 完美防禦駕駛！雖然直行車享有優先路權，但行經路口隨時「減速備煞、確認橫向與對向轉彎車動態」才能避免三寶搶快造成事故，既合法又安全！"
-      },
-      {
-        text: "C. 在路口中央直接緊急打方向盤切入對向車道閃避",
-        correct: false,
-        feedback: "❌ 非常危險！在路口隨意跨越雙黃線切入對向車道，極可能與對向後方直行車輛發生正面對撞。"
-      }
-    ],
-    svg: `<svg viewBox="0 0 420 280">
-      <rect width="420" height="280" fill="#86EFAC"/>
-      <!-- 十字馬路 -->
-      <rect x="145" y="0" width="130" height="280" fill="#334155"/>
-      <rect x="0" y="85" width="420" height="110" fill="#334155"/>
-      <!-- 雙黃線 -->
-      <line x1="208" y1="0" x2="208" y2="85" stroke="#FACC15" stroke-width="3"/>
-      <line x1="212" y1="0" x2="212" y2="85" stroke="#FACC15" stroke-width="3"/>
-      <line x1="208" y1="195" x2="208" y2="280" stroke="#FACC15" stroke-width="3"/>
-      <line x1="212" y1="195" x2="212" y2="280" stroke="#FACC15" stroke-width="3"/>
-      <!-- 停止線 -->
-      <line x1="212" y1="195" x2="275" y2="195" stroke="#FFFFFF" stroke-width="4"/>
-      <line x1="145" y1="85" x2="208" y2="85" stroke="#FFFFFF" stroke-width="4"/>
-      <!-- 綠燈號誌 -->
-      <rect x="285" y="168" width="24" height="52" rx="6" fill="#0F172A"/>
-      <circle cx="297" cy="180" r="5" fill="#475569"/>
-      <circle cx="297" cy="194" r="5" fill="#475569"/>
-      <circle cx="297" cy="208" r="6" fill="#22C55E"/>
-      <!-- 你的藍車（直行向上） -->
-      <rect x="230" y="210" width="28" height="48" rx="7" fill="#0284C7" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="244" y="239" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">你</text>
-      <path d="M244 204 L244 155" stroke="#38BDF8" stroke-width="4" stroke-dasharray="6 4"/>
-      <polygon points="244,145 237,158 251,158" fill="#38BDF8"/>
-      <!-- 對向橘車（搶快左轉） -->
-      <rect x="164" y="38" width="28" height="46" rx="7" fill="#F97316" stroke="#FFFFFF" stroke-width="2"/>
-      <path d="M178 88 Q182 135 255 138" fill="none" stroke="#FB923C" stroke-width="4" stroke-dasharray="6 4"/>
-      <polygon points="265,138 252,131 252,145" fill="#FB923C"/>
+    id: "mark_double_yellow",
+    topic: "markings",
+    category: "longitudinal",
+    name: "雙黃實線（分向限制線）",
+    meaning: "用以劃分對向車道，雙向均「嚴禁超車、跨越或迴轉」。",
+    rule: "黃色標線代表「分隔對向車流」。看到兩條平行黃實線，任何方向車輛均不得跨越駛入來車道超車或迴轉。",
+    lawRef: "設置規則第 165 條",
+    svg: `<svg viewBox="0 0 280 120">
+      <rect width="280" height="120" fill="#334155"/>
+      <line x1="0" y1="56" x2="280" y2="56" stroke="#FACC15" stroke-width="4"/>
+      <line x1="0" y1="64" x2="280" y2="64" stroke="#FACC15" stroke-width="4"/>
+      <text x="140" y="32" text-anchor="middle" fill="#E2E8F0" font-size="13">← 對向來車道</text>
+      <text x="140" y="96" text-anchor="middle" fill="#E2E8F0" font-size="13">本向行車道 →</text>
     </svg>`
   },
   {
-    id: 2,
-    shortTitle: "右轉遇行人",
-    title: "第 2 關｜汽車綠燈右轉，斑馬線上有行人正要通過",
-    reward: 50,
-    description: "你駕駛藍色汽車在路口外側車道準備右轉，前方同向為綠燈。當你打右轉燈轉入橫向道路時，發現斑馬線上有一位背著書包的學生正踏上行人穿越道準備過馬路，距離你的車頭約 2.5 公尺。",
-    lawBasis: "依據：《道路交通安全規則》第 103 條＆《道交條例》第 44 條（距離行人 3 公尺內應暫停讓行）",
-    options: [
-      {
-        text: "A. 趁學生還沒走到路中央，趕快踩油門從他前面切過去",
-        correct: false,
-        feedback: "❌ 嚴重違規且極度危險！車輛距離行人行進方向 3 公尺以內搶先通過，不僅違反「停讓行人」規定（最高罰 6,000 元並記 3 點），搶快極易撞傷行人。"
-      },
-      {
-        text: "B. 踩煞車將車輛完全暫停在斑馬線前，耐心禮讓學生完全通過後再右轉起步",
-        correct: true,
-        feedback: "✅ 完全正確！行近行人穿越道有行人穿越時，無論有無號誌均應「暫停讓行人先行通過」，保持 3 公尺以上安全距離，做個有禮貌的優良駕駛！"
-      },
-      {
-        text: "C. 長按喇叭催促學生用跑的過馬路",
-        correct: false,
-        feedback: "❌ 不適當且違法！在行人穿越道前鳴按喇叭逼迫行人，可能驚嚇行人導致跌倒，且車輛仍未履行「暫停讓行」的法定義務。"
-      }
-    ],
-    svg: `<svg viewBox="0 0 420 280">
-      <rect width="420" height="280" fill="#86EFAC"/>
-      <rect x="90" y="0" width="130" height="280" fill="#334155"/>
-      <rect x="90" y="80" width="330" height="120" fill="#334155"/>
-      <!-- 右側斑馬線 -->
+    id: "mark_single_yellow_dash",
+    topic: "markings",
+    category: "longitudinal",
+    name: "黃色虛線（行車分向線）",
+    meaning: "用以劃分對向車道，在確認對向無來車且視距良好安全時，准許暫時跨越超車或迴轉。",
+    rule: "同樣是黃線（分隔對向車流），但虛線代表「在安全條件下允許跨越超車」，超車後應立即駛回原車道。",
+    lawRef: "設置規則第 164 條",
+    svg: `<svg viewBox="0 0 280 120">
+      <rect width="280" height="120" fill="#334155"/>
+      <line x1="10" y1="60" x2="270" y2="60" stroke="#FACC15" stroke-width="5" stroke-dasharray="24 18"/>
+      <text x="140" y="34" text-anchor="middle" fill="#FEF08A" font-size="13">安全時可暫時跨越超車</text>
+    </svg>`
+  },
+  {
+    id: "mark_double_white",
+    topic: "markings",
+    category: "longitudinal",
+    name: "雙白實線（禁止變換車道線）",
+    meaning: "用以分隔「同向」車道，兩側車輛均「禁止變換車道」。",
+    rule: "白色標線代表「分隔同向車流」！雙白實線常見於路口停止線前、隧道內或高架匝道口，壓線變換車道即屬違規。",
+    lawRef: "設置規則第 167 條",
+    svg: `<svg viewBox="0 0 280 120">
+      <rect width="280" height="120" fill="#334155"/>
+      <line x1="0" y1="56" x2="280" y2="56" stroke="#FFFFFF" stroke-width="4"/>
+      <line x1="0" y1="64" x2="280" y2="64" stroke="#FFFFFF" stroke-width="4"/>
+      <text x="140" y="32" text-anchor="middle" fill="#E2E8F0" font-size="13">同向內側車道 →</text>
+      <text x="140" y="96" text-anchor="middle" fill="#E2E8F0" font-size="13">同向外側車道 →</text>
+    </svg>`
+  },
+  {
+    id: "mark_single_white_solid_dash",
+    topic: "markings",
+    category: "longitudinal",
+    name: "單白實線 vs 白色虛線（同向車道線）",
+    meaning: "白色虛線分隔同向車道，安全時可變換車道；單白實線分隔快慢車道或車道邊線，無必要不得任意跨越。",
+    rule: "口訣：看顏色分「對向(黃) / 同向(白)」，看線型分「能跨(虛) / 不能跨(實)」。",
+    lawRef: "設置規則第 166、167 條",
+    svg: `<svg viewBox="0 0 280 120">
+      <rect width="280" height="120" fill="#334155"/>
+      <line x1="10" y1="42" x2="270" y2="42" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="20 16"/>
+      <line x1="0" y1="82" x2="280" y2="82" stroke="#FFFFFF" stroke-width="4"/>
+      <text x="140" y="26" text-anchor="middle" fill="#BAE6FD" font-size="12">白色虛線：同向可變換車道</text>
+      <text x="140" y="106" text-anchor="middle" fill="#FEF08A" font-size="12">單白實線：不得任意跨越</text>
+    </svg>`
+  },
+  {
+    id: "mark_stop_line",
+    topic: "markings",
+    category: "transverse",
+    name: "停止線（白色橫向粗實線）",
+    meaning: "指示車輛在紅燈、閃光紅燈或「停車再開」時，前懸不得超越之停止位置。",
+    rule: "停等紅燈時前輪壓過或超越停止線即屬「越線受罰」；且停止線後方常緊接行人穿越道，越線會擠壓行人空間。",
+    lawRef: "設置規則第 170 條",
+    svg: `<svg viewBox="0 0 280 120">
+      <rect width="280" height="120" fill="#334155"/>
+      <rect x="115" y="10" width="12" height="100" fill="#FFFFFF"/>
+      <rect x="35" y="42" width="64" height="36" rx="8" fill="#0284C7" stroke="#FFF" stroke-width="2"/>
+      <text x="67" y="64" text-anchor="middle" fill="#FFF" font-size="12" font-weight="bold">停在此線前</text>
+      <text x="198" y="64" text-anchor="middle" fill="#FEF08A" font-size="13" font-weight="bold">← 停止線</text>
+    </svg>`
+  },
+  {
+    id: "mark_crosswalk",
+    topic: "markings",
+    category: "transverse",
+    name: "枕木紋行人穿越道線（斑馬線）",
+    meaning: "設於交岔路口供行人穿越道路之標線，行人擁有絕對優先通行權。",
+    rule: "汽車與機車行近行人穿越道遇有行人穿越時，無論有無號誌均應暫停讓行人先行（保持 3 公尺以上安全距離）。",
+    lawRef: "設置規則第 185 條",
+    svg: `<svg viewBox="0 0 280 120">
+      <rect width="280" height="120" fill="#334155"/>
       <g fill="#F8FAFC">
-        <rect x="232" y="92" width="12" height="96" rx="2"/>
-        <rect x="252" y="92" width="12" height="96" rx="2"/>
-        <rect x="272" y="92" width="12" height="96" rx="2"/>
+        <rect x="85" y="14" width="16" height="92" rx="2"/>
+        <rect x="115" y="14" width="16" height="92" rx="2"/>
+        <rect x="145" y="14" width="16" height="92" rx="2"/>
+        <rect x="175" y="14" width="16" height="92" rx="2"/>
       </g>
-      <!-- 行人 -->
-      <circle cx="258" cy="115" r="9" fill="#FACC15" stroke="#0F172A" stroke-width="2"/>
-      <text x="276" y="119" fill="#FEF08A" font-size="12" font-weight="bold">行人</text>
-      <path d="M258 126 L258 168" stroke="#FACC15" stroke-width="3" stroke-dasharray="4 3"/>
-      <!-- 你的藍車（準備右轉） -->
-      <g transform="translate(185, 195) rotate(25)">
-        <rect x="-14" y="-22" width="28" height="46" rx="7" fill="#0284C7" stroke="#FFFFFF" stroke-width="2"/>
-        <text x="0" y="5" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">你</text>
-      </g>
-      <path d="M192 175 Q202 142 226 142" fill="none" stroke="#38BDF8" stroke-width="4" stroke-dasharray="5 4"/>
     </svg>`
   },
   {
-    id: 3,
-    shortTitle: "機車變換車道",
-    title: "第 3 關｜機車行駛外側車道，前方公車突然靠站停靠",
-    reward: 50,
-    description: "你騎乘藍色機車行駛在市區雙車道的外側車道，前方一輛公車開啟右轉方向燈正減速靠右停靠公車站。你想向左切入內側車道繞過公車，但從後視鏡隱約看到左後方似乎有汽車正在接近。",
-    lawBasis: "依據：《道路交通安全規則》第 98 條（變換車道應顯示方向燈、讓直行車先行並注意安全距離）",
-    options: [
-      {
-        text: "A. 立刻向左急轉切出，因為公車擋在前面，後方汽車應該要讓我",
-        correct: false,
-        feedback: "❌ 非常危險！變換車道車輛必須禮讓「直行車先行」。未打方向燈且未確認左後方來車距離就突然切出，是機車側撞事故最常見原因。"
-      },
-      {
-        text: "B. 先減速並開啟左方向燈，查看後視鏡並快速轉頭確認左後方盲點，等左側直行車通過後再平順切出",
-        correct: true,
-        feedback: "✅ 非常標準的防禦騎乘！落實「減速 → 打左方向燈 → 看後視鏡＋擺頭確認死角 → 禮讓直行車通過 → 平順變換車道」，安全百分百！"
-      },
-      {
-        text: "C. 從公車右側與人行道之間的狹小縫隙加速鑽過去",
-        correct: false,
-        feedback: "❌ 極度危險！公車靠站時會有乘客上下車，從右側門邊硬鑽極易撞上剛下車的乘客或被夾在公車與路緣之間。"
-      }
-    ],
-    svg: `<svg viewBox="0 0 420 280">
-      <rect width="420" height="280" fill="#CBD5E1"/>
-      <!-- 雙車道馬路 -->
-      <rect x="95" y="0" width="230" height="280" fill="#334155"/>
-      <line x1="210" y1="0" x2="210" y2="280" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="14 12"/>
-      <!-- 前方靠站公車 -->
-      <rect x="262" y="45" width="46" height="92" rx="8" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="285" y="95" text-anchor="middle" fill="#0F172A" font-size="12" font-weight="bold">靠站公車</text>
-      <!-- 你的藍色機車 -->
-      <rect x="268" y="185" width="18" height="34" rx="6" fill="#0284C7" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="277" y="206" text-anchor="middle" fill="#FFF" font-size="10" font-weight="bold">你</text>
-      <path d="M277 180 C277 152, 165 148, 165 110" fill="none" stroke="#38BDF8" stroke-width="3.5" stroke-dasharray="5 4"/>
-      <!-- 左後方接近的直行車 -->
-      <rect x="148" y="205" width="32" height="52" rx="7" fill="#EF4444" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="164" y="235" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">直行車</text>
-      <path d="M164 200 L164 155" stroke="#FCA5A5" stroke-width="3.5"/>
+    id: "mark_direction_arrow",
+    topic: "markings",
+    category: "special",
+    name: "車道指向線（地面白色箭頭）",
+    meaning: "指示該車道車輛行至交岔路口時所允許行駛之方向（直行、左轉、右轉或直行兼轉彎）。",
+    rule: "行駛在僅畫有「左轉箭頭」的車道上，到路口時就必須左轉，不可直接直行，以免與直行車流衝突。",
+    lawRef: "設置規則第 188 條",
+    svg: `<svg viewBox="0 0 280 120">
+      <rect width="280" height="120" fill="#334155"/>
+      <line x1="140" y1="0" x2="140" y2="120" stroke="#FFFFFF" stroke-width="3"/>
+      <!-- 直行箭頭 -->
+      <path d="M75 95 V35" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+      <polygon points="75,20 62,40 88,40" fill="#FFFFFF"/>
+      <!-- 左轉箭頭 -->
+      <path d="M215 95 V55 Q215 42 200 42 H178" fill="none" stroke="#FACC15" stroke-width="7" stroke-linecap="round"/>
+      <polygon points="180,30 162,42 180,54" fill="#FACC15"/>
     </svg>`
   },
   {
-    id: 4,
-    shortTitle: "閃光號誌路口",
-    title: "第 4 關｜深夜行經「閃光紅燈」路口，橫向為閃光黃燈幹道",
-    reward: 50,
-    description: "深夜 11 點，你駕駛藍色汽車行經一處無一般三色號誌的路口，你前方的號誌正閃爍著「閃光紅燈」，而橫向幹道的號誌則閃爍著「閃光黃燈」，遠處似乎有一輛白色休旅車正沿橫向道路駛來。",
-    lawBasis: "依據：《道路交通標誌標線號誌設置規則》第 211 條（閃光紅燈＝停車再開；閃光黃燈＝警告減速）",
-    options: [
-      {
-        text: "A. 深夜路上沒什麼車，只要稍微放慢油門、不需停車就直接滑過路口",
-        correct: false,
-        feedback: "❌ 違規且危險！「閃光紅燈」等同於「停車再開標誌」，無論白天或深夜都必須將車輛完全停下確認安全後才可起步。"
-      },
-      {
-        text: "B. 在停止線前將車輛完全停下（車輪靜止），左右擺頭確認橫向幹道來車動態安全後，再起步通過",
-        correct: true,
-        feedback: "✅ 正確無誤！閃光紅燈代表支線道「停車再開」，必須完全停止並禮讓閃光黃燈（幹線道）車輛優先通行，確認無安全疑慮再通過！"
-      },
-      {
-        text: "C. 閃光紅燈跟閃光黃燈代表號誌故障，誰先衝進路口誰就贏",
-        correct: false,
-        feedback: "❌ 觀念錯誤！閃光紅燈與閃光黃燈是正規的夜間／離峰時段交通管制號誌，並非故障，清楚區分了支線道與幹線道的路權義務。"
-      }
-    ],
-    svg: `<svg viewBox="0 0 420 280">
-      <rect width="420" height="280" fill="#1E293B"/>
-      <rect x="145" y="0" width="130" height="280" fill="#475569"/>
-      <rect x="0" y="85" width="420" height="110" fill="#475569"/>
-      <line x1="212" y1="195" x2="275" y2="195" stroke="#FFFFFF" stroke-width="4"/>
-      <!-- 閃光紅燈（你的方向） -->
-      <rect x="284" y="175" width="26" height="26" rx="6" fill="#0F172A"/>
-      <circle cx="297" cy="188" r="8" fill="#EF4444" class="anim-blink-red"/>
-      <text x="316" y="192" fill="#FCA5A5" font-size="11" font-weight="bold">閃光紅燈</text>
-      <!-- 閃光黃燈（橫向） -->
-      <rect x="108" y="52" width="26" height="26" rx="6" fill="#0F172A"/>
-      <circle cx="121" cy="65" r="8" fill="#FACC15" class="anim-blink-yellow"/>
-      <text x="45" y="69" fill="#FEF08A" font-size="11" font-weight="bold">閃光黃燈</text>
-      <!-- 你的藍車 -->
-      <rect x="230" y="210" width="28" height="46" rx="7" fill="#0284C7" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="244" y="237" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">你</text>
-      <!-- 橫向白車 -->
-      <rect x="42" y="148" width="46" height="28" rx="7" fill="#F8FAFC" stroke="#0F172A" stroke-width="2"/>
-      <path d="M94 162 L155 162" stroke="#FACC15" stroke-width="3" stroke-dasharray="5 4"/>
-    </svg>`
-  },
-  {
-    id: 5,
-    shortTitle: "無號誌路口",
-    title: "第 5 關｜無號誌且無「停／讓」標誌的同寬十字路口會車",
-    reward: 60,
-    description: "你駕駛藍色汽車行駛在一條雙向單車道住宅區道路上，前方是一個完全沒有紅綠燈，地上也沒有畫「停」或「讓」標線的十字路口。你打算直行通過，此時你的「右手邊」橫向道路也有一輛橘色汽車正準備直行通過路口。",
-    lawBasis: "依據：《道路交通安全規則》第 102 條第 1 項第 2 款（車道數相同且同為直行車，左方車讓右方車）",
-    options: [
-      {
-        text: "A. 兩條路一樣寬，我應該減速並暫停禮讓右手邊的橘色汽車先行通過",
-        correct: true,
-        feedback: "✅ 法規記憶滿分！在未劃分干、支線道且車道數相同的路口，同為直行車時「左方車應暫停讓右方車先行」（口訣：左讓右）。橘色車在你的右方，由你禮讓它先行最正確！"
-      },
-      {
-        text: "B. 我是南北向道路比較重要，右邊的車應該要讓我先過",
-        correct: false,
-        feedback: "❌ 錯誤！道路方位（東西向或南北向）並非路權依據。未設標誌標線劃分干支線且車道數相同時，應依「左方車讓右方車」原則通行。"
-      },
-      {
-        text: "C. 加速搶在右方車輛抵達路口中心前衝過去",
-        correct: false,
-        feedback: "❌ 非常危險！無號誌路口搶快是最容易發生側面碰撞的肇因，減速並依「左讓右」規則禮讓才能確保安全。"
-      }
-    ],
-    svg: `<svg viewBox="0 0 420 280">
-      <rect width="420" height="280" fill="#BBF7D0"/>
-      <!-- 同寬無號誌十字路口 -->
-      <rect x="155" y="0" width="110" height="280" fill="#475569"/>
-      <rect x="0" y="90" width="420" height="100" fill="#475569"/>
-      <!-- 你的藍車（左方車） -->
-      <rect x="224" y="205" width="28" height="46" rx="7" fill="#0284C7" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="238" y="232" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">你</text>
-      <!-- 右方橘車（擁有優先路權） -->
-      <rect x="305" y="106" width="46" height="28" rx="7" fill="#F97316" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="328" y="124" text-anchor="middle" fill="#FFF" font-size="10" font-weight="bold">右方車</text>
-      <path d="M298 120 L235 120" stroke="#FACC15" stroke-width="4" stroke-dasharray="6 4"/>
-      <polygon points="225,120 238,113 238,127" fill="#FACC15"/>
-    </svg>`
-  },
-  {
-    id: 6,
-    shortTitle: "避讓緊急車輛",
-    title: "第 6 關｜雙向單線道行駛中，後方傳來救護車鳴笛聲",
-    reward: 60,
-    description: "你正駕駛藍色汽車行駛在雙向各一車道的市區道路上，車流速度不快。突然從後視鏡看到一輛閃著紅燈、鳴響警笛的救護車正從正後方快速接近！",
-    lawBasis: "依據：《道路交通安全規則》第 101 條第 3 項＆《道交條例》第 45 條（聞緊急車輛警號應立即避讓）",
-    options: [
-      {
-        text: "A. 踩油門加速往前衝，試圖開在救護車前面幫它帶路",
-        correct: false,
-        feedback: "❌ 錯誤且違法！在救護車前方加速疾駛不僅危險，更容易阻擋救護車變換車道或轉彎路線。"
-      },
-      {
-        text: "B. 開啟右轉方向燈，確認右側安全後盡量向道路右側靠邊減速（或暫停），讓出中央通道供救護車超越",
-        correct: true,
-        feedback: "✅ 教科書等級的正確避讓！在雙向單車道遇後方救護車時，應開啟方向燈向右側靠邊避讓，讓出中間通道讓緊急車輛順暢通過，且不可在後尾隨急駛！"
-      },
-      {
-        text: "C. 因為前面還有紅燈，先繼續開到停止線再看情況",
-        correct: false,
-        feedback: "❌ 延誤救援！聞有緊急車輛警號時「不論來自何方，均應立即避讓」，即便前方有紅燈，在確保安全的前提下也應向兩側靠邊讓出通道（避讓緊急車輛而越線不受處罰）。"
-      }
-    ],
-    svg: `<svg viewBox="0 0 420 280">
-      <rect width="420" height="280" fill="#CBD5E1"/>
-      <rect x="115" y="0" width="190" height="280" fill="#334155"/>
-      <line x1="210" y1="0" x2="210" y2="280" stroke="#FACC15" stroke-width="3"/>
-      <!-- 你的藍車（在前） -->
-      <rect x="242" y="95" width="30" height="48" rx="7" fill="#0284C7" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="257" y="123" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">你</text>
-      <!-- 靠右避讓示意箭頭 -->
-      <path d="M257 90 Q278 70 284 48" fill="none" stroke="#38BDF8" stroke-width="3.5" stroke-dasharray="5 4"/>
-      <!-- 後方救護車 -->
-      <rect x="234" y="195" width="34" height="58" rx="7" fill="#FFFFFF" stroke="#EF4444" stroke-width="3"/>
-      <path d="M245 224 H257 M251 218 V230" stroke="#EF4444" stroke-width="4"/>
-      <circle cx="251" cy="204" r="5" fill="#EF4444" class="anim-blink-red"/>
-      <text x="251" y="246" text-anchor="middle" fill="#DC2626" font-size="9" font-weight="bold">救護車</text>
-    </svg>`
-  },
-  {
-    id: 7,
-    shortTitle: "夜間雨天行車",
-    title: "第 7 關｜傍晚下起滂沱大雨，天色昏暗且路面出現積水",
-    reward: 80,
-    description: "傍晚下班尖峰時段突然下起大雷雨，視線變得十分模糊，擋風玻璃雨刷開到最大，前方汽車濺起陣陣水花，且路面出現明顯積水反光。",
-    lawBasis: "依據：《道路交通安全規則》第 93 條＆第 109 條（遇雨霧應開亮頭燈、減速慢行並保持安全距離）",
-    options: [
-      {
-        text: "A. 立刻開啟「頭燈（近光燈）」，降低車速並將與前車的安全跟車距離拉長至平時的 2 倍以上，避免急踩煞車",
-        correct: true,
-        feedback: "✅ 恭喜通關！遇雨、霧天色昏暗時依法必須「開亮頭燈」（僅開日行燈或小燈尾燈不會亮，後方車輛會看不見你！），同時降速、拉長跟車距離以防「水漂效應」打滑，你已具備滿分安全駕駛素養！"
-      },
-      {
-        text: "B. 開啟遠光燈照亮雨幕，並緊跟前車尾燈高速行駛比較不會迷路",
-        correct: false,
-        feedback: "❌ 非常危險！大雨中開遠光燈會被雨滴反射產生一片白霧反光，反而完全看不清路況；緊跟前車則會在前車急煞時因濕滑煞不住而追撞。"
-      },
-      {
-        text: "C. 只開雙黃警示燈（故障燈）一路直行，不需要開大燈",
-        correct: false,
-        feedback: "❌ 錯誤觀念！行進中開啟雙黃警示燈會讓後方車輛無法判別你要變換車道或轉彎，且法規規定遇雨霧應開亮頭燈。"
-      }
-    ],
-    svg: `<svg viewBox="0 0 420 280">
-      <rect width="420" height="280" fill="#0F172A"/>
-      <rect x="115" y="0" width="190" height="280" fill="#1E293B"/>
-      <line x1="210" y1="0" x2="210" y2="280" stroke="#FACC15" stroke-width="3" stroke-dasharray="12 10"/>
-      <!-- 雨絲效果 -->
-      <g stroke="#38BDF8" stroke-width="2" opacity="0.6">
-        <line x1="60" y1="30" x2="52" y2="55"/>
-        <line x1="150" y1="40" x2="142" y2="65"/>
-        <line x1="280" y1="25" x2="272" y2="50"/>
-        <line x1="350" y1="60" x2="342" y2="85"/>
-        <line x1="90" y1="160" x2="82" y2="185"/>
-        <line x1="330" y1="180" x2="322" y2="205"/>
-      </g>
-      <!-- 積水區域 -->
-      <ellipse cx="252" cy="145" rx="34" ry="16" fill="#0284C7" opacity="0.45"/>
-      <!-- 你的藍車＋近光燈光束 -->
-      <polygon points="236,195 222,135 282,135 268,195" fill="#FEF08A" opacity="0.32"/>
-      <rect x="236" y="195" width="32" height="52" rx="7" fill="#0284C7" stroke="#FFFFFF" stroke-width="2"/>
-      <text x="252" y="225" text-anchor="middle" fill="#FFF" font-size="11" font-weight="bold">你</text>
-      <!-- 前方車輛 -->
-      <rect x="236" y="42" width="32" height="50" rx="7" fill="#94A3B8" stroke="#FFFFFF" stroke-width="2"/>
-      <circle cx="242" cy="91" r="3" fill="#EF4444"/>
-      <circle cx="262" cy="91" r="3" fill="#EF4444"/>
+    id: "mark_red_yellow_curb",
+    topic: "markings",
+    category: "special",
+    name: "路邊紅線 vs 黃線（禁止停車標線）",
+    meaning: "紅實線為「禁止臨時停車線」（全天 24 小時連臨停都不行）；黃實線為「禁止停車線」（每日 07:00–20:00 禁止停車，但可未滿 3 分鐘臨停）。",
+    rule: "口訣：「紅線連臨停都母湯；黃線白天可臨停 3 分鐘內（駕駛人須保持立即行駛狀態），晚上 8 點至隔早 7 點可停車」。",
+    lawRef: "設置規則第 168、169 條",
+    svg: `<svg viewBox="0 0 280 120">
+      <rect width="280" height="120" fill="#334155"/>
+      <rect x="0" y="0" width="280" height="22" fill="#CBD5E1"/>
+      <rect x="0" y="22" width="135" height="8" fill="#EF4444"/>
+      <rect x="145" y="22" width="135" height="8" fill="#FACC15"/>
+      <text x="68" y="65" text-anchor="middle" fill="#FCA5A5" font-size="13" font-weight="bold">紅線：禁臨停</text>
+      <text x="212" y="65" text-anchor="middle" fill="#FEF08A" font-size="13" font-weight="bold">黃線：禁停車</text>
     </svg>`
   }
 ];
 
 /**
- * 5. 成就徽章定義 (ACHIEVEMENTS_CONFIG)
+ * 3. 台灣交通號誌教學 (SIGNALS_CATALOG)
  */
-const ACHIEVEMENTS_CONFIG = [
+const SIGNALS_CATALOG = [
   {
-    id: "badge_newbie",
+    id: "sig_green",
+    topic: "signals",
+    simKey: "green",
+    name: "圓形綠燈",
+    meaning: "表示准許車輛直行或左、右轉彎。但轉彎車輛應讓直行車及行人優先通行。",
+    rule: "注意！「圓形綠燈」並未給予轉彎車絕對路權，左轉或右轉時仍須禮讓對向直行車與斑馬線行人。",
+    lawRef: "設置規則第 206 條第 1 款",
+    svg: `<svg viewBox="0 0 70 110">
+      <rect x="12" y="6" width="46" height="98" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <circle cx="35" cy="26" r="11" fill="#334155"/>
+      <circle cx="35" cy="55" r="11" fill="#334155"/>
+      <circle cx="35" cy="84" r="12" fill="#22C55E"/>
+    </svg>`
+  },
+  {
+    id: "sig_yellow",
+    topic: "signals",
+    simKey: "yellow",
+    name: "圓形黃燈",
+    meaning: "用以警告車輛駕駛人紅色燈號即將顯示，屆時將失去通行路權。",
+    rule: "黃燈亮起時，尚未越過停止線之車輛「應減速煞車停於停止線前」；已越過停止線進入路口者，應迅速通過路口。",
+    lawRef: "設置規則第 206 條第 2 款",
+    svg: `<svg viewBox="0 0 70 110">
+      <rect x="12" y="6" width="46" height="98" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <circle cx="35" cy="26" r="11" fill="#334155"/>
+      <circle cx="35" cy="55" r="12" fill="#FACC15"/>
+      <circle cx="35" cy="84" r="11" fill="#334155"/>
+    </svg>`
+  },
+  {
+    id: "sig_red",
+    topic: "signals",
+    simKey: "red",
+    name: "圓形紅燈",
+    meaning: "表示車輛禁止通行，不得超越停止線或進入路口。",
+    rule: "在台灣，圓形紅燈亮起時「紅燈右轉同樣屬於闖紅燈違規」（除非另有右轉箭頭綠燈亮起）！",
+    lawRef: "設置規則第 206 條第 3 款",
+    svg: `<svg viewBox="0 0 70 110">
+      <rect x="12" y="6" width="46" height="98" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <circle cx="35" cy="26" r="12" fill="#EF4444"/>
+      <circle cx="35" cy="55" r="11" fill="#334155"/>
+      <circle cx="35" cy="84" r="11" fill="#334155"/>
+    </svg>`
+  },
+  {
+    id: "sig_arrow_green",
+    topic: "signals",
+    simKey: "arrow_left",
+    name: "箭頭綠燈（方向指示號誌）",
+    meaning: "表示僅准許車輛依箭頭所指之方向行駛（例如僅亮直行箭頭綠燈時，不可左轉或右轉）。",
+    rule: "常見考題陷阱！當路口亮「直行箭頭綠燈」而「左轉箭頭尚未亮起」時，左轉車輛必須停等，不可搶先左轉。",
+    lawRef: "設置規則第 206 條第 4 款",
+    svg: `<svg viewBox="0 0 90 110">
+      <rect x="10" y="6" width="70" height="98" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <circle cx="32" cy="26" r="10" fill="#EF4444"/>
+      <circle cx="32" cy="55" r="10" fill="#334155"/>
+      <circle cx="32" cy="84" r="10" fill="#334155"/>
+      <circle cx="60" cy="84" r="12" fill="#14532D"/>
+      <path d="M66 84 H53 M58 79 L52 84 L58 89" fill="none" stroke="#22C55E" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`
+  },
+  {
+    id: "sig_flash_red",
+    topic: "signals",
+    simKey: "flash_red",
+    name: "閃光紅燈",
+    meaning: "表示「停車再開」，車輛應減速接近，先停止於交岔路口前，讓幹線道車優先通行後認為安全時，方得續行。",
+    rule: "閃光紅燈設於「支線道」，效力等同於八角形「停」標誌，車輪必須完全靜止後再起步。",
+    lawRef: "設置規則第 211 條第 1 款",
+    svg: `<svg viewBox="0 0 70 110">
+      <rect x="14" y="22" width="42" height="66" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <circle cx="35" cy="55" r="15" fill="#EF4444" class="blink-red"/>
+    </svg>`
+  },
+  {
+    id: "sig_flash_yellow",
+    topic: "signals",
+    simKey: "flash_yellow",
+    name: "閃光黃燈",
+    meaning: "表示「警告」，車輛應減速接近，注意安全，小心通過。",
+    rule: "閃光黃燈設於「幹線道」，雖擁有優先於閃光紅燈支線道的路權，仍須減速防禦駕駛。",
+    lawRef: "設置規則第 211 條第 2 款",
+    svg: `<svg viewBox="0 0 70 110">
+      <rect x="14" y="22" width="42" height="66" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <circle cx="35" cy="55" r="15" fill="#FACC15" class="blink-yellow"/>
+    </svg>`
+  },
+  {
+    id: "sig_pedestrian",
+    topic: "signals",
+    simKey: "green",
+    name: "行人專用號誌（小綠人／小紅人）",
+    meaning: "「行走行人（綠燈）」准許行人快速穿越；「綠燈閃爍」警告尚未進入道路者禁止跨入；「站立行人（紅燈）」禁止行人穿越。",
+    rule: "綠燈倒數閃爍時，已在斑馬線上的行人應加快腳步通過；尚未踏出人行道者應停下等待下一輪綠燈。",
+    lawRef: "設置規則第 207 條",
+    svg: `<svg viewBox="0 0 70 110">
+      <rect x="12" y="6" width="46" height="98" rx="10" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <circle cx="35" cy="24" r="4" fill="#EF4444"/>
+      <rect x="31" y="29" width="8" height="14" rx="2" fill="#EF4444"/>
+      <circle cx="35" cy="64" r="4.5" fill="#22C55E"/>
+      <path d="M35 69 L35 83 M28 74 L42 74 M35 83 L28 94 M35 83 L42 94" stroke="#22C55E" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>`
+  }
+];
+
+/**
+ * 4. 互動闖關題庫 (CHALLENGE_BANK)
+ * 說明：每道題目皆包含圖片 SVG、正確名稱與說明、3 個干擾選項（供模式 A/B 使用），
+ *       以及一段真假敘述（供模式 C 真假辨識使用），方便未來直接新增題目物件！
+ */
+const CHALLENGE_BANK = [
+  {
+    id: "ch_01",
+    topic: "signs",
+    visualType: "sign",
+    title: "停車再開標誌",
+    promptMeaning: "行至交岔路口前必須「完全停止」，確認幹線道無來車安全後，方得再開。",
+    wrongMeanings: [
+      "只要減速至時速 20 公里以下滑行通過即可，不需完全停車",
+      "前方為禁止任何車輛進入之單行道出口",
+      "前方有連續下坡路段，應換低速檔行駛"
+    ],
+    tfStatement: "此八角形標誌為「停車再開標誌」，車輛行至路口前必須完全停止確認安全後才可起步。",
+    tfIsTrue: true,
+    explanation: "八角形紅底白字「停」為「停車再開標誌」（禁制標誌），支線道車輛必須在停止線前車輪完全靜止，確認幹線道無來車後才可再開。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 58 條",
+    svg: SIGNS_CATALOG.find((s) => s.id === "sign_stop").svg
+  },
+  {
+    id: "ch_02",
+    topic: "signs",
+    visualType: "sign",
+    title: "讓路標誌",
+    promptMeaning: "白底紅邊倒三角形，告示支線道車輛應減速慢行，禮讓幹線道車輛優先通行。",
+    wrongMeanings: [
+      "警告前方有急轉彎路段，禁止超車",
+      "指示前方設有行人穿越道",
+      "告示車輛必須在路口完全停止 3 秒鐘"
+    ],
+    tfStatement: "此倒三角形標誌代表「前方有陡坡」，提醒駕駛人注意煞車。",
+    tfIsTrue: false,
+    explanation: "白底紅邊倒三角形是全台唯一的「讓路標誌」，代表你位於支線道，應減速慢行禮讓幹線道車輛優先通行。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 59 條",
+    svg: SIGNS_CATALOG.find((s) => s.id === "sign_yield").svg
+  },
+  {
+    id: "ch_03",
+    topic: "signs",
+    visualType: "sign",
+    title: "機慢車兩段左轉標誌",
+    promptMeaning: "告示普通重型機車、輕型機車及慢車行經該路口左轉時，應先靠右駛入待轉區兩段式左轉。",
+    wrongMeanings: [
+      "告示機車必須直接切入最內側快車道跟隨汽車左轉",
+      "指示前方為圓環路段，車輛應逆時針繞行",
+      "禁止所有機車進入該路口"
+    ],
+    tfStatement: "看到此藍底圓形標誌時，普通重型機車左轉應先靠右行駛至待轉區停等。",
+    tfIsTrue: true,
+    explanation: "此為「機慢車兩段左轉標誌」（禁制遵行標誌），機車行經該路口左轉應先靠右進入機慢車左轉待轉區，待橫向綠燈亮起後再直行通過。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 65 條",
+    svg: SIGNS_CATALOG.find((s) => s.id === "sign_two_stage_left").svg
+  },
+  {
+    id: "ch_04",
+    topic: "signs",
+    visualType: "sign",
+    title: "禁止進入標誌",
+    promptMeaning: "紅底白橫槓圓形標誌，告示任何車輛均禁止進入該路段。",
+    wrongMeanings: [
+      "道路施工封閉，僅限當地住戶車輛進入",
+      "前方設有收費站，車輛應減速繳費",
+      "禁止停車，但允許臨時停車 3 分鐘"
+    ],
+    tfStatement: "此標誌為「禁止進入標誌」，任何汽車、機車與自行車均不得駛入。",
+    tfIsTrue: true,
+    explanation: "紅底中間一道白色橫槓為「禁止進入標誌」，常見於單行道出口端，任何車輛均禁止進入。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 60 條",
+    svg: SIGNS_CATALOG.find((s) => s.id === "sign_no_entry").svg
+  },
+  {
+    id: "ch_05",
+    topic: "signs",
+    visualType: "sign",
+    title: "禁止臨時停車標誌",
+    promptMeaning: "藍底紅邊雙交叉斜線（✕），告示車輛嚴禁在該路段臨時停車及停車。",
+    wrongMeanings: [
+      "禁止停車，但駕駛人在車上可臨時停車 3 分鐘內",
+      "前方十字路口禁止左右轉彎",
+      "前方為鐵路平交道警示區"
+    ],
+    tfStatement: "此藍底紅叉標誌為「禁止停車標誌」，只要不熄火就可以在路邊臨停 3 分鐘。",
+    tfIsTrue: false,
+    explanation: "雙交叉斜線（✕）是「禁止臨時停車標誌」（對應路邊紅線），連上下客臨停都不行；單斜線（／）才是「禁止停車標誌」（對應黃線）。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 80 條",
+    svg: SIGNS_CATALOG.find((s) => s.id === "sign_no_stopping").svg
+  },
+  {
+    id: "ch_06",
+    topic: "signs",
+    visualType: "sign",
+    title: "當心行人標誌",
+    promptMeaning: "紅邊三角形內繪有行人圖案，警告駕駛人前方有行人穿越道或行人活動，應減速準備停讓。",
+    wrongMeanings: [
+      "指示此處為行人徒步區，車輛完全禁止通行",
+      "前方設有公園停車場",
+      "警告前方有學童專車停靠站"
+    ],
+    tfStatement: "三角形紅邊標誌屬於「警告標誌」，此圖提醒駕駛人前方有行人穿越道或行人活動。",
+    tfIsTrue: true,
+    explanation: "紅邊正三角形為警告標誌，此標誌為「當心行人」，提醒駕駛人提前降速並注意停讓行人。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 44 條",
+    svg: SIGNS_CATALOG.find((s) => s.id === "sign_pedestrian").svg
+  },
+  {
+    id: "ch_07",
+    topic: "signs",
+    visualType: "sign",
+    title: "道路施工標誌",
+    promptMeaning: "橙底黑邊三角形標誌，警告駕駛人前方道路正在施工，應減速慢行小心通過。",
+    wrongMeanings: [
+      "前方有落石坍方，道路已永久封閉",
+      "指示前方設有資源回收場",
+      "警告前方為連續急轉彎山路"
+    ],
+    tfStatement: "施工標誌採用醒目的「橙底黑圖案」，提醒駕駛人前方施工應減速慢行。",
+    tfIsTrue: true,
+    explanation: "依規定道路施工警告標誌採用橙色底黑色邊線及圖案，提醒駕駛人注意前方工區與人員機具。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 54 條",
+    svg: SIGNS_CATALOG.find((s) => s.id === "sign_road_work").svg
+  },
+  {
+    id: "ch_08",
+    topic: "signs",
+    visualType: "sign",
+    title: "單行道指示標誌",
+    promptMeaning: "藍底白色向上箭頭方形標誌，指示該道路僅准車輛依箭頭方向單向行駛。",
+    wrongMeanings: [
+      "強制規定車輛行至路口只能直行，禁止左右轉",
+      "前方為上坡路段，大型車應靠右行駛",
+      "指示前方有高速公路交流道入口"
+    ],
+    tfStatement: "藍底白箭頭的方形標誌是「單行道指示標誌」，表示該路段僅能依箭頭方向單向行駛。",
+    tfIsTrue: true,
+    explanation: "藍底方形為指示標誌，此為「單行道指示標誌」（圓形藍底白箭頭才是禁制標誌的「遵行方向」）。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 96 條",
+    svg: SIGNS_CATALOG.find((s) => s.id === "sign_one_way").svg
+  },
+  {
+    id: "ch_09",
+    topic: "markings",
+    visualType: "marking",
+    title: "雙黃實線（分向限制線）",
+    promptMeaning: "用以劃分對向車道，雙向車輛均嚴禁超車、跨越或迴轉。",
+    wrongMeanings: [
+      "分隔同向快慢車道，確認後方無車時可隨時跨越",
+      "僅禁止對向車輛跨越，本向車輛可以跨越超車",
+      "表示該路段夜間開放路邊停車"
+    ],
+    tfStatement: "雙黃實線用於分隔同向車道，只要打方向燈就可以變換車道。",
+    tfIsTrue: false,
+    explanation: "黃線是用來分隔「對向」車流，雙黃實線更是雙向嚴禁超車、跨越或迴轉！分隔同向車道的實線是「雙白實線」。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 165 條",
+    svg: MARKINGS_CATALOG.find((m) => m.id === "mark_double_yellow").svg
+  },
+  {
+    id: "ch_10",
+    topic: "markings",
+    visualType: "marking",
+    title: "雙白實線（禁止變換車道線）",
+    promptMeaning: "用以分隔同向車道，兩側同向車輛均禁止跨越變換車道。",
+    wrongMeanings: [
+      "用以分隔對向來車，雙向禁止迴轉",
+      "表示前方設有減速丘，車輛應減速",
+      "表示機慢車專用道邊線"
+    ],
+    tfStatement: "白色標線分隔同向車流，看到雙白實線時，左右兩側車道均禁止變換車道。",
+    tfIsTrue: true,
+    explanation: "正確！白色標線分隔同向車道，雙白實線常見於路口停止線前或隧道內，兩側車輛均不得壓線變換車道。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 167 條",
+    svg: MARKINGS_CATALOG.find((m) => m.id === "mark_double_white").svg
+  },
+  {
+    id: "ch_11",
+    topic: "markings",
+    visualType: "marking",
+    title: "枕木紋行人穿越道線（斑馬線）",
+    promptMeaning: "供行人穿越道路之標線，車輛行近遇有行人穿越時無論有無號誌均應暫停禮讓。",
+    wrongMeanings: [
+      "僅供自行車騎乘穿越之專用通道",
+      "只有行人號誌為綠燈時車輛才需要禮讓行人",
+      "黃網狀禁停區，車輛不可在上方暫停"
+    ],
+    tfStatement: "車輛行近枕木紋行人穿越道遇有行人穿越時，無論有無號誌均應暫停讓行人先行。",
+    tfIsTrue: true,
+    explanation: "依據《道路交通安全規則》第 103 條，行近行人穿越道遇有行人穿越時，無論有無指揮人員或號誌，均應暫停讓行人先行。",
+    lawRef: "依據：《道路交通安全規則》第 103 條",
+    svg: MARKINGS_CATALOG.find((m) => m.id === "mark_crosswalk").svg
+  },
+  {
+    id: "ch_12",
+    topic: "signals",
+    visualType: "signal",
+    title: "閃光紅燈號誌",
+    promptMeaning: "設於支線道，表示「停車再開」，車輛應先停止於交岔路口前，讓幹線道車優先通行後安全方得續行。",
+    wrongMeanings: [
+      "設於幹線道，車輛只需減速慢行不需停車即可通過",
+      "表示號誌設備故障維修中，所有車輛自由通行",
+      "表示禁止所有車輛進入該路口，必須立即調頭"
+    ],
+    tfStatement: "深夜行經閃光紅燈路口時，只要左右看沒車，減速慢行直接通過即可，不需要完全停車。",
+    tfIsTrue: false,
+    explanation: "閃光紅燈代表「停車再開」，無論白天或深夜，車輛都必須在停止線前完全停下（車輪靜止），確認幹線道無來車後才可通過。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 211 條",
+    svg: SIGNALS_CATALOG.find((s) => s.id === "sig_flash_red").svg
+  },
+  {
+    id: "ch_13",
+    topic: "signals",
+    visualType: "signal",
+    title: "圓形紅燈號誌",
+    promptMeaning: "表示車輛禁止通行，不得超越停止線或進入路口（含禁止紅燈右轉）。",
+    wrongMeanings: [
+      "直行車停止，但右轉車可以直接紅燈右轉不需停等",
+      "警告綠燈即將亮起，車輛可提前起步",
+      "僅限制大型車停止，機車可繼續直行"
+    ],
+    tfStatement: "台灣交通規則中，圓形紅燈亮起時，車輛不得紅燈右轉（除非另有右轉箭頭綠燈亮起）。",
+    tfIsTrue: true,
+    explanation: "正確！圓形紅燈禁止車輛超越停止線通行，未設右轉箭頭綠燈而逕行紅燈右轉者，依闖紅燈論處。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 206 條",
+    svg: SIGNALS_CATALOG.find((s) => s.id === "sig_red").svg
+  },
+  {
+    id: "ch_14",
+    topic: "signals",
+    visualType: "signal",
+    title: "箭頭綠燈號誌",
+    promptMeaning: "表示僅准許車輛依箭頭所指之方向行駛，其他方向車流仍須依指示停等。",
+    wrongMeanings: [
+      "與圓形綠燈完全相同，直行、左轉、右轉皆可自由通行",
+      "警告前方道路改道，所有車輛強制左轉",
+      "僅供公車與計程車專用之優先燈號"
+    ],
+    tfStatement: "當號誌僅亮「左轉箭頭綠燈」而無直行綠燈時，表示左轉車輛可依箭頭方向左轉。",
+    tfIsTrue: true,
+    explanation: "箭頭綠燈代表僅准許依箭頭所指方向行駛，使該方向車流能在受保護的時相中安全通過。",
+    lawRef: "依據：《道路交通標誌標線號誌設置規則》第 206 條",
+    svg: SIGNALS_CATALOG.find((s) => s.id === "sig_arrow_green").svg
+  }
+];
+
+/**
+ * 5. 成就徽章定義 (BADGES_LIST)
+ */
+const BADGES_LIST = [
+  {
+    id: "badge_first_try",
     icon: "🌱",
-    title: "交通新手",
-    desc: "踏出安全駕駛第一步！完成任 1 個知識單元或答對任 1 題測驗。"
+    title: "重返駕訓班",
+    desc: "完成第 1 局互動闖關測驗，踏出複習第一步！"
   },
   {
-    id: "badge_signs",
-    icon: "🚸",
-    title: "標誌達人",
-    desc: "點擊檢視至少 8 個交通標誌，並完成「交通標誌認識」單元。"
+    id: "badge_sharp_eye",
+    icon: "👀",
+    title: "鷹眼辨識王",
+    desc: "在單局測驗中獲得 85%（含）以上的高正確率！"
   },
   {
-    id: "badge_quiz_master",
-    icon: "🎓",
-    title: "筆試高手",
-    desc: "在單次駕照筆試測驗中獲得 80%（含）以上的高正確率。"
+    id: "badge_speedster",
+    icon: "⚡",
+    title: "閃電反應王",
+    desc: "完成 1 次「60 秒限時挑戰」並答對至少 5 題！"
   },
   {
-    id: "badge_safe_driver",
-    icon: "🛡️",
-    title: "安全駕駛員",
-    desc: "成功通過全部 7 個真實道路情境闖關挑戰！"
+    id: "badge_fixer",
+    icon: "🛠️",
+    title: "錯題終結者",
+    desc: "透過錯題複習功能重練並成功答對曾做錯的題目！"
   },
   {
-    id: "badge_reviewer",
-    icon: "⭐",
-    title: "錯題剋星",
-    desc: "善用錯題收藏本功能，收藏易錯題目反覆溫習。"
+    id: "badge_points_300",
+    icon: "🏅",
+    title: "優良駕駛人",
+    desc: "累積交通安全學習積分達到 300 分！"
   },
   {
-    id: "badge_legend",
+    id: "badge_master_800",
     icon: "👑",
-    title: "滿分車神",
-    desc: "累積交通安全學習積分達到 500 分以上！"
+    title: "交通法規大師",
+    desc: "累積交通安全學習積分達到 800 分以上！"
   }
 ];
 
 /* ============================================================================
-   二、狀態管理與 localStorage 持久化
+   二、localStorage 狀態管理
    ============================================================================ */
 
-const STORAGE_KEY = "dont_forget_license_state_v1";
+const STORAGE_KEY = "dont_forget_license_signs_v2";
 
-const DEFAULT_STATE = {
-  totalPoints: 0,
-  completedUnits: [],        // 已標記完成的知識單元 ID 陣列
-  viewedSigns: [],           // 已點擊查看過的交通標誌 ID 陣列
-  quizHistory: {
-    sessionsCount: 0,
-    totalAnswered: 0,
-    totalCorrect: 0,
-    bestAccuracy: 0
-  },
-  bookmarkedQuestions: [],   // 收藏的題目 ID 陣列
-  unlockedLevel: 1,          // 目前正常闖關解鎖到的最高關卡 (1~7)
-  completedLevels: [],       // 已成功通關的關卡 ID 陣列
-  unlockAllMode: false       // 是否開啟自由體驗模式
+const DEFAULT_RECORDS = {
+  totalScore: 0,
+  completedQuizzes: 0,
+  totalAnswered: 0,
+  totalCorrect: 0,
+  bestAccuracy: 0,
+  timedBestCorrect: 0,
+  fixedWrongCount: 0,
+  wrongQuestionIds: [] // 儲存答錯過的 CHALLENGE_BANK 題目 ID
 };
 
-let appState = loadState();
+let userRecords = loadRecords();
 
-function loadState() {
+function loadRecords() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
-    const parsed = JSON.parse(raw);
-    return {
-      ...JSON.parse(JSON.stringify(DEFAULT_STATE)),
-      ...parsed,
-      quizHistory: {
-        ...DEFAULT_STATE.quizHistory,
-        ...(parsed.quizHistory || {})
-      }
-    };
-  } catch (e) {
-    console.warn("讀取 localStorage 失敗，使用預設狀態：", e);
-    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_RECORDS));
+    return { ...JSON.parse(JSON.stringify(DEFAULT_RECORDS)), ...JSON.parse(raw) };
+  } catch (err) {
+    console.warn("讀取 localStorage 失敗：", err);
+    return JSON.parse(JSON.stringify(DEFAULT_RECORDS));
   }
 }
 
-function saveState() {
+function saveRecords() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-  } catch (e) {
-    console.warn("儲存 localStorage 失敗：", e);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(userRecords));
+  } catch (err) {
+    console.warn("儲存 localStorage 失敗：", err);
   }
-  refreshAllUI();
+  syncAllDisplays();
 }
 
-function addPoints(points, reasonText) {
-  if (points <= 0) return;
-  appState.totalPoints += points;
-  saveState();
-  if (reasonText) {
-    showToast(`🎉 ${reasonText}（+${points} 積分）`);
-  }
-}
-
-function showToast(message) {
-  const toastEl = document.getElementById("toastNotification");
-  if (!toastEl) return;
-  toastEl.textContent = message;
-  toastEl.classList.add("show");
+function showToast(msg) {
+  const el = document.getElementById("toastBox");
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add("show");
   clearTimeout(window.__toastTimer);
-  window.__toastTimer = setTimeout(() => {
-    toastEl.classList.remove("show");
-  }, 2800);
+  window.__toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
 }
 
 /* ============================================================================
-   三、頁面導覽與全域畫面同步
+   三、頁面導覽與全域同步
    ============================================================================ */
 
-let currentPage = "home";
-let currentUnitId = KNOWLEDGE_UNITS[0].id;
-let currentSignFilter = "all";
-let currentScenarioId = 1;
+let activePage = "home";
+let signFilterCategory = "all";
+let signSearchKeyword = "";
+let markingFilterCategory = "all";
 
-function switchPage(pageName) {
-  currentPage = pageName;
+function navigateTo(pageId) {
+  // 若正在進行限時挑戰中途離開頁面，清除計時器
+  if (gameSession.timerId && pageId !== "game") {
+    clearInterval(gameSession.timerId);
+    gameSession.timerId = null;
+  }
 
-  // 切換 section 顯示
+  activePage = pageId;
   document.querySelectorAll(".page-section").forEach((sec) => {
-    sec.classList.toggle("active", sec.id === `page-${pageName}`);
+    sec.classList.toggle("active", sec.id === `page-${pageId}`);
   });
-
-  // 更新導覽按鈕 active 樣式
   document.querySelectorAll(".nav-btn").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.page === pageName);
+    btn.classList.toggle("active", btn.dataset.page === pageId);
   });
 
-  // 手機版自動收合選單
   const navLinks = document.getElementById("navLinks");
   if (navLinks) navLinks.classList.remove("open");
 
   window.scrollTo({ top: 0, behavior: "smooth" });
-  refreshAllUI();
+  syncAllDisplays();
 }
 
-function refreshAllUI() {
-  // 頂部積分顯示
-  const navPts = document.getElementById("navTotalPoints");
-  if (navPts) navPts.textContent = appState.totalPoints;
+function syncAllDisplays() {
+  // 導覽列與橫幅積分
+  const navScore = document.getElementById("navScore");
+  const gameBannerScore = document.getElementById("gameBannerScore");
+  if (navScore) navScore.textContent = userRecords.totalScore;
+  if (gameBannerScore) gameBannerScore.textContent = userRecords.totalScore;
 
-  renderHomeProgress();
-  renderLearnPage();
-  renderScenarioMap();
-  renderProgressPage();
+  // 首頁儀表板
+  const homeTotalScore = document.getElementById("homeTotalScore");
+  const homeQuizCount = document.getElementById("homeQuizCount");
+  const homeAccuracy = document.getElementById("homeAccuracy");
+  const homeWrongCount = document.getElementById("homeWrongCount");
 
-  const bmBadge = document.getElementById("bookmarkCountBadge");
-  if (bmBadge) bmBadge.textContent = appState.bookmarkedQuestions.length;
-}
-
-/* ============================================================================
-   四、首頁進度儀表板渲染
-   ============================================================================ */
-
-function renderHomeProgress() {
-  const ptsEl = document.getElementById("homePoints");
-  const unitsEl = document.getElementById("homeUnits");
-  const unitsBar = document.getElementById("homeUnitsBar");
-  const scenEl = document.getElementById("homeScenarios");
-  const scenBar = document.getElementById("homeScenariosBar");
-  const accEl = document.getElementById("homeAccuracy");
-
-  if (!ptsEl) return;
-
-  ptsEl.textContent = `${appState.totalPoints} 分`;
-
-  const uDone = appState.completedUnits.length;
-  const uTotal = KNOWLEDGE_UNITS.length;
-  unitsEl.textContent = `${uDone} / ${uTotal} 單元`;
-  unitsBar.style.width = `${Math.round((uDone / uTotal) * 100)}%`;
-
-  const sDone = appState.completedLevels.length;
-  const sTotal = SCENARIO_LEVELS.length;
-  scenEl.textContent = `${sDone} / ${sTotal} 關`;
-  scenBar.style.width = `${Math.round((sDone / sTotal) * 100)}%`;
-
-  const { totalAnswered, totalCorrect } = appState.quizHistory;
-  if (totalAnswered === 0) {
-    accEl.textContent = "尚未測驗";
-  } else {
-    const rate = Math.round((totalCorrect / totalAnswered) * 100);
-    accEl.textContent = `${rate}%（${totalCorrect}/${totalAnswered}題）`;
+  if (homeTotalScore) {
+    homeTotalScore.textContent = `${userRecords.totalScore} 分`;
+    homeQuizCount.textContent = `${userRecords.completedQuizzes} 次`;
+    homeWrongCount.textContent = `${userRecords.wrongQuestionIds.length} 題`;
+    if (userRecords.totalAnswered === 0) {
+      homeAccuracy.textContent = "尚未作答";
+    } else {
+      const rate = Math.round((userRecords.totalCorrect / userRecords.totalAnswered) * 100);
+      homeAccuracy.textContent = `${rate}%（${userRecords.totalCorrect}/${userRecords.totalAnswered}題）`;
+    }
   }
+
+  renderSignsCatalog();
+  renderMarkingsCatalog();
+  renderSignalsCatalog();
+  renderRecordsPage();
 }
 
 /* ============================================================================
-   五、交通知識複習頁面邏輯
+   四、三大圖鑑渲染（交通標誌、道路標線、交通號誌）
    ============================================================================ */
 
-function renderLearnPage() {
-  const countEl = document.getElementById("learnCompletedCount");
-  if (countEl) countEl.textContent = appState.completedUnits.length;
+function renderSignsCatalog() {
+  const grid = document.getElementById("signsCatalogGrid");
+  const totalBadge = document.getElementById("totalSignsBadge");
+  if (!grid) return;
 
-  const tabsContainer = document.getElementById("unitTabs");
-  const contentArea = document.getElementById("unitContentArea");
-  if (!tabsContainer || !contentArea) return;
+  if (totalBadge) totalBadge.textContent = SIGNS_CATALOG.length;
 
-  // 渲染 5 個單元切換按鈕
-  tabsContainer.innerHTML = KNOWLEDGE_UNITS.map((unit) => {
-    const isActive = unit.id === currentUnitId;
-    const isDone = appState.completedUnits.includes(unit.id);
-    return `
-      <button class="unit-tab-btn ${isActive ? "active" : ""}" data-unit-id="${unit.id}">
-        ${unit.title}
-        ${isDone ? '<span class="done-dot" title="已完成複習">✓</span>' : ""}
-      </button>
-    `;
-  }).join("");
-
-  // 綁定分頁點擊事件
-  tabsContainer.querySelectorAll(".unit-tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      currentUnitId = btn.dataset.unitId;
-      renderLearnPage();
-    });
+  const kw = signSearchKeyword.trim().toLowerCase();
+  const filtered = SIGNS_CATALOG.filter((item) => {
+    const matchCat = signFilterCategory === "all" || item.category === signFilterCategory;
+    const matchKw =
+      !kw ||
+      item.name.toLowerCase().includes(kw) ||
+      item.meaning.toLowerCase().includes(kw) ||
+      item.usage.toLowerCase().includes(kw) ||
+      item.categoryName.toLowerCase().includes(kw);
+    return matchCat && matchKw;
   });
 
-  // 取得目前單元資料
-  const unit = KNOWLEDGE_UNITS.find((u) => u.id === currentUnitId) || KNOWLEDGE_UNITS[0];
-  const isCompleted = appState.completedUnits.includes(unit.id);
-
-  let bodyHTML = `
-    <div class="card unit-header-card">
-      <div>
-        <h2>${unit.title}</h2>
-        <p class="text-blue" style="font-weight:700; margin: 4px 0 8px;">${unit.subtitle}</p>
-        <p class="muted-text">${unit.summary}</p>
-      </div>
-      <div>
-        <button class="btn ${isCompleted ? "btn-secondary" : "btn-primary"}" id="markUnitDoneBtn">
-          ${isCompleted ? "✅ 已完成本單元複習" : "📌 標記本單元已複習（+20分）"}
-        </button>
-      </div>
-    </div>
-  `;
-
-  if (unit.isSignUnit) {
-    // 交通標誌互動圖鑑
-    const filteredSigns =
-      currentSignFilter === "all"
-        ? TRAFFIC_SIGNS_DATA
-        : TRAFFIC_SIGNS_DATA.filter((s) => s.category === currentSignFilter);
-
-    bodyHTML += `
-      <div class="signs-filter-bar">
-        <button class="sign-filter-chip ${currentSignFilter === "all" ? "active" : ""}" data-sign-cat="all">全部標誌（${TRAFFIC_SIGNS_DATA.length}）</button>
-        <button class="sign-filter-chip ${currentSignFilter === "warning" ? "active" : ""}" data-sign-cat="warning">🔺 警告標誌</button>
-        <button class="sign-filter-chip ${currentSignFilter === "prohibit" ? "active" : ""}" data-sign-cat="prohibit">🛑 禁制／遵行標誌</button>
-        <button class="sign-filter-chip ${currentSignFilter === "guide" ? "active" : ""}" data-sign-cat="guide">🟦 指示標誌</button>
-      </div>
-      <div class="signs-grid">
-        ${filteredSigns
-          .map((sign) => {
-            const viewed = appState.viewedSigns.includes(sign.id);
-            return `
-              <div class="sign-card ${viewed ? "viewed" : ""}" data-sign-id="${sign.id}" role="button" tabindex="0">
-                ${viewed ? '<span class="sign-viewed-badge">已閱讀</span>' : ""}
-                <div class="sign-svg-wrap">${sign.svg}</div>
-                <h4>${sign.name}</h4>
-                <span class="sign-cat-label">${sign.categoryLabel}</span>
-              </div>
-            `;
-          })
-          .join("")}
-      </div>
-    `;
-  } else {
-    // 一般知識重點卡片
-    bodyHTML += `
-      <div class="key-points-grid">
-        ${unit.points
-          .map(
-            (pt) => `
-          <article class="card knowledge-item-card">
-            <div class="knowledge-item-svg">${pt.svg}</div>
-            <div class="knowledge-item-body">
-              <h3>${pt.title}</h3>
-              <p>${pt.desc}</p>
-              <div class="rule-tip">💡 ${pt.tip}</div>
-            </div>
-          </article>
-        `
-          )
-          .join("")}
-      </div>
-    `;
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="card" style="grid-column:1/-1; text-align:center;">找不到符合「${signSearchKeyword}」的交通標誌，請嘗試其他關鍵字或切換分類。</div>`;
+    return;
   }
 
-  contentArea.innerHTML = bodyHTML;
+  grid.innerHTML = filtered
+    .map(
+      (sign) => `
+      <article class="sign-item-card" data-detail-type="sign" data-item-id="${sign.id}" role="button" tabindex="0">
+        <div class="sign-card-top">
+          <span class="cat-badge cat-${sign.category}">${sign.categoryName}</span>
+          <span class="muted-text" style="font-size:0.78rem;">點擊看詳解 🔍</span>
+        </div>
+        <div class="sign-svg-box">${sign.svg}</div>
+        <h3>${sign.name}</h3>
+        <p class="sign-meaning-preview">${sign.meaning}</p>
+        <div class="sign-usage-box">💡 用途：${sign.usage}</div>
+      </article>
+    `
+    )
+    .join("");
 
-  // 綁定標記完成按鈕
-  const doneBtn = document.getElementById("markUnitDoneBtn");
-  if (doneBtn) {
-    doneBtn.addEventListener("click", () => {
-      if (!appState.completedUnits.includes(unit.id)) {
-        appState.completedUnits.push(unit.id);
-        addPoints(20, `完成「${unit.title}」複習`);
-      } else {
-        showToast("你已經完成過這個單元的複習囉！");
-      }
-    });
-  }
-
-  // 綁定標誌分類篩選與點擊檢視
-  contentArea.querySelectorAll(".sign-filter-chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      currentSignFilter = chip.dataset.signCat;
-      renderLearnPage();
-    });
-  });
-
-  contentArea.querySelectorAll(".sign-card").forEach((card) => {
-    const openDetail = () => openSignModal(card.dataset.signId);
-    card.addEventListener("click", openDetail);
+  grid.querySelectorAll(".sign-item-card").forEach((card) => {
+    const openFn = () => openItemDetailModal("sign", card.dataset.itemId);
+    card.addEventListener("click", openFn);
     card.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        openDetail();
+        openFn();
       }
     });
   });
 }
 
-function openSignModal(signId) {
-  const sign = TRAFFIC_SIGNS_DATA.find((s) => s.id === signId);
-  if (!sign) return;
+function renderMarkingsCatalog() {
+  const grid = document.getElementById("markingsGrid");
+  const totalBadge = document.getElementById("totalMarkingsBadge");
+  if (!grid) return;
 
-  // 記錄已檢視標誌
-  if (!appState.viewedSigns.includes(sign.id)) {
-    appState.viewedSigns.push(sign.id);
-    saveState();
-  }
+  if (totalBadge) totalBadge.textContent = MARKINGS_CATALOG.length;
 
-  const modal = document.getElementById("signModal");
-  const modalBody = document.getElementById("signModalBody");
-  modalBody.innerHTML = `
-    <div class="sign-modal-top">
-      <div class="sign-modal-svg">${sign.svg}</div>
+  const list =
+    markingFilterCategory === "all"
+      ? MARKINGS_CATALOG
+      : MARKINGS_CATALOG.filter((m) => m.category === markingFilterCategory);
+
+  grid.innerHTML = list
+    .map(
+      (m) => `
+      <article class="marking-card">
+        <div class="marking-visual">${m.svg}</div>
+        <div class="marking-body">
+          <h3>${m.name}</h3>
+          <p class="muted-text">${m.meaning}</p>
+          <div class="marking-rule-pill">📌 ${m.rule}（${m.lawRef}）</div>
+        </div>
+      </article>
+    `
+    )
+    .join("");
+}
+
+function renderSignalsCatalog() {
+  const grid = document.getElementById("signalsGrid");
+  if (!grid) return;
+
+  grid.innerHTML = SIGNALS_CATALOG.map(
+    (sig) => `
+    <article class="card signal-card">
+      <div class="signal-icon-box">${sig.svg}</div>
+      <div class="signal-info">
+        <h3>${sig.name}</h3>
+        <p>${sig.meaning}</p>
+        <div class="marking-rule-pill">⚠️ ${sig.rule}（${sig.lawRef}）</div>
+      </div>
+    </article>
+  `
+  ).join("");
+}
+
+function updateSignalSimulator(simKey) {
+  const target = SIGNALS_CATALOG.find((s) => s.simKey === simKey) || SIGNALS_CATALOG[0];
+  document.getElementById("simSignalName").textContent = target.name;
+  document.getElementById("simSignalRule").textContent = `${target.meaning} ${target.rule}`;
+  document.getElementById("simSignalLaw").textContent = `法規依據：《道路交通標誌標線號誌設置規則》${target.lawRef}`;
+  document.getElementById("simVisualStage").innerHTML = `<div style="width:120px; height:175px;">${target.svg}</div>`;
+
+  document.querySelectorAll("#simButtonGroup button").forEach((btn) => {
+    const isSelected = btn.dataset.sim === simKey;
+    btn.classList.toggle("btn-primary", isSelected);
+    btn.classList.toggle("btn-secondary", !isSelected);
+  });
+}
+
+function openItemDetailModal(type, id) {
+  const item = SIGNS_CATALOG.find((s) => s.id === id);
+  if (!item) return;
+
+  const modal = document.getElementById("detailModal");
+  const content = document.getElementById("detailModalContent");
+  content.innerHTML = `
+    <div class="modal-head">
+      <div class="modal-svg-large">${item.svg}</div>
       <div>
-        <span class="sign-cat-label">${sign.categoryLabel}</span>
-        <h3 id="signModalTitle" style="font-size:1.35rem; margin-top:6px;">${sign.name}</h3>
+        <span class="cat-badge cat-${item.category}">${item.categoryName}</span>
+        <h3 id="modalItemTitle" style="font-size:1.38rem; margin-top:6px;">${item.name}</h3>
+        <span class="muted-text" style="font-size:0.84rem;">交通部${item.lawRef}</span>
       </div>
     </div>
-    <div class="sign-modal-section">
-      <h4>📖 代表意思</h4>
-      <p>${sign.meaning}</p>
+    <div class="modal-info-block">
+      <h4>📖 標誌代表意思</h4>
+      <p>${item.meaning}</p>
     </div>
-    <div class="sign-modal-section">
-      <h4>⚠️ 相關注意事項與法規重點</h4>
-      <p>${sign.precaution}</p>
+    <div class="modal-info-block">
+      <h4>🚗 實際用途與駕駛注意事項</h4>
+      <p>${item.usage}</p>
     </div>
   `;
   modal.classList.add("open");
@@ -1186,18 +1140,24 @@ function openSignModal(signId) {
 }
 
 /* ============================================================================
-   六、駕照筆試測驗邏輯
+   五、互動闖關遊戲引擎（四大玩法：看圖猜意思 / 看意思找標誌 / 真假辨識 / 限時挑戰）
    ============================================================================ */
 
-let quizSession = {
+let gameSession = {
+  mode: "pic_to_meaning", // 'pic_to_meaning' | 'meaning_to_pic' | 'true_false' | 'timed' | 'wrong_review'
   questions: [],
-  currentIndex: 0,
+  index: 0,
   score: 0,
   correctCount: 0,
-  answeredCurrent: false
+  answeredCount: 0,
+  combo: 0,
+  sessionWrongIds: [],
+  locked: false,
+  timerId: null,
+  timeLeft: 60
 };
 
-function shuffleArray(arr) {
+function shuffleList(arr) {
   const copy = [...arr];
   for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -1206,493 +1166,443 @@ function shuffleArray(arr) {
   return copy;
 }
 
-function startQuiz() {
-  const cat = document.getElementById("quizCategorySelect").value;
-  const count = parseInt(document.getElementById("quizCountSelect").value, 10);
+function startGameMode(mode, customQuestionList = null) {
+  // 清除舊計時器
+  if (gameSession.timerId) {
+    clearInterval(gameSession.timerId);
+    gameSession.timerId = null;
+  }
 
   let pool = [];
-  if (cat === "all") {
-    pool = [...QUIZ_BANK];
-  } else if (cat === "bookmarks") {
-    pool = QUIZ_BANK.filter((q) => appState.bookmarkedQuestions.includes(q.id));
-    if (pool.length === 0) {
-      showToast("⚠️ 你的錯題收藏本目前是空的！先去做幾題測驗並收藏吧！");
-      return;
-    }
+  if (customQuestionList) {
+    pool = [...customQuestionList];
   } else {
-    pool = QUIZ_BANK.filter((q) => q.category === cat);
+    const selectedTopic = document.getElementById("gameTopicSelect").value;
+    pool =
+      selectedTopic === "all"
+        ? [...CHALLENGE_BANK]
+        : CHALLENGE_BANK.filter((q) => q.topic === selectedTopic);
   }
 
-  const selected = shuffleArray(pool).slice(0, Math.min(count, pool.length));
+  // 若選取範圍題數不足 4 題（看意思找圖片需要 4 個不同選項），自動補入綜合題庫
+  if (pool.length < 4) {
+    pool = [...CHALLENGE_BANK];
+  }
 
-  quizSession = {
-    questions: selected,
-    currentIndex: 0,
+  const questionList = mode === "timed" ? shuffleList([...pool, ...shuffleList(pool)]) : shuffleList(pool).slice(0, 8);
+
+  gameSession = {
+    mode,
+    questions: questionList,
+    index: 0,
     score: 0,
     correctCount: 0,
-    answeredCurrent: false
+    answeredCount: 0,
+    combo: 0,
+    sessionWrongIds: [],
+    locked: false,
+    timerId: null,
+    timeLeft: 60
   };
 
-  document.getElementById("quizSetupCard").classList.add("hidden");
-  document.getElementById("quizResultCard").classList.add("hidden");
-  document.getElementById("quizActiveCard").classList.remove("hidden");
+  const modeNames = {
+    pic_to_meaning: "模式 A：看圖猜意思",
+    meaning_to_pic: "模式 B：看意思找標誌",
+    true_false: "模式 C：真假辨識挑戰",
+    timed: "模式 D：60 秒限時挑戰",
+    wrong_review: "📝 錯題專項重練"
+  };
 
-  renderCurrentQuestion();
-}
+  document.getElementById("hudModeLabel").textContent = modeNames[mode] || "互動闖關";
+  document.getElementById("hudSessionScore").textContent = "0";
 
-function renderCurrentQuestion() {
-  const q = quizSession.questions[quizSession.currentIndex];
-  const total = quizSession.questions.length;
-  const num = quizSession.currentIndex + 1;
-
-  quizSession.answeredCurrent = false;
-
-  document.getElementById("quizProgressText").textContent = `第 ${num} / ${total} 題`;
-  document.getElementById("quizCurrentTag").textContent = q.categoryLabel;
-  document.getElementById("quizLiveScore").textContent = quizSession.score;
-  document.getElementById("quizProgressBar").style.width = `${Math.round((num / total) * 100)}%`;
-  document.getElementById("quizQuestionText").textContent = q.question;
-
-  // 若題目附有交通標誌 SVG 則顯示
-  const visualBox = document.getElementById("quizVisualBox");
-  if (q.signId) {
-    const sign = TRAFFIC_SIGNS_DATA.find((s) => s.id === q.signId);
-    if (sign) {
-      visualBox.innerHTML = sign.svg;
-      visualBox.classList.remove("hidden");
-    } else {
-      visualBox.classList.add("hidden");
-    }
-  } else {
-    visualBox.classList.add("hidden");
-  }
-
-  // 渲染選項按鈕
-  const letters = ["A", "B", "C", "D"];
-  const optionsList = document.getElementById("quizOptionsList");
-  optionsList.innerHTML = q.options
-    .map(
-      (optText, idx) => `
-      <button class="quiz-option-btn" data-opt-index="${idx}">
-        <span class="option-letter">${letters[idx]}</span>
-        <span>${optText}</span>
-      </button>
-    `
-    )
-    .join("");
-
-  optionsList.querySelectorAll(".quiz-option-btn").forEach((btn) => {
-    btn.addEventListener("click", () => handleQuizAnswer(parseInt(btn.dataset.optIndex, 10)));
-  });
-
-  // 隱藏解析框
-  document.getElementById("quizFeedbackBox").classList.add("hidden");
-}
-
-function handleQuizAnswer(selectedIndex) {
-  if (quizSession.answeredCurrent) return;
-  quizSession.answeredCurrent = true;
-
-  const q = quizSession.questions[quizSession.currentIndex];
-  const isCorrect = selectedIndex === q.answer;
-  const optionBtns = document.querySelectorAll("#quizOptionsList .quiz-option-btn");
-
-  optionBtns.forEach((btn, idx) => {
-    btn.disabled = true;
-    if (idx === q.answer) {
-      btn.classList.add("correct");
-    } else if (idx === selectedIndex && !isCorrect) {
-      btn.classList.add("wrong");
-    }
-  });
-
-  const statusEl = document.getElementById("feedbackStatus");
-  if (isCorrect) {
-    quizSession.correctCount += 1;
-    quizSession.score += 10;
-    statusEl.textContent = "✅ 答對了！觀念非常清楚！";
-    statusEl.style.color = "var(--success)";
-  } else {
-    statusEl.textContent = `❌ 答錯囉！正確答案是（${["A", "B", "C", "D"][q.answer]}）`;
-    statusEl.style.color = "var(--danger)";
-  }
-
-  document.getElementById("quizLiveScore").textContent = quizSession.score;
-  document.getElementById("feedbackExplanation").textContent = q.explanation;
-
-  // 更新收藏按鈕狀態
-  updateBookmarkButtonUI(q.id);
-
-  const nextBtn = document.getElementById("nextQuestionBtn");
-  nextBtn.textContent =
-    quizSession.currentIndex === quizSession.questions.length - 1 ? "查看測驗結果 🏆" : "下一題 →";
-
-  document.getElementById("quizFeedbackBox").classList.remove("hidden");
-}
-
-function updateBookmarkButtonUI(questionId) {
-  const btn = document.getElementById("toggleBookmarkBtn");
-  const isSaved = appState.bookmarkedQuestions.includes(questionId);
-  btn.textContent = isSaved ? "★ 已收藏至錯題本" : "⭐ 收藏此題";
-  btn.classList.toggle("saved", isSaved);
-}
-
-function toggleCurrentQuestionBookmark() {
-  const q = quizSession.questions[quizSession.currentIndex];
-  if (!q) return;
-  const idx = appState.bookmarkedQuestions.indexOf(q.id);
-  if (idx === -1) {
-    appState.bookmarkedQuestions.push(q.id);
-    showToast("⭐ 已將此題加入錯題收藏本！");
-  } else {
-    appState.bookmarkedQuestions.splice(idx, 1);
-    showToast("已從錯題收藏本移除");
-  }
-  saveState();
-  updateBookmarkButtonUI(q.id);
-}
-
-function goToNextQuestion() {
-  if (quizSession.currentIndex < quizSession.questions.length - 1) {
-    quizSession.currentIndex += 1;
-    renderCurrentQuestion();
-  } else {
-    finishQuizSession();
-  }
-}
-
-function finishQuizSession() {
-  const total = quizSession.questions.length;
-  const correct = quizSession.correctCount;
-  const accuracy = Math.round((correct / total) * 100);
-  const earnedPoints = correct * 10;
-
-  // 更新全局紀錄
-  appState.quizHistory.sessionsCount += 1;
-  appState.quizHistory.totalAnswered += total;
-  appState.quizHistory.totalCorrect += correct;
-  if (accuracy > appState.quizHistory.bestAccuracy) {
-    appState.quizHistory.bestAccuracy = accuracy;
-  }
-  addPoints(earnedPoints);
-
-  document.getElementById("quizActiveCard").classList.add("hidden");
-  document.getElementById("quizResultCard").classList.remove("hidden");
-
-  document.getElementById("resCorrectCount").textContent = `${correct} / ${total} 題`;
-  document.getElementById("resAccuracy").textContent = `${accuracy}%`;
-  document.getElementById("resEarnedPoints").textContent = `+${earnedPoints} 分`;
-
-  const iconEl = document.getElementById("resultIcon");
-  const commentEl = document.getElementById("resComment");
-  if (accuracy === 100) {
-    iconEl.textContent = "🏆";
-    commentEl.textContent = "太強了！全數答對，你的交通法規觀念堪比駕訓班教練！";
-  } else if (accuracy >= 80) {
-    iconEl.textContent = "🎉";
-    commentEl.textContent = "表現優秀！已經達到高標水準，把錯題收藏起來就更無敵了！";
-  } else if (accuracy >= 60) {
-    iconEl.textContent = "👍";
-    commentEl.textContent = "還不錯喔！建議把答錯的題目加入收藏，再去知識複習區溫習一下。";
-  } else {
-    iconEl.textContent = "📘";
-    commentEl.textContent = "有些規則稍微生疏囉！快點選收藏錯題並前往「交通知識複習」重新充電吧！";
-  }
-}
-
-/* ============================================================================
-   七、道路情境闖關邏輯（核心特色）
-   ============================================================================ */
-
-function renderScenarioMap() {
-  const mapGrid = document.getElementById("scenarioMapGrid");
-  const toggleEl = document.getElementById("unlockAllToggle");
-  if (!mapGrid) return;
-
-  if (toggleEl) {
-    toggleEl.checked = appState.unlockAllMode;
-  }
-
-  mapGrid.innerHTML = SCENARIO_LEVELS.map((lvl) => {
-    const isCompleted = appState.completedLevels.includes(lvl.id);
-    const isUnlocked = appState.unlockAllMode || lvl.id <= appState.unlockedLevel;
-    const isActive = lvl.id === currentScenarioId;
-
-    let statusIcon = "🔒";
-    if (isCompleted) statusIcon = "✅";
-    else if (isUnlocked) statusIcon = "🚦";
-
-    return `
-      <button
-        class="level-node ${isActive ? "active" : ""} ${isCompleted ? "completed" : ""} ${!isUnlocked ? "locked" : ""}"
-        data-level-id="${lvl.id}"
-        ${!isUnlocked ? 'disabled title="請先通過前一關以解鎖此關卡"' : ""}
-      >
-        <span class="level-num">${statusIcon} 第 ${lvl.id} 關</span>
-        <span class="level-short-name">${lvl.shortTitle}</span>
-      </button>
-    `;
-  }).join("");
-
-  mapGrid.querySelectorAll(".level-node").forEach((node) => {
-    node.addEventListener("click", () => {
-      const id = parseInt(node.dataset.levelId, 10);
-      loadScenarioStage(id);
-    });
-  });
-
-  loadScenarioStage(currentScenarioId);
-}
-
-function loadScenarioStage(levelId) {
-  const lvl = SCENARIO_LEVELS.find((item) => item.id === levelId) || SCENARIO_LEVELS[0];
-  currentScenarioId = lvl.id;
-
-  // 更新地圖節點高亮
-  document.querySelectorAll(".level-node").forEach((node) => {
-    node.classList.toggle("active", parseInt(node.dataset.levelId, 10) === lvl.id);
-  });
-
-  document.getElementById("stageLevelPill").textContent = `第 ${lvl.id} 關 / 共 ${SCENARIO_LEVELS.length} 關`;
-  document.getElementById("stageTitle").textContent = lvl.title;
-  document.getElementById("stageReward").textContent = `+${lvl.reward} 積分`;
-  document.getElementById("stageSvgContainer").innerHTML = lvl.svg;
-  document.getElementById("stageDescription").textContent = lvl.description;
-
-  const optionsContainer = document.getElementById("scenarioOptions");
-  optionsContainer.innerHTML = lvl.options
-    .map(
-      (opt, idx) => `
-      <button class="scenario-opt-btn" data-opt-idx="${idx}">
-        ${opt.text}
-      </button>
-    `
-    )
-    .join("");
-
-  optionsContainer.querySelectorAll(".scenario-opt-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      handleScenarioChoice(lvl, parseInt(btn.dataset.optIdx, 10));
-    });
-  });
-
-  // 隱藏上一題的結果卡
-  const resBox = document.getElementById("scenarioResultBox");
-  resBox.classList.add("hidden");
-  resBox.classList.remove("pass", "fail");
-}
-
-function handleScenarioChoice(lvl, chosenIdx) {
-  const chosenOpt = lvl.options[chosenIdx];
-  const optBtns = document.querySelectorAll("#scenarioOptions .scenario-opt-btn");
-
-  optBtns.forEach((btn, idx) => {
-    btn.disabled = true;
-    if (idx === chosenIdx) {
-      btn.classList.add(chosenOpt.correct ? "selected-correct" : "selected-wrong");
-    }
-  });
-
-  const resBox = document.getElementById("scenarioResultBox");
-  const resTitle = document.getElementById("scenarioResultTitle");
-  const resDetail = document.getElementById("scenarioResultDetail");
-  const lawBasis = document.getElementById("scenarioLawBasis");
-  const retryBtn = document.getElementById("retryScenarioBtn");
-  const nextBtn = document.getElementById("nextScenarioBtn");
-
-  resBox.classList.remove("hidden", "pass", "fail");
-  lawBasis.textContent = lvl.lawBasis;
-
-  if (chosenOpt.correct) {
-    resBox.classList.add("pass");
-    resTitle.textContent = "🎉 判斷正確！安全通過本關路況！";
-    resTitle.style.color = "var(--success)";
-    resDetail.textContent = chosenOpt.feedback;
-    retryBtn.classList.add("hidden");
-
-    // 首次通關給予積分並解鎖下一關
-    const firstTimePass = !appState.completedLevels.includes(lvl.id);
-    if (firstTimePass) {
-      appState.completedLevels.push(lvl.id);
-      if (lvl.id + 1 > appState.unlockedLevel && lvl.id < SCENARIO_LEVELS.length) {
-        appState.unlockedLevel = lvl.id + 1;
+  const timerBox = document.getElementById("hudTimerBox");
+  if (mode === "timed") {
+    timerBox.classList.remove("hidden");
+    document.getElementById("hudTimeLeft").textContent = "60";
+    gameSession.timerId = setInterval(() => {
+      gameSession.timeLeft -= 1;
+      document.getElementById("hudTimeLeft").textContent = String(gameSession.timeLeft);
+      if (gameSession.timeLeft <= 0) {
+        clearInterval(gameSession.timerId);
+        gameSession.timerId = null;
+        showToast("⏰ 時間到！正在結算你的限時挑戰成績...");
+        finishGameSession();
       }
-      addPoints(lvl.reward, `通過「${lvl.shortTitle}」情境關卡`);
+    }, 1000);
+  } else {
+    timerBox.classList.add("hidden");
+  }
+
+  document.getElementById("gameMenuArea").classList.add("hidden");
+  document.getElementById("gameSummaryArea").classList.add("hidden");
+  document.getElementById("gamePlayArea").classList.remove("hidden");
+
+  renderCurrentGameQuestion();
+}
+
+function renderCurrentGameQuestion() {
+  // 若限時模式題庫用完則自動循環補題
+  if (gameSession.index >= gameSession.questions.length) {
+    if (gameSession.mode === "timed") {
+      gameSession.questions.push(...shuffleList(CHALLENGE_BANK));
     } else {
-      showToast("✅ 再次通過本關複習！");
+      finishGameSession();
+      return;
+    }
+  }
+
+  gameSession.locked = false;
+  const q = gameSession.questions[gameSession.index];
+  const renderArea = document.getElementById("questionRenderArea");
+  const fbArea = document.getElementById("answerFeedbackArea");
+  fbArea.classList.add("hidden");
+  fbArea.classList.remove("fb-pass", "fb-fail");
+
+  // 更新頂部進度條
+  if (gameSession.mode === "timed") {
+    document.getElementById("hudProgressText").textContent = `已作答 ${gameSession.answeredCount} 題（連對 ${gameSession.combo} 題）`;
+    document.getElementById("gameProgressBar").style.width = `${Math.max(0, (gameSession.timeLeft / 60) * 100)}%`;
+  } else {
+    const total = gameSession.questions.length;
+    const current = gameSession.index + 1;
+    document.getElementById("hudProgressText").textContent = `第 ${current} / ${total} 題`;
+    document.getElementById("gameProgressBar").style.width = `${Math.round((current / total) * 100)}%`;
+  }
+
+  // 決定本題呈現的玩法（限時模式與錯題重練會隨機混搭 A / B / C 三種題型）
+  let effectiveType = gameSession.mode;
+  if (effectiveType === "timed" || effectiveType === "wrong_review") {
+    const types = ["pic_to_meaning", "meaning_to_pic", "true_false"];
+    effectiveType = types[gameSession.index % types.length];
+  }
+
+  const visualClass =
+    q.visualType === "marking" ? "q-visual-center is-marking" : q.visualType === "signal" ? "q-visual-center is-signal" : "q-visual-center";
+
+  if (effectiveType === "pic_to_meaning") {
+    // 模式 A：看圖猜意思（顯示圖片，四選一文字意思）
+    const correctText = `【${q.title}】${q.promptMeaning}`;
+    const choices = shuffleList([
+      { text: correctText, isCorrect: true },
+      ...q.wrongMeanings.map((wm) => ({ text: wm, isCorrect: false }))
+    ]);
+    const letters = ["A", "B", "C", "D"];
+
+    renderArea.innerHTML = `
+      <div class="${visualClass}">${q.svg}</div>
+      <h3 class="q-prompt-title">請問上圖代表的正確交通名稱與含義為何？</h3>
+      <div class="text-options-grid">
+        ${choices
+          .map(
+            (c, i) => `
+          <button class="opt-choice-btn" data-correct="${c.isCorrect}">
+            <span class="opt-key">${letters[i]}</span>
+            <span>${c.text}</span>
+          </button>
+        `
+          )
+          .join("")}
+      </div>
+    `;
+
+    renderArea.querySelectorAll(".opt-choice-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const isCorrect = btn.dataset.correct === "true";
+        renderArea.querySelectorAll(".opt-choice-btn").forEach((b) => {
+          b.disabled = true;
+          if (b.dataset.correct === "true") b.classList.add("is-correct");
+          else if (b === btn && !isCorrect) b.classList.add("is-wrong");
+        });
+        submitGameAnswer(q, isCorrect);
+      });
+    });
+  } else if (effectiveType === "meaning_to_pic") {
+    // 模式 B：看意思找標誌（顯示文字規則，點選正確圖片）
+    const distractors = shuffleList(CHALLENGE_BANK.filter((item) => item.id !== q.id)).slice(0, 3);
+    const picChoices = shuffleList([
+      { item: q, isCorrect: true },
+      ...distractors.map((d) => ({ item: d, isCorrect: false }))
+    ]);
+
+    renderArea.innerHTML = `
+      <div class="tf-statement-box">
+        <span class="muted-text" style="display:block; font-size:0.84rem; margin-bottom:4px;">請根據下列規則找出對應的正確圖示：</span>
+        「${q.promptMeaning}」
+      </div>
+      <div class="pic-options-grid">
+        ${picChoices
+          .map(
+            (pc, idx) => `
+          <button class="pic-choice-btn" data-correct="${pc.isCorrect}" aria-label="圖片選項 ${idx + 1}">
+            <div class="pic-choice-svg">${pc.item.svg}</div>
+            <span class="muted-text" style="font-size:0.82rem; font-weight:700;">選項 ${idx + 1}</span>
+          </button>
+        `
+          )
+          .join("")}
+      </div>
+    `;
+
+    renderArea.querySelectorAll(".pic-choice-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const isCorrect = btn.dataset.correct === "true";
+        renderArea.querySelectorAll(".pic-choice-btn").forEach((b) => {
+          b.disabled = true;
+          if (b.dataset.correct === "true") b.classList.add("is-correct");
+          else if (b === btn && !isCorrect) b.classList.add("is-wrong");
+        });
+        submitGameAnswer(q, isCorrect);
+      });
+    });
+  } else {
+    // 模式 C：真假辨識（顯示圖片＋說明，判斷相符或錯誤）
+    renderArea.innerHTML = `
+      <div class="${visualClass}">${q.svg}</div>
+      <div class="tf-statement-box">
+        <span class="muted-text" style="display:block; font-size:0.84rem; margin-bottom:4px;">請判斷圖片與下列說明是否相符：</span>
+        「${q.tfStatement}」
+      </div>
+      <div class="tf-buttons-row">
+        <button class="btn btn-primary tf-btn" data-tf="true">⭕ 正確（完全相符）</button>
+        <button class="btn btn-outline-danger tf-btn" data-tf="false">❌ 錯誤（說明有誤）</button>
+      </div>
+    `;
+
+    renderArea.querySelectorAll(".tf-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const userSaidTrue = btn.dataset.tf === "true";
+        const isCorrect = userSaidTrue === q.tfIsTrue;
+        renderArea.querySelectorAll(".tf-btn").forEach((b) => {
+          b.disabled = true;
+          const btnVal = b.dataset.tf === "true";
+          if (btnVal === q.tfIsTrue) {
+            b.style.background = "var(--success)";
+            b.style.color = "#fff";
+            b.style.borderColor = "var(--success)";
+          } else if (b === btn && !isCorrect) {
+            b.style.background = "var(--danger)";
+            b.style.color = "#fff";
+          }
+        });
+        submitGameAnswer(q, isCorrect);
+      });
+    });
+  }
+}
+
+function submitGameAnswer(q, isCorrect) {
+  if (gameSession.locked) return;
+  gameSession.locked = true;
+  gameSession.answeredCount += 1;
+
+  const fbArea = document.getElementById("answerFeedbackArea");
+  const headline = document.getElementById("fbResultHeadline");
+  const deltaEl = document.getElementById("fbPointDelta");
+  const expText = document.getElementById("fbExplanationText");
+  const lawEl = document.getElementById("fbLawCitation");
+  const nextBtn = document.getElementById("nextGameQuestionBtn");
+
+  fbArea.classList.remove("hidden", "fb-pass", "fb-fail");
+
+  if (isCorrect) {
+    gameSession.correctCount += 1;
+    gameSession.combo += 1;
+    const bonus = gameSession.mode === "timed" && gameSession.combo >= 3 ? 5 : 0;
+    const gained = 15 + bonus;
+    gameSession.score += gained;
+
+    // 若原本在錯題本中，答對後自動從錯題本移除
+    if (userRecords.wrongQuestionIds.includes(q.id)) {
+      userRecords.wrongQuestionIds = userRecords.wrongQuestionIds.filter((id) => id !== q.id);
+      userRecords.fixedWrongCount += 1;
     }
 
-    if (lvl.id < SCENARIO_LEVELS.length) {
-      nextBtn.classList.remove("hidden");
-      nextBtn.textContent = `➡️ 解鎖並挑戰第 ${lvl.id + 1} 關`;
-    } else {
-      nextBtn.classList.remove("hidden");
-      nextBtn.textContent = "🏆 恭喜全數通關！查看成就徽章";
-    }
+    fbArea.classList.add("fb-pass");
+    headline.textContent = bonus > 0 ? `🔥 太神啦！連續答對 ${gameSession.combo} 題！` : "✅ 答對了！辨識完全正確！";
+    headline.style.color = "var(--success)";
+    deltaEl.textContent = `+${gained} 分`;
   } else {
-    resBox.classList.add("fail");
-    resTitle.textContent = "⚠️ 判斷失誤！可能引發交通事故或違規";
-    resTitle.style.color = "var(--danger)";
-    resDetail.textContent = chosenOpt.feedback;
-    retryBtn.classList.remove("hidden");
-    nextBtn.classList.add("hidden");
+    gameSession.combo = 0;
+    if (!gameSession.sessionWrongIds.includes(q.id)) {
+      gameSession.sessionWrongIds.push(q.id);
+    }
+    if (!userRecords.wrongQuestionIds.includes(q.id)) {
+      userRecords.wrongQuestionIds.push(q.id);
+    }
+
+    fbArea.classList.add("fb-fail");
+    headline.textContent = `❌ 答錯囉！正確答案是【${q.title}】`;
+    headline.style.color = "var(--danger)";
+    deltaEl.textContent = "+0 分（已收錄至錯題本）";
+  }
+
+  document.getElementById("hudSessionScore").textContent = String(gameSession.score);
+  expText.textContent = q.explanation;
+  lawEl.textContent = q.lawRef;
+
+  const isLastNormal = gameSession.mode !== "timed" && gameSession.index >= gameSession.questions.length - 1;
+  nextBtn.textContent = isLastNormal ? "查看本局成績結算 🏆" : "下一題 →";
+
+  fbArea.classList.remove("hidden");
+  saveRecords();
+}
+
+function finishGameSession() {
+  if (gameSession.timerId) {
+    clearInterval(gameSession.timerId);
+    gameSession.timerId = null;
+  }
+
+  const answered = gameSession.answeredCount;
+  const correct = gameSession.correctCount;
+  const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+
+  // 寫入累計紀錄
+  if (answered > 0) {
+    userRecords.completedQuizzes += 1;
+    userRecords.totalAnswered += answered;
+    userRecords.totalCorrect += correct;
+    userRecords.totalScore += gameSession.score;
+    if (accuracy > userRecords.bestAccuracy) {
+      userRecords.bestAccuracy = accuracy;
+    }
+    if (gameSession.mode === "timed" && correct > userRecords.timedBestCorrect) {
+      userRecords.timedBestCorrect = correct;
+    }
+  }
+  saveRecords();
+
+  document.getElementById("gamePlayArea").classList.add("hidden");
+  document.getElementById("gameSummaryArea").classList.remove("hidden");
+
+  document.getElementById("sumCorrect").textContent = `${correct} / ${answered} 題`;
+  document.getElementById("sumAccuracy").textContent = `${accuracy}%`;
+  document.getElementById("sumPoints").textContent = `+${gameSession.score} 分`;
+
+  const emojiEl = document.getElementById("summaryEmoji");
+  const titleEl = document.getElementById("summaryTitle");
+  const subEl = document.getElementById("summarySubtitle");
+
+  if (accuracy >= 85) {
+    emojiEl.textContent = "🏆";
+    titleEl.textContent = "太強了！滿分級交通辨識達人！";
+    subEl.textContent = "你對台灣交通標誌、標線與號誌的掌握度非常出色！";
+  } else if (accuracy >= 60) {
+    emojiEl.textContent = "🎉";
+    titleEl.textContent = "表現不錯！順利完成挑戰！";
+    subEl.textContent = "答錯的題目已自動收錄至「錯題本」，隨時可以針對弱點複習。";
+  } else {
+    emojiEl.textContent = "📘";
+    titleEl.textContent = "加油！再多複習一下圖鑑吧！";
+    subEl.textContent = "建議先逛逛「標誌圖鑑」與「道路標線」，再回來挑戰一次！";
+  }
+
+  const practiceWrongBtn = document.getElementById("practiceWrongNowBtn");
+  if (gameSession.sessionWrongIds.length > 0) {
+    practiceWrongBtn.classList.remove("hidden");
+    practiceWrongBtn.textContent = `📝 立即重練本局錯題（${gameSession.sessionWrongIds.length} 題）`;
+  } else {
+    practiceWrongBtn.classList.add("hidden");
   }
 }
 
 /* ============================================================================
-   八、學習紀錄與成就頁面渲染
+   六、學習紀錄與成就頁面渲染
    ============================================================================ */
 
-function checkUnlockedBadges() {
-  const unlocked = new Set();
-
-  // 1. 交通新手
-  if (appState.completedUnits.length >= 1 || appState.quizHistory.totalCorrect >= 1) {
-    unlocked.add("badge_newbie");
-  }
-  // 2. 標誌達人
-  if (appState.viewedSigns.length >= 8 && appState.completedUnits.includes("unit_signs")) {
-    unlocked.add("badge_signs");
-  }
-  // 3. 筆試高手
-  if (appState.quizHistory.bestAccuracy >= 80) {
-    unlocked.add("badge_quiz_master");
-  }
-  // 4. 安全駕駛員
-  if (appState.completedLevels.length >= SCENARIO_LEVELS.length) {
-    unlocked.add("badge_safe_driver");
-  }
-  // 5. 錯題剋星
-  if (appState.bookmarkedQuestions.length >= 1) {
-    unlocked.add("badge_reviewer");
-  }
-  // 6. 滿分車神
-  if (appState.totalPoints >= 500) {
-    unlocked.add("badge_legend");
-  }
-
-  return unlocked;
+function getUnlockedBadgesSet() {
+  const set = new Set();
+  if (userRecords.completedQuizzes >= 1) set.add("badge_first_try");
+  if (userRecords.bestAccuracy >= 85) set.add("badge_sharp_eye");
+  if (userRecords.timedBestCorrect >= 5) set.add("badge_speedster");
+  if (userRecords.fixedWrongCount >= 1) set.add("badge_fixer");
+  if (userRecords.totalScore >= 300) set.add("badge_points_300");
+  if (userRecords.totalScore >= 800) set.add("badge_master_800");
+  return set;
 }
 
-function renderProgressPage() {
-  const ptsEl = document.getElementById("progressPagePoints");
-  if (!ptsEl) return;
+function renderRecordsPage() {
+  const recScore = document.getElementById("recScore");
+  if (!recScore) return;
 
-  ptsEl.textContent = appState.totalPoints;
-  document.getElementById("recTotalPoints").textContent = `${appState.totalPoints} 分`;
-
-  const { sessionsCount, totalAnswered, totalCorrect } = appState.quizHistory;
-  document.getElementById("recQuizCount").textContent = `${sessionsCount} 次（${totalAnswered} 題）`;
-  const acc = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
-  document.getElementById("recQuizAccuracy").textContent = totalAnswered > 0 ? `${acc}%` : "尚未測驗";
-  document.getElementById("recScenarioCount").textContent = `${appState.completedLevels.length} / ${SCENARIO_LEVELS.length} 關`;
+  recScore.textContent = `${userRecords.totalScore} 分`;
+  document.getElementById("recSessions").textContent = `${userRecords.completedQuizzes} 局`;
+  const acc =
+    userRecords.totalAnswered > 0
+      ? Math.round((userRecords.totalCorrect / userRecords.totalAnswered) * 100)
+      : 0;
+  document.getElementById("recAccuracy").textContent =
+    userRecords.totalAnswered > 0 ? `${acc}%` : "0%";
+  document.getElementById("recWrongCount").textContent = `${userRecords.wrongQuestionIds.length} 題`;
 
   // 渲染成就徽章
-  const unlockedSet = checkUnlockedBadges();
-  const badgesGrid = document.getElementById("badgesGrid");
-  badgesGrid.innerHTML = ACHIEVEMENTS_CONFIG.map((b) => {
-    const isUnlocked = unlockedSet.has(b.id);
+  const unlocked = getUnlockedBadgesSet();
+  const badgesWall = document.getElementById("badgesWall");
+  badgesWall.innerHTML = BADGES_LIST.map((b) => {
+    const isOpen = unlocked.has(b.id);
     return `
-      <div class="badge-card ${isUnlocked ? "unlocked" : ""}">
-        <div class="badge-emblem">${isUnlocked ? b.icon : "🔒"}</div>
+      <div class="badge-item ${isOpen ? "unlocked" : ""}">
+        <div class="badge-circle">${isOpen ? b.icon : "🔒"}</div>
         <div>
           <h4>${b.title}</h4>
-          <p class="muted-text" style="font-size:0.85rem;">${b.desc}</p>
-          <span class="badge-status-pill">${isUnlocked ? "✨ 已獲得徽章" : "尚未解鎖"}</span>
+          <p class="muted-text" style="font-size:0.84rem;">${b.desc}</p>
+          <span class="badge-tag">${isOpen ? "✨ 已解鎖成就" : "尚未獲得"}</span>
         </div>
       </div>
     `;
   }).join("");
 
-  // 渲染尚未完成的關卡
-  const pendingList = document.getElementById("uncompletedScenariosList");
-  const uncompleted = SCENARIO_LEVELS.filter((l) => !appState.completedLevels.includes(l.id));
-  if (uncompleted.length === 0) {
-    pendingList.innerHTML = `<div class="pending-item"><span>🎉 太棒了！你已經通過所有道路情境關卡！</span></div>`;
+  // 渲染錯題本清單
+  const wrongContainer = document.getElementById("wrongQuestionsContainer");
+  const wrongItems = CHALLENGE_BANK.filter((q) => userRecords.wrongQuestionIds.includes(q.id));
+
+  if (wrongItems.length === 0) {
+    wrongContainer.innerHTML = `<div style="grid-column:1/-1; padding:18px; background:#f8fafc; border-radius:12px; text-align:center;" class="muted-text">🎉 目前沒有待複習的錯題！繼續保持滿分紀錄吧！</div>`;
   } else {
-    pendingList.innerHTML = uncompleted
+    wrongContainer.innerHTML = wrongItems
       .map(
-        (l) => `
-        <div class="pending-item">
-          <div>
-            <strong>第 ${l.id} 關：${l.shortTitle}</strong>
-            <div class="muted-text" style="font-size:0.82rem;">獎勵 +${l.reward} 積分</div>
+        (item) => `
+        <div class="wrong-item-card">
+          <div class="wrong-mini-svg">${item.svg}</div>
+          <div style="flex:1;">
+            <strong style="color:var(--danger); font-size:1rem;">${item.title}</strong>
+            <p class="muted-text" style="font-size:0.86rem; margin:4px 0 8px;">${item.explanation}</p>
+            <button class="btn btn-sm btn-primary" data-repractice-id="${item.id}">單題重新練習 →</button>
           </div>
-          <button class="btn btn-sm btn-primary" data-jump-scenario="${l.id}">前往挑戰 →</button>
         </div>
       `
       )
       .join("");
 
-    pendingList.querySelectorAll("[data-jump-scenario]").forEach((btn) => {
+    wrongContainer.querySelectorAll("[data-repractice-id]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const targetId = parseInt(btn.dataset.jumpScenario, 10);
-        if (!appState.unlockAllMode && targetId > appState.unlockedLevel) {
-          currentScenarioId = appState.unlockedLevel;
-          showToast(`請先依序通過第 ${appState.unlockedLevel} 關以解鎖後續關卡！`);
-        } else {
-          currentScenarioId = targetId;
+        const target = CHALLENGE_BANK.find((q) => q.id === btn.dataset.repracticeId);
+        if (target) {
+          navigateTo("game");
+          startGameMode("wrong_review", [target]);
         }
-        switchPage("scenarios");
-      });
-    });
-  }
-
-  // 渲染收藏的錯題清單
-  document.getElementById("recBookmarkCount").textContent = appState.bookmarkedQuestions.length;
-  const bmList = document.getElementById("bookmarkedQuestionsList");
-  const savedQuestions = QUIZ_BANK.filter((q) => appState.bookmarkedQuestions.includes(q.id));
-
-  if (savedQuestions.length === 0) {
-    bmList.innerHTML = `<div class="pending-item"><span class="muted-text">目前尚無收藏題目，在「駕照筆試測驗」作答後可點選收藏！</span></div>`;
-  } else {
-    bmList.innerHTML = savedQuestions
-      .map(
-        (q) => `
-        <div class="bookmark-item">
-          <div class="bookmark-item-head">
-            <strong style="font-size:0.95rem;">${q.question}</strong>
-            <button class="btn btn-sm btn-outline-danger" data-remove-bm="${q.id}">移除</button>
-          </div>
-          <div style="font-size:0.86rem; color:var(--success); font-weight:700;">
-            ✔ 正解：${q.options[q.answer]}
-          </div>
-          <div class="muted-text" style="font-size:0.83rem; margin-top:4px;">${q.explanation}</div>
-        </div>
-      `
-      )
-      .join("");
-
-    bmList.querySelectorAll("[data-remove-bm]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const qId = btn.dataset.removeBm;
-        appState.bookmarkedQuestions = appState.bookmarkedQuestions.filter((id) => id !== qId);
-        saveState();
-        showToast("已移除該收藏題目");
       });
     });
   }
 }
 
 /* ============================================================================
-   九、事件初始化綁定
+   七、初始化所有按鈕與事件監聽
    ============================================================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
-  // 頂部導覽按鈕
+  // 導覽列切換
   document.querySelectorAll(".nav-btn, .brand").forEach((el) => {
     el.addEventListener("click", (e) => {
       e.preventDefault();
-      const targetPage = el.dataset.page;
-      if (targetPage) switchPage(targetPage);
+      if (el.dataset.page) navigateTo(el.dataset.page);
     });
   });
 
-  // 頁面內跳轉按鈕 ([data-goto])
+  // 頁面內快捷跳轉按鈕
   document.querySelectorAll("[data-goto]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      switchPage(btn.dataset.goto);
-    });
+    btn.addEventListener("click", () => navigateTo(btn.dataset.goto));
   });
 
   // 手機版漢堡選單
@@ -1700,76 +1610,124 @@ document.addEventListener("DOMContentLoaded", () => {
   const navLinks = document.getElementById("navLinks");
   if (navToggle && navLinks) {
     navToggle.addEventListener("click", () => {
-      const isOpen = navLinks.classList.toggle("open");
-      navToggle.setAttribute("aria-expanded", String(isOpen));
+      const open = navLinks.classList.toggle("open");
+      navToggle.setAttribute("aria-expanded", String(open));
     });
   }
 
-  // 重置學習紀錄
-  const resetBtn = document.getElementById("resetProgressBtn");
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      if (confirm("確定要清除所有積分、筆試紀錄與情境闖關進度嗎？此動作無法復原。")) {
-        appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-        currentScenarioId = 1;
-        saveState();
-        showToast("🔄 已重置所有學習紀錄");
-      }
-    });
-  }
-
-  // 交通標誌彈窗關閉事件
-  const signModal = document.getElementById("signModal");
-  const closeSignModal = document.getElementById("closeSignModal");
-  if (closeSignModal && signModal) {
-    closeSignModal.addEventListener("click", () => {
-      signModal.classList.remove("open");
-      signModal.setAttribute("aria-hidden", "true");
-    });
-    signModal.addEventListener("click", (e) => {
-      if (e.target === signModal) {
-        signModal.classList.remove("open");
-        signModal.setAttribute("aria-hidden", "true");
-      }
-    });
-  }
-
-  // 筆試測驗按鈕綁定
-  document.getElementById("startQuizBtn")?.addEventListener("click", startQuiz);
-  document.getElementById("toggleBookmarkBtn")?.addEventListener("click", toggleCurrentQuestionBookmark);
-  document.getElementById("nextQuestionBtn")?.addEventListener("click", goToNextQuestion);
-  document.getElementById("restartQuizBtn")?.addEventListener("click", () => {
-    document.getElementById("quizResultCard").classList.add("hidden");
-    document.getElementById("quizSetupCard").classList.remove("hidden");
+  // 重置紀錄
+  document.getElementById("resetAllBtn")?.addEventListener("click", () => {
+    if (confirm("確定要清除所有積分、測驗次數與錯題本紀錄嗎？")) {
+      userRecords = JSON.parse(JSON.stringify(DEFAULT_RECORDS));
+      saveRecords();
+      showToast("🔄 已重置所有學習紀錄");
+    }
   });
-  document.getElementById("reviewBookmarksBtn")?.addEventListener("click", () => {
-    if (appState.bookmarkedQuestions.length === 0) {
-      showToast("目前尚未收藏任何錯題喔！");
+
+  // 標誌圖鑑分類與搜尋
+  document.querySelectorAll("#signCategoryPills .pill-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#signCategoryPills .pill-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      signFilterCategory = btn.dataset.cat;
+      renderSignsCatalog();
+    });
+  });
+
+  document.getElementById("signSearchInput")?.addEventListener("input", (e) => {
+    signSearchKeyword = e.target.value;
+    renderSignsCatalog();
+  });
+
+  // 道路標線分類篩選
+  document.querySelectorAll("#markingFilterPills .pill-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#markingFilterPills .pill-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      markingFilterCategory = btn.dataset.mcat;
+      renderMarkingsCatalog();
+    });
+  });
+
+  // 交通號誌互動模擬器按鈕
+  document.querySelectorAll("#simButtonGroup button").forEach((btn) => {
+    btn.addEventListener("click", () => updateSignalSimulator(btn.dataset.sim));
+  });
+  updateSignalSimulator("green");
+
+  // 關閉詳情彈窗
+  const detailModal = document.getElementById("detailModal");
+  document.getElementById("closeDetailModal")?.addEventListener("click", () => {
+    detailModal.classList.remove("open");
+    detailModal.setAttribute("aria-hidden", "true");
+  });
+  detailModal?.addEventListener("click", (e) => {
+    if (e.target === detailModal) {
+      detailModal.classList.remove("open");
+      detailModal.setAttribute("aria-hidden", "true");
+    }
+  });
+
+  // 互動闖關四大模式啟動按鈕
+  document.querySelectorAll("[data-mode]").forEach((btn) => {
+    btn.addEventListener("click", () => startGameMode(btn.dataset.mode));
+  });
+
+  // 遊戲內控制按鈕
+  document.getElementById("nextGameQuestionBtn")?.addEventListener("click", () => {
+    gameSession.index += 1;
+    renderCurrentGameQuestion();
+  });
+
+  document.getElementById("quitGameBtn")?.addEventListener("click", () => {
+    if (gameSession.timerId) {
+      clearInterval(gameSession.timerId);
+      gameSession.timerId = null;
+    }
+    document.getElementById("gamePlayArea").classList.add("hidden");
+    document.getElementById("gameMenuArea").classList.remove("hidden");
+  });
+
+  document.getElementById("playAgainBtn")?.addEventListener("click", () => {
+    startGameMode(gameSession.mode);
+  });
+
+  document.getElementById("practiceWrongNowBtn")?.addEventListener("click", () => {
+    const list = CHALLENGE_BANK.filter((q) => gameSession.sessionWrongIds.includes(q.id));
+    if (list.length > 0) startGameMode("wrong_review", list);
+  });
+
+  document.getElementById("backToModesBtn")?.addEventListener("click", () => {
+    document.getElementById("gameSummaryArea").classList.add("hidden");
+    document.getElementById("gameMenuArea").classList.remove("hidden");
+  });
+
+  // 學習紀錄頁面錯題練習與清空按鈕
+  document.getElementById("startWrongPracticeBtn")?.addEventListener("click", () => {
+    const list = CHALLENGE_BANK.filter((q) => userRecords.wrongQuestionIds.includes(q.id));
+    if (list.length === 0) {
+      showToast("🎉 目前沒有任何答錯的題目需要重練！");
       return;
     }
-    document.getElementById("quizCategorySelect").value = "bookmarks";
-    startQuiz();
+    navigateTo("game");
+    startGameMode("wrong_review", list);
   });
 
-  // 情境闖關控制項綁定
-  document.getElementById("unlockAllToggle")?.addEventListener("change", (e) => {
-    appState.unlockAllMode = e.target.checked;
-    saveState();
-    showToast(e.target.checked ? "🔓 已開啟自由體驗模式（全關卡可選）" : "🔒 已切換回標準闖關進度模式");
-  });
-
-  document.getElementById("retryScenarioBtn")?.addEventListener("click", () => {
-    loadScenarioStage(currentScenarioId);
-  });
-
-  document.getElementById("nextScenarioBtn")?.addEventListener("click", () => {
-    if (currentScenarioId < SCENARIO_LEVELS.length) {
-      loadScenarioStage(currentScenarioId + 1);
-    } else {
-      switchPage("progress");
+  document.getElementById("clearWrongListBtn")?.addEventListener("click", () => {
+    if (userRecords.wrongQuestionIds.length === 0) return;
+    if (confirm("確定要清空錯題本清單嗎？")) {
+      userRecords.wrongQuestionIds = [];
+      saveRecords();
+      showToast("已清空錯題本");
     }
   });
 
-  // 首次渲染全站 UI
-  refreshAllUI();
+  // 初始渲染全站資料
+  syncAllDisplays();
 });
+"""
+
+with open("script.js", "w", encoding="utf-8") as f:
+    f.write(script_js)
+
+print("script.js written:", os.path.getsize("script.js"), "bytes")
