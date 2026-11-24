@@ -1,2683 +1,529 @@
-<!DOCTYPE html>
+import os
+
+# Write index.html, style.css, and script.js for 《駕照別忘光！交通標誌辨識大挑戰》
+
+index_html = """<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>駕照別忘光！｜台灣交通安全教育互動網站</title>
-  <!-- 引入 Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 引入 Google Fonts: Noto Sans TC (繁體中文) 與 Plus Jakarta Sans (數字與英文) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-
-  <script>
-    // 自訂 Tailwind 主題色票（淺藍色、純白、少量號誌黃）
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', '"Noto Sans TC"', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#F0F9FF',
-              100: '#E0F2FE',
-              200: '#BAE6FD',
-              300: '#7DD3FC',
-              400: '#38BDF8',
-              500: '#0EA5E9',
-              600: '#0284C7',
-              700: '#0369A1',
-              800: '#075985',
-              900: '#0C4A6E',
-            },
-            signal: {
-              yellow: '#F59E0B',
-              yellowLight: '#FEF3C7',
-              red: '#EF4444',
-              green: '#10B981',
-            }
-          }
-        }
-      }
-    };
-  </script>
-
-  <style>
-    /* =====================================================================
-       全站基礎樣式與動畫設定 (CSS Styles)
-       ===================================================================== */
-    body {
-      background-color: #F0F9FF;
-      color: #1E293B;
-      overflow-x: hidden;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* 柔和道路網格背景紋理 */
-    .bg-road-pattern {
-      background-image: radial-gradient(#BAE6FD 1px, transparent 1px);
-      background-size: 24px 24px;
-    }
-
-    /* 卡片懸浮微互動效果 */
-    .edu-card {
-      background: #FFFFFF;
-      border: 1px solid #E0F2FE;
-      border-radius: 1.25rem;
-      box-shadow: 0 4px 20px -2px rgba(2, 132, 199, 0.06);
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-
-    .edu-card-hover:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 28px -4px rgba(2, 132, 199, 0.14);
-      border-color: #7DD3FC;
-    }
-
-    /* 頁面切換淡入動畫 */
-    .page-section {
-      animation: fadeSlideIn 0.28s ease-out;
-    }
-
-    @keyframes fadeSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* 首頁插畫汽車微幅前進動畫 */
-    @keyframes carCruise {
-      0%, 100% { transform: translateX(0px); }
-      50% { transform: translateX(10px); }
-    }
-    .animate-car {
-      animation: carCruise 3.2s ease-in-out infinite;
-    }
-
-    /* 情境模擬 SVG 虛線流動動畫 */
-    @keyframes dashFlow {
-      to { stroke-dashoffset: -24; }
-    }
-    .animate-path-flow {
-      animation: dashFlow 1.2s linear infinite;
-    }
-
-    /* 自訂捲軸美化 */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #F0F9FF;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #BAE6FD;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #7DD3FC;
-    }
-  </style>
+  <title>駕照別忘光！交通標誌辨識大挑戰</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="min-h-screen flex flex-col bg-road-pattern font-sans antialiased">
-
-  <!-- =====================================================================
-       1. 頂部響應式導覽列 (Header & Navigation)
-       ===================================================================== -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-brand-100 shadow-sm">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6">
-      <div class="flex items-center justify-between h-16 sm:h-18">
-        <!-- 網站 Logo 與名稱 -->
-        <button onclick="navigateTo('home')" class="flex items-center gap-2.5 text-left group focus:outline-none">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-            <!-- 精緻方向盤與號誌結合 SVG Logo -->
-            <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <circle cx="12" cy="12" r="9" />
-              <circle cx="12" cy="12" r="2.5" fill="#F59E0B" stroke="none" />
-              <path d="M3.5 10.5h6M14.5 10.5h6M12 14.5v6" stroke-linecap="round" />
-            </svg>
-          </div>
-          <div>
-            <div class="flex items-center gap-1.5">
-              <span class="font-black text-lg sm:text-xl tracking-tight text-slate-800">駕照別忘光！</span>
-              <span class="hidden sm:inline-block text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">台灣交通互動網</span>
-            </div>
-            <p class="text-[11px] text-slate-500 hidden sm:block">懂路權、守規則，安心上路不卡關</p>
-          </div>
-        </button>
-
-        <!-- 桌面版導覽選單 -->
-        <nav class="hidden lg:flex items-center gap-1 bg-brand-50/80 p-1.5 rounded-2xl border border-brand-100" id="desktop-nav">
-          <button data-nav="home" onclick="navigateTo('home')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-bold transition-all">首頁</button>
-          <button data-nav="learn" onclick="navigateTo('learn')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-bold transition-all">交通知識複習</button>
-          <button data-nav="quiz" onclick="navigateTo('quiz')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-bold transition-all">駕照筆試測驗</button>
-          <button data-nav="scenarios" onclick="navigateTo('scenarios')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1">
-            <span>道路情境闖關</span>
-            <span class="w-2 h-2 rounded-full bg-signal-yellow animate-pulse"></span>
-          </button>
-          <button data-nav="progress" onclick="navigateTo('progress')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-bold transition-all">學習紀錄與成就</button>
-        </nav>
-
-        <!-- 右側即時積分徽章與手機漢堡按鈕 -->
-        <div class="flex items-center gap-2 sm:gap-3">
-          <button onclick="navigateTo('progress')" title="查看積分與成就" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 font-bold text-xs sm:text-sm transition-colors">
-            <span class="text-base">🏆</span>
-            <span id="header-points">0</span>
-            <span class="text-xs font-medium text-amber-700">分</span>
-          </button>
-
-          <button id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="開啟選單" class="lg:hidden p-2.5 rounded-xl bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+<body>
+  <!-- 頂部導覽列 -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#home" class="brand" data-page="home">
+        <span class="brand-icon" aria-hidden="true">🚦</span>
+        <div class="brand-text">
+          <span class="brand-title">駕照別忘光！</span>
+          <span class="brand-subtitle">交通標誌辨識大挑戰</span>
         </div>
-      </div>
+      </a>
 
-      <!-- 手機版展開導覽列 -->
-      <div id="mobile-menu" class="hidden lg:hidden pb-4 pt-2 border-t border-brand-100">
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <button data-nav="home" onclick="navigateTo('home'); toggleMobileMenu(false)" class="nav-btn-mobile p-3 rounded-xl text-sm font-bold text-left">🏠 首頁總覽</button>
-          <button data-nav="learn" onclick="navigateTo('learn'); toggleMobileMenu(false)" class="nav-btn-mobile p-3 rounded-xl text-sm font-bold text-left">📘 交通知識複習</button>
-          <button data-nav="quiz" onclick="navigateTo('quiz'); toggleMobileMenu(false)" class="nav-btn-mobile p-3 rounded-xl text-sm font-bold text-left">📝 駕照筆試測驗</button>
-          <button data-nav="scenarios" onclick="navigateTo('scenarios'); toggleMobileMenu(false)" class="nav-btn-mobile p-3 rounded-xl text-sm font-bold text-left">🚦 道路情境闖關</button>
-          <button data-nav="progress" onclick="navigateTo('progress'); toggleMobileMenu(false)" class="nav-btn-mobile p-3 rounded-xl text-sm font-bold text-left col-span-2 sm:col-span-1">🏅 學習紀錄與成就</button>
-        </div>
+      <button class="nav-toggle" id="navToggle" aria-label="開啟主選單" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav-links" id="navLinks">
+        <button class="nav-btn active" data-page="home">🏠 首頁</button>
+        <button class="nav-btn" data-page="signs">🚸 標誌圖鑑</button>
+        <button class="nav-btn" data-page="markings">🛣️ 道路標線</button>
+        <button class="nav-btn" data-page="signals">🚦 交通號誌</button>
+        <button class="nav-btn" data-page="game">🎮 互動闖關</button>
+        <button class="nav-btn" data-page="records">🏆 學習紀錄</button>
+      </nav>
+
+      <div class="nav-score-pill" title="目前累積積分">
+        <span>⭐</span>
+        <span id="navScore">0</span> 分
       </div>
     </div>
   </header>
 
-  <!-- =====================================================================
-       2. 主內容容器 (Main Content Area - 動態切換五大頁面)
-       ===================================================================== -->
-  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-
-    <!-- -------------------------------------------------------------------
-         頁面一：首頁 (Home View)
-         ------------------------------------------------------------------- -->
-    <section id="view-home" class="page-section space-y-8">
-      <!-- Hero 主視覺區塊 -->
-      <div class="edu-card overflow-hidden bg-gradient-to-br from-white via-brand-50/70 to-sky-100/80 p-6 sm:p-10">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <!-- 左側文字介紹與行動按鈕 -->
-          <div class="lg:col-span-7 space-y-5">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-brand-200 shadow-xs text-brand-700 text-xs sm:text-sm font-bold">
-              <span class="w-2.5 h-2.5 rounded-full bg-signal-yellow"></span>
-              <span>依據台灣現行《道路交通安全規則》設計</span>
-            </div>
-
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 leading-tight">
-              考過駕照就還給教練了？<br />
-              <span class="text-brand-600">《駕照別忘光！》</span>帶你找回真實路感
-            </h1>
-
-            <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
-              專為高中生、大學生、準考照族與久未上路的「本本族」打造。不只有傳統筆試題庫，更結合<strong>互動交通標誌圖鑑</strong>與<strong>7 大台灣真實路口情境模擬闖關</strong>，讓你在安全環境中建立防禦駕駛直覺！
+  <main class="main-content">
+    <!-- ==================== 1. 首頁 ==================== -->
+    <section id="page-home" class="page-section active">
+      <div class="container">
+        <div class="hero-card">
+          <div class="hero-text">
+            <span class="hero-badge">🇹🇼 依據交通部《道路交通標誌標線號誌設置規則》編製</span>
+            <h1>考到駕照後就忘光了嗎？<br /><span class="highlight">《駕照別忘光！》</span>交通標誌辨識大挑戰</h1>
+            <p class="hero-desc">
+              專為高中生、大學生、準考照族與已領照駕駛人打造的台灣交通視覺辨識學習平台。
+              透過高精準向量圖解、分類搜尋圖鑑與四大互動闖關玩法，徹底搞懂標誌、標線與號誌！
             </p>
-
-            <!-- 主要行動按鈕 -->
-            <div class="flex flex-wrap items-center gap-3 pt-2">
-              <button onclick="navigateTo('scenarios')" class="px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 active:scale-98 text-white font-bold text-base shadow-lg shadow-brand-500/25 flex items-center gap-2 transition-all">
-                <span>🚦 立即道路情境闖關</span>
-              </button>
-              <button onclick="navigateTo('learn')" class="px-6 py-3.5 rounded-2xl bg-white hover:bg-brand-50 active:scale-98 text-brand-700 border-2 border-brand-200 font-bold text-base flex items-center gap-2 transition-all">
-                <span>📘 開始交通知識複習</span>
-              </button>
-              <button onclick="navigateTo('quiz')" class="px-5 py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-500 active:scale-98 text-slate-900 font-bold text-base shadow-md shadow-amber-400/20 flex items-center gap-2 transition-all">
-                <span>📝 駕照筆試測驗</span>
-              </button>
+            <div class="hero-actions">
+              <button class="btn btn-primary btn-lg" data-goto="signs">🚸 瀏覽交通標誌圖鑑</button>
+              <button class="btn btn-warning btn-lg" data-goto="game">🎮 開始互動闖關遊戲</button>
             </div>
           </div>
 
-          <!-- 右側互動路口交通安全 SVG 插畫 -->
-          <div class="lg:col-span-5">
-            <div class="bg-white rounded-3xl p-4 border-2 border-brand-200 shadow-inner relative">
-              <div class="flex items-center justify-between mb-2 px-1">
-                <span class="text-xs font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full">互動插畫：點擊紅綠燈切換燈號！</span>
-                <span id="hero-light-label" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">目前：綠燈通行</span>
+          <div class="hero-visual">
+            <svg viewBox="0 0 460 320" class="hero-svg" role="img" aria-label="台灣道路標誌與號誌主視覺">
+              <defs>
+                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#DBEAFE" />
+                  <stop offset="100%" stop-color="#F0F9FF" />
+                </linearGradient>
+              </defs>
+              <rect width="460" height="320" rx="24" fill="url(#skyGrad)" />
+              <!-- 雲朵 -->
+              <g fill="#FFFFFF" opacity="0.9">
+                <circle cx="80" cy="54" r="16" /><circle cx="100" cy="50" r="20" /><circle cx="120" cy="56" r="15" />
+                <circle cx="340" cy="46" r="14" /><circle cx="358" cy="42" r="18" /><circle cx="376" cy="48" r="13" />
+              </g>
+              <!-- 城市輪廓 -->
+              <rect x="28" y="135" width="46" height="85" rx="6" fill="#BFDBFE" />
+              <rect x="82" y="110" width="54" height="110" rx="6" fill="#93C5FD" />
+              <rect x="320" y="118" width="52" height="102" rx="6" fill="#93C5FD" />
+              <rect x="380" y="140" width="46" height="80" rx="6" fill="#BFDBFE" />
+
+              <!-- 人行道與綠地 -->
+              <rect x="0" y="212" width="460" height="18" fill="#86EFAC" />
+              <rect x="0" y="226" width="460" height="14" fill="#CBD5E1" />
+
+              <!-- 柏油路面與標線 -->
+              <rect x="0" y="240" width="460" height="80" fill="#334155" />
+              <!-- 停止線 -->
+              <rect x="155" y="244" width="8" height="72" fill="#FFFFFF" />
+              <!-- 枕木紋行人穿越道 -->
+              <g fill="#F8FAFC">
+                <rect x="180" y="246" width="14" height="68" rx="2" />
+                <rect x="204" y="246" width="14" height="68" rx="2" />
+                <rect x="228" y="246" width="14" height="68" rx="2" />
+                <rect x="252" y="246" width="14" height="68" rx="2" />
+              </g>
+              <!-- 雙黃實線 -->
+              <rect x="16" y="275" width="125" height="3.5" fill="#FACC15" />
+              <rect x="16" y="282" width="125" height="3.5" fill="#FACC15" />
+              <rect x="285" y="275" width="155" height="3.5" fill="#FACC15" />
+              <rect x="285" y="282" width="155" height="3.5" fill="#FACC15" />
+
+              <!-- 三色行車管制號誌 -->
+              <rect x="148" y="102" width="7" height="124" rx="3.5" fill="#475569" />
+              <rect x="134" y="84" width="34" height="84" rx="9" fill="#0F172A" stroke="#64748B" stroke-width="2" />
+              <circle cx="151" cy="103" r="8.5" fill="#EF4444" />
+              <circle cx="151" cy="126" r="8.5" fill="#FACC15" />
+              <circle cx="151" cy="149" r="8.5" fill="#22C55E" />
+
+              <!-- 警告標誌（當心行人） -->
+              <rect x="288" y="146" width="6" height="80" rx="3" fill="#64748B" />
+              <polygon points="291,104 321,152 261,152" fill="#FFFFFF" stroke="#DC2626" stroke-width="5" stroke-linejoin="round" />
+              <circle cx="291" cy="128" r="4" fill="#0F172A" />
+              <path d="M291 133 L291 143 M285 138 L297 138 M291 143 L286 149 M291 143 L296 149" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" />
+
+              <!-- 藍色汽車 -->
+              <g transform="translate(36, 224)">
+                <rect x="10" y="18" width="102" height="28" rx="9" fill="#0284C7" />
+                <path d="M26 18 L40 4 L82 4 L96 18 Z" fill="#38BDF8" />
+                <rect x="104" y="24" width="7" height="7" rx="2" fill="#FEF08A" />
+                <circle cx="32" cy="46" r="10.5" fill="#0F172A" /><circle cx="32" cy="46" r="4.5" fill="#CBD5E1" />
+                <circle cx="90" cy="46" r="10.5" fill="#0F172A" /><circle cx="90" cy="46" r="4.5" fill="#CBD5E1" />
+              </g>
+
+              <!-- 機車 -->
+              <g transform="translate(330, 228)">
+                <circle cx="16" cy="40" r="9.5" fill="#0F172A" /><circle cx="16" cy="40" r="4" fill="#CBD5E1" />
+                <circle cx="60" cy="40" r="9.5" fill="#0F172A" /><circle cx="60" cy="40" r="4" fill="#CBD5E1" />
+                <path d="M16 38 L25 23 L50 23 L58 38 Z" fill="#FACC15" />
+                <circle cx="38" cy="8" r="6.5" fill="#0284C7" />
+                <rect x="32" y="15" width="12" height="13" rx="4" fill="#38BDF8" />
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 學習儀表板摘要 -->
+        <div class="card dashboard-strip">
+          <div class="strip-head">
+            <div>
+              <h2>📊 我的學習即時儀表板</h2>
+              <p class="muted-text">學習進度自動儲存於瀏覽器 localStorage，無需註冊帳號即可累積積分與徽章。</p>
+            </div>
+            <button class="btn btn-outline-danger btn-sm" id="resetAllBtn">🔄 重置學習紀錄</button>
+          </div>
+          <div class="stats-four">
+            <div class="stat-item">
+              <span class="stat-label">累積學習積分</span>
+              <span class="stat-val text-blue" id="homeTotalScore">0 分</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">完成測驗次數</span>
+              <span class="stat-val" id="homeQuizCount">0 次</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">平均答題正確率</span>
+              <span class="stat-val text-green" id="homeAccuracy">尚未作答</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">待複習錯題數</span>
+              <span class="stat-val text-amber" id="homeWrongCount">0 題</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 五大功能入口卡片 -->
+        <div class="section-title-box">
+          <h2>🧭 選擇學習與挑戰單元</h2>
+          <p>先透過三大圖鑑建立視覺記憶，再到「互動闖關」測試你的辨識實力</p>
+        </div>
+
+        <div class="module-grid">
+          <article class="card module-card">
+            <div class="mod-icon bg-blue-soft">🚸</div>
+            <h3>1. 交通標誌圖鑑</h3>
+            <p>涵蓋「警告、禁制、指示、輔助」四大類台灣官方交通標誌，支援分類篩選與關鍵字搜尋。</p>
+            <button class="btn btn-secondary btn-block" data-goto="signs">進入標誌圖鑑 →</button>
+          </article>
+
+          <article class="card module-card">
+            <div class="mod-icon bg-yellow-soft">🛣️</div>
+            <h3>2. 道路標線圖鑑</h3>
+            <p>圖解黃白實虛線、雙黃實線、雙白實線、停止線、枕木紋斑馬線、網狀線與指向線規定。</p>
+            <button class="btn btn-secondary btn-block" data-goto="markings">學習道路標線 →</button>
+          </article>
+
+          <article class="card module-card">
+            <div class="mod-icon bg-blue-soft">🚦</div>
+            <h3>3. 交通號誌教學</h3>
+            <p>完整解析紅黃綠三色燈、閃光紅黃燈、箭頭燈號（圓形綠燈 vs 箭頭綠燈）與行人專用號誌。</p>
+            <button class="btn btn-secondary btn-block" data-goto="signals">認識交通號誌 →</button>
+          </article>
+
+          <article class="card module-card featured-card">
+            <span class="hot-tag">🔥 四大玩法</span>
+            <div class="mod-icon bg-yellow-soft">🎮</div>
+            <h3>4. 互動闖關遊戲</h3>
+            <p>看圖猜意思、看意思找標誌、真假辨識、60 秒限時挑戰！每題作答立即顯示官方解析。</p>
+            <button class="btn btn-primary btn-block" data-goto="game">立即開始闖關 →</button>
+          </article>
+
+          <article class="card module-card">
+            <div class="mod-icon bg-blue-soft">🏆</div>
+            <h3>5. 學習紀錄與錯題本</h3>
+            <p>查看答題正確率、累積積分、解鎖成就徽章，並針對答錯題目一鍵重新練習。</p>
+            <button class="btn btn-secondary btn-block" data-goto="records">查看學習紀錄 →</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. 交通標誌圖鑑 ==================== -->
+    <section id="page-signs" class="page-section">
+      <div class="container">
+        <div class="page-header-banner">
+          <div>
+            <h1>🚸 台灣交通標誌圖鑑</h1>
+            <p>依交通部《道路交通標誌標線號誌設置規則》分類：警告、禁制、指示、輔助標誌</p>
+          </div>
+          <div class="banner-stat">目前收錄 <strong id="totalSignsBadge">0</strong> 面標準標誌</div>
+        </div>
+
+        <!-- 分類篩選 + 搜尋列 -->
+        <div class="card filter-toolbar">
+          <div class="category-pills" id="signCategoryPills">
+            <button class="pill-btn active" data-cat="all">全部標誌</button>
+            <button class="pill-btn" data-cat="warning">🔺 警告標誌</button>
+            <button class="pill-btn" data-cat="prohibit">🛑 禁制標誌</button>
+            <button class="pill-btn" data-cat="guide">🟦 指示標誌</button>
+            <button class="pill-btn" data-cat="auxiliary">📋 輔助標誌</button>
+          </div>
+          <div class="search-box">
+            <input type="search" id="signSearchInput" class="search-input" placeholder="🔍 輸入標誌名稱或關鍵字（如：停車、左轉、速限、施工）..." />
+          </div>
+        </div>
+
+        <!-- 標誌規則快速口訣提示 -->
+        <div class="shape-guide-bar" id="shapeGuideBar">
+          <span><strong>形狀辨識口訣：</strong></span>
+          <span>🔺 紅邊正三角形＝<strong>警告</strong>（提醒注意危險）</span>
+          <span>🛑 圓形 / 八角形 / 倒三角＝<strong>禁制</strong>（禁止、限制或遵行）</span>
+          <span>🟦 方形藍底 / 綠底＝<strong>指示</strong>（路線、方向與設施指引）</span>
+          <span>⬜ 白底黑字附牌＝<strong>輔助</strong>（補充說明主標誌條件）</span>
+        </div>
+
+        <!-- 標誌卡片網格 -->
+        <div class="signs-catalog-grid" id="signsCatalogGrid"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 3. 道路標線圖鑑 ==================== -->
+    <section id="page-markings" class="page-section">
+      <div class="container">
+        <div class="page-header-banner">
+          <div>
+            <h1>🛣️ 台灣道路標線圖鑑</h1>
+            <p>看懂地面上的白線與黃線！了解實線、虛線、停止線、行人穿越道與車道指向線規定</p>
+          </div>
+          <div class="banner-stat">收錄 <strong id="totalMarkingsBadge">0</strong> 種常見標線</div>
+        </div>
+
+        <div class="filter-toolbar card">
+          <div class="category-pills" id="markingFilterPills">
+            <button class="pill-btn active" data-mcat="all">全部道路標線</button>
+            <button class="pill-btn" data-mcat="longitudinal">黃線與白線（縱向標線）</button>
+            <button class="pill-btn" data-mcat="transverse">停止線與行人穿越道（橫向標線）</button>
+            <button class="pill-btn" data-mcat="special">指向線與禁止停車標線</button>
+          </div>
+        </div>
+
+        <div class="markings-grid" id="markingsGrid"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. 交通號誌教學 ==================== -->
+    <section id="page-signals" class="page-section">
+      <div class="container">
+        <div class="page-header-banner">
+          <div>
+            <h1>🚦 台灣交通號誌教學</h1>
+            <p>掌握行車管制號誌、閃光號誌、箭頭綠燈差異與行人專用號誌規則</p>
+          </div>
+          <div class="banner-stat">互動模擬燈號演示</div>
+        </div>
+
+        <!-- 互動燈號模擬器 -->
+        <div class="card signal-simulator-card mb-24">
+          <div class="sim-left">
+            <span class="hero-badge">💡 點擊下方按鈕切換燈號，實際觀察通行規定</span>
+            <h2 id="simSignalName">圓形綠燈</h2>
+            <p id="simSignalRule" class="sim-rule-text">表示准許車輛直行或左、右轉彎。但轉彎車輛應讓直行車及行人優先通行。</p>
+            <div class="sim-law-note" id="simSignalLaw">法規依據：《道路交通標誌標線號誌設置規則》第 206 條</div>
+
+            <div class="sim-btn-group" id="simButtonGroup">
+              <button class="btn btn-sm btn-primary" data-sim="green">🟢 圓形綠燈</button>
+              <button class="btn btn-sm btn-secondary" data-sim="yellow">🟡 圓形黃燈</button>
+              <button class="btn btn-sm btn-secondary" data-sim="red">🔴 圓形紅燈</button>
+              <button class="btn btn-sm btn-secondary" data-sim="arrow_left">⬅️ 左轉箭頭綠燈</button>
+              <button class="btn btn-sm btn-secondary" data-sim="flash_red">🚨 閃光紅燈</button>
+              <button class="btn btn-sm btn-secondary" data-sim="flash_yellow">⚠️ 閃光黃燈</button>
+            </div>
+          </div>
+
+          <div class="sim-right" id="simVisualStage">
+            <!-- JavaScript 動態繪製互動號誌燈箱 -->
+          </div>
+        </div>
+
+        <!-- 交通號誌完整分類卡片 -->
+        <div class="section-title-box">
+          <h2>📖 常見交通號誌圖解一覽</h2>
+          <p>特別留意「圓形綠燈」與「箭頭綠燈」的差別，避免在多時相路口誤闖轉彎！</p>
+        </div>
+        <div class="signals-grid" id="signalsGrid"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 5. 互動闖關遊戲 ==================== -->
+    <section id="page-game" class="page-section">
+      <div class="container">
+        <div class="page-header-banner">
+          <div>
+            <h1>🎮 交通標誌辨識互動闖關</h1>
+            <p>四種互動測驗模式任你挑戰，作答後立即顯示正確答案與詳細交通法規解析！</p>
+          </div>
+          <div class="banner-stat">累積積分：<strong id="gameBannerScore">0</strong> 分</div>
+        </div>
+
+        <!-- 遊戲模式選擇畫面 -->
+        <div id="gameMenuArea">
+          <div class="card mb-20">
+            <div class="game-filter-row">
+              <div>
+                <h2>選擇出題範圍：</h2>
+                <p class="muted-text">可選擇全部綜合題庫，或針對特定類別加強訓練</p>
               </div>
+              <select id="gameTopicSelect" class="form-select">
+                <option value="all">🌐 綜合挑戰（標誌＋標線＋號誌全收錄）</option>
+                <option value="signs">🚸 專攻：交通標誌（警告／禁制／指示／輔助）</option>
+                <option value="markings">🛣️ 專攻：道路標線規定</option>
+                <option value="signals">🚦 專攻：交通號誌規則</option>
+              </select>
+            </div>
+          </div>
 
-              <!-- 台灣路口紅綠燈、斑馬線、小客車與標誌 SVG 插畫 -->
-              <svg id="hero-scene-svg" viewBox="0 0 420 270" class="w-full h-auto rounded-2xl bg-sky-100 cursor-pointer select-none" onclick="cycleHeroTrafficLight()">
-                <!-- 天空雲朵 -->
-                <circle cx="70" cy="45" r="18" fill="#FFFFFF" opacity="0.9" />
-                <circle cx="90" cy="42" r="22" fill="#FFFFFF" opacity="0.9" />
-                <circle cx="112" cy="47" r="16" fill="#FFFFFF" opacity="0.9" />
+          <div class="modes-grid">
+            <div class="card mode-card">
+              <div class="mode-badge">模式 A｜基礎辨識</div>
+              <div class="mode-emoji">🖼️</div>
+              <h3>看圖猜意思</h3>
+              <p>畫面顯示台灣交通標誌、標線或號誌圖片，從四個選項中選出正確名稱與含義。（共 8 題，每題 +15 分）</p>
+              <button class="btn btn-primary btn-block" data-mode="pic_to_meaning">開始挑戰模式 A →</button>
+            </div>
 
-                <circle cx="310" cy="38" r="14" fill="#FFFFFF" opacity="0.85" />
-                <circle cx="328" cy="35" r="18" fill="#FFFFFF" opacity="0.85" />
+            <div class="card mode-card">
+              <div class="mode-badge">模式 B｜逆向配對</div>
+              <div class="mode-emoji">🎯</div>
+              <h3>看意思找標誌</h3>
+              <p>給出交通規則或情境說明，從四張標誌／標線圖片中點選出唯一正確的圖示。（共 8 題，每題 +15 分）</p>
+              <button class="btn btn-primary btn-block" data-mode="meaning_to_pic">開始挑戰模式 B →</button>
+            </div>
 
-                <!-- 遠景城市建築剪影 -->
-                <rect x="20" y="95" width="45" height="75" rx="4" fill="#BAE6FD" />
-                <rect x="72" y="75" width="55" height="95" rx="4" fill="#7DD3FC" />
-                <rect x="285" y="82" width="52" height="88" rx="4" fill="#BAE6FD" />
-                <rect x="345" y="100" width="55" height="70" rx="4" fill="#7DD3FC" />
+            <div class="card mode-card">
+              <div class="mode-badge">模式 C｜觀念除錯</div>
+              <div class="mode-emoji">⚖️</div>
+              <h3>真假辨識挑戰</h3>
+              <p>同時顯示圖片與一段規則說明，考驗你能否一眼識破張冠李戴的錯誤說法！（共 8 題，每題 +15 分）</p>
+              <button class="btn btn-primary btn-block" data-mode="true_false">開始挑戰模式 C →</button>
+            </div>
 
-                <!-- 人行道與綠地 -->
-                <rect x="0" y="165" width="420" height="18" fill="#A7F3D0" />
-                <rect x="0" y="180" width="420" height="12" fill="#CBD5E1" />
-
-                <!-- 柏油路面 -->
-                <rect x="0" y="192" width="420" height="78" fill="#334155" />
-                <!-- 道路中央雙黃線 -->
-                <line x1="0" y1="230" x2="255" y2="230" stroke="#FBBF24" stroke-width="3" />
-                <line x1="0" y1="235" x2="255" y2="235" stroke="#FBBF24" stroke-width="3" />
-                <!-- 白色停止線 -->
-                <line x1="262" y1="195" x2="262" y2="266" stroke="#FFFFFF" stroke-width="5" />
-                <!-- 斑馬線 (行人穿越道) -->
-                <g fill="#FFFFFF" opacity="0.95">
-                  <rect x="276" y="198" width="42" height="9" rx="2" />
-                  <rect x="276" y="214" width="42" height="9" rx="2" />
-                  <rect x="276" y="230" width="42" height="9" rx="2" />
-                  <rect x="276" y="246" width="42" height="9" rx="2" />
-                </g>
-
-                <!-- 台灣「停」八角標誌牌 -->
-                <g transform="translate(348, 118)">
-                  <rect x="16" y="34" width="4" height="42" fill="#64748B" />
-                  <polygon points="11,2 25,2 35,12 35,26 25,36 11,36 1,26 1,12" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" />
-                  <text x="18" y="24" text-anchor="middle" fill="#FFFFFF" font-size="14" font-weight="900">停</text>
-                </g>
-
-                <!-- 紅綠燈號誌桿 -->
-                <g transform="translate(232, 65)">
-                  <rect x="16" y="75" width="6" height="45" fill="#475569" />
-                  <rect x="4" y="6" width="30" height="74" rx="8" fill="#1E293B" stroke="#94A3B8" stroke-width="2" />
-                  <!-- 紅燈 -->
-                  <circle id="hero-bulb-red" cx="19" cy="21" r="8.5" fill="#450A0A" />
-                  <!-- 黃燈 -->
-                  <circle id="hero-bulb-yellow" cx="19" cy="43" r="8.5" fill="#451A03" />
-                  <!-- 綠燈 (預設亮起) -->
-                  <circle id="hero-bulb-green" cx="19" cy="65" r="8.5" fill="#10B981" />
-                </g>
-
-                <!-- 可愛有質感的藍色自小客車 -->
-                <g id="hero-car-group" class="animate-car" transform="translate(75, 194)">
-                  <!-- 車身陰影 -->
-                  <ellipse cx="75" cy="54" rx="68" ry="6" fill="#0F172A" opacity="0.45" />
-                  <!-- 車頂與車窗 -->
-                  <path d="M32,24 L50,6 L104,6 L124,24 Z" fill="#0284C7" />
-                  <path d="M38,23 L52,10 L75,10 L75,23 Z" fill="#E0F2FE" />
-                  <path d="M80,23 L80,10 L101,10 L116,23 Z" fill="#E0F2FE" />
-                  <!-- 車身主體 -->
-                  <rect x="12" y="23" width="128" height="25" rx="10" fill="#0EA5E9" />
-                  <!-- 車身腰線裝飾 -->
-                  <rect x="24" y="32" width="102" height="4" rx="2" fill="#BAE6FD" />
-                  <!-- 頭燈與尾燈 -->
-                  <rect x="133" y="28" width="7" height="8" rx="3" fill="#FDE047" />
-                  <rect x="12" y="28" width="5" height="8" rx="2" fill="#EF4444" />
-                  <!-- 輪胎 -->
-                  <circle cx="42" cy="48" r="11" fill="#0F172A" />
-                  <circle cx="42" cy="48" r="5" fill="#CBD5E1" />
-                  <circle cx="110" cy="48" r="11" fill="#0F172A" />
-                  <circle cx="110" cy="48" r="5" fill="#CBD5E1" />
-                </g>
-              </svg>
+            <div class="card mode-card mode-timed">
+              <div class="mode-badge badge-gold">模式 D｜極限衝刺</div>
+              <div class="mode-emoji">⏱️</div>
+              <h3>60 秒限時挑戰</h3>
+              <p>在 60 秒倒數計時內盡可能答對最多隨機題目！連續答對還有額外連擊加分！</p>
+              <button class="btn btn-warning btn-block" data-mode="timed">立即開始 60 秒挑戰 →</button>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 學習進度總覽儀表板 -->
-      <div class="edu-card p-6 sm:p-8 space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-100 pb-4">
-          <div>
-            <h2 class="text-xl sm:text-2xl font-black text-slate-800 flex items-center gap-2">
-              <span>📊 你的即時學習進度總覽</span>
-            </h2>
-            <p class="text-sm text-slate-500 mt-0.5">所有學習紀錄皆自動儲存在本機瀏覽器中，重新整理也不會遺失。</p>
-          </div>
-          <button onclick="confirmResetProgress()" class="self-start sm:self-auto px-3.5 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition-colors flex items-center gap-1.5">
-            <span>🔄 重置所有學習進度</span>
-          </button>
-        </div>
-
-        <!-- 總體完成度進度條 -->
-        <div class="bg-brand-50/70 p-4 rounded-2xl border border-brand-100">
-          <div class="flex items-center justify-between text-sm font-bold mb-2">
-            <span class="text-brand-900">全站綜合完學進度（知識單元 + 情境闖關）</span>
-            <span id="home-overall-percent" class="text-brand-600 text-base">0%</span>
-          </div>
-          <div class="w-full h-3.5 bg-white rounded-full overflow-hidden border border-brand-200">
-            <div id="home-overall-bar" class="h-full bg-gradient-to-r from-brand-500 to-signal-yellow rounded-full transition-all duration-500" style="width: 0%"></div>
-          </div>
-        </div>
-
-        <!-- 四大核心數據指標卡片 -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="p-4 sm:p-5 rounded-2xl bg-amber-50/70 border border-amber-200">
-            <div class="text-xs font-bold text-amber-800 mb-1">累積安全積分</div>
-            <div class="text-2xl sm:text-3xl font-black text-amber-600"><span id="home-stat-points">0</span> <span class="text-sm font-bold">分</span></div>
-            <div class="text-xs text-amber-700/80 mt-1">完成單元、測驗與闖關獲得</div>
-          </div>
-
-          <div class="p-4 sm:p-5 rounded-2xl bg-brand-50/70 border border-brand-200">
-            <div class="text-xs font-bold text-brand-800 mb-1">交通知識複習</div>
-            <div class="text-2xl sm:text-3xl font-black text-brand-600"><span id="home-stat-units">0</span> <span class="text-sm font-bold">/ 5 單元</span></div>
-            <div class="text-xs text-brand-700/80 mt-1">含 12 款台灣交通標誌圖鑑</div>
-          </div>
-
-          <div class="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-            <div class="text-xs font-bold text-emerald-800 mb-1">道路情境闖關</div>
-            <div class="text-2xl sm:text-3xl font-black text-emerald-600"><span id="home-stat-scenarios">0</span> <span class="text-sm font-bold">/ 7 關</span></div>
-            <div class="text-xs text-emerald-700/80 mt-1">模擬真實台灣路口路權決策</div>
-          </div>
-
-          <div class="p-4 sm:p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200">
-            <div class="text-xs font-bold text-indigo-800 mb-1">筆試平均正確率</div>
-            <div class="text-2xl sm:text-3xl font-black text-indigo-600"><span id="home-stat-accuracy">0</span><span class="text-sm font-bold">%</span></div>
-            <div class="text-xs text-indigo-700/80 mt-1">支援錯題一鍵收藏複習</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 四大特色功能快速導覽卡片 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div onclick="navigateTo('learn')" class="edu-card edu-card-hover p-6 cursor-pointer flex items-start gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-2xl shrink-0">📘</div>
-          <div>
-            <h3 class="font-bold text-lg text-slate-800">1. 交通知識複習與標誌圖鑑</h3>
-            <p class="text-sm text-slate-600 mt-1 leading-relaxed">涵蓋交通標誌、路權規則、汽車安全、機車安全與行人安全五大單元。點擊 12 款台灣標準交通標誌可查看詳細法規與罰則提醒。</p>
-          </div>
-        </div>
-
-        <div onclick="navigateTo('quiz')" class="edu-card edu-card-hover p-6 cursor-pointer flex items-start gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl shrink-0">📝</div>
-          <div>
-            <h3 class="font-bold text-lg text-slate-800">2. 駕照筆試隨機模擬測驗</h3>
-            <p class="text-sm text-slate-600 mt-1 leading-relaxed">區分汽車、機車、全科綜合與「錯題收藏本」。作答後立即公布正確答案與白話法規解析，告別死背題庫。</p>
-          </div>
-        </div>
-
-        <div onclick="navigateTo('scenarios')" class="edu-card edu-card-hover p-6 cursor-pointer flex items-start gap-4 border-2 border-amber-200/80">
-          <div class="w-12 h-12 rounded-2xl bg-signal-yellowLight text-amber-700 flex items-center justify-center text-2xl shrink-0">🚦</div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="font-bold text-lg text-slate-800">3. 道路情境模擬闖關</h3>
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-signal-yellow text-white">核心主打</span>
+        <!-- 遊戲作答進行中舞台 -->
+        <div id="gamePlayArea" class="card game-stage-card hidden">
+          <div class="game-top-hud">
+            <div class="hud-left">
+              <span class="hud-mode-tag" id="hudModeLabel">模式 A：看圖猜意思</span>
+              <span class="hud-progress" id="hudProgressText">第 1 / 8 題</span>
             </div>
-            <p class="text-sm text-slate-600 mt-1 leading-relaxed">7 大真實台灣路況俯視模擬圖：右轉停讓行人 3 公尺、無號誌左讓右、閃光紅黃燈、禮讓救護車等，通關逐步解鎖！</p>
+            <div class="hud-right">
+              <span class="hud-timer hidden" id="hudTimerBox">⏱️ 剩餘 <strong id="hudTimeLeft">60</strong> 秒</span>
+              <span class="hud-score">本局得分：<strong id="hudSessionScore">0</strong></span>
+              <button class="btn btn-sm btn-secondary" id="quitGameBtn">離開本局</button>
+            </div>
+          </div>
+
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="gameProgressBar" style="width: 12.5%"></div>
+          </div>
+
+          <!-- 題目主體區（動態生成看圖題／選圖題／真假題） -->
+          <div id="questionRenderArea" class="question-render-area"></div>
+
+          <!-- 答題後立即解析區塊 -->
+          <div id="answerFeedbackArea" class="answer-feedback-area hidden">
+            <div class="fb-title-row">
+              <span id="fbResultHeadline" class="fb-headline">✅ 答對了！</span>
+              <span id="fbPointDelta" class="fb-points">+15 分</span>
+            </div>
+            <p id="fbExplanationText" class="fb-explanation"></p>
+            <div id="fbLawCitation" class="fb-law"></div>
+            <div class="fb-actions">
+              <button class="btn btn-primary" id="nextGameQuestionBtn">下一題 →</button>
+            </div>
           </div>
         </div>
 
-        <div onclick="navigateTo('progress')" class="edu-card edu-card-hover p-6 cursor-pointer flex items-start gap-4">
-          <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shrink-0">🏅</div>
-          <div>
-            <h3 class="font-bold text-lg text-slate-800">4. 學習紀錄與 6 枚榮譽徽章</h3>
-            <p class="text-sm text-slate-600 mt-1 leading-relaxed">自動追蹤累積積分、解鎖「標誌達人」、「安全駕駛員」等 6 枚徽章，並管理尚未完成關卡與錯題收藏夾。</p>
+        <!-- 遊戲結算畫面 -->
+        <div id="gameSummaryArea" class="card game-summary-card hidden">
+          <div class="summary-trophy" id="summaryEmoji">🏆</div>
+          <h2 id="summaryTitle">挑戰完成！</h2>
+          <p class="muted-text" id="summarySubtitle">本局成績已自動寫入你的學習紀錄</p>
+
+          <div class="summary-stats-grid">
+            <div class="sum-box">
+              <span class="stat-label">答對題數</span>
+              <span class="stat-val" id="sumCorrect">0 / 8</span>
+            </div>
+            <div class="sum-box">
+              <span class="stat-label">本局正確率</span>
+              <span class="stat-val text-blue" id="sumAccuracy">0%</span>
+            </div>
+            <div class="sum-box">
+              <span class="stat-label">獲得積分</span>
+              <span class="stat-val text-amber" id="sumPoints">+0 分</span>
+            </div>
+          </div>
+
+          <div class="summary-buttons">
+            <button class="btn btn-primary" id="playAgainBtn">🔄 再玩一次同模式</button>
+            <button class="btn btn-warning hidden" id="practiceWrongNowBtn">📝 立即重練本局錯題</button>
+            <button class="btn btn-secondary" id="backToModesBtn">🎮 選擇其他玩法</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- -------------------------------------------------------------------
-         頁面二：交通知識複習 (Knowledge Review View)
-         ------------------------------------------------------------------- -->
-    <section id="view-learn" class="page-section hidden space-y-6">
-      <!-- 頁面標題區 -->
-      <div class="edu-card p-6 sm:p-8 bg-gradient-to-r from-white to-brand-50">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- ==================== 6. 學習紀錄與錯題本 ==================== -->
+    <section id="page-records" class="page-section">
+      <div class="container">
+        <div class="page-header-banner">
           <div>
-            <span class="text-xs font-bold uppercase tracking-wider text-brand-600 bg-brand-100 px-3 py-1 rounded-full">Knowledge Base</span>
-            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">交通知識複習</h1>
-            <p class="text-slate-600 text-sm sm:text-base mt-1">五大核心主題圖文重點整理，每完成一個單元可領取 <strong class="text-amber-600">+20 安全積分</strong>！</p>
+            <h1>🏆 學習紀錄與錯題複習本</h1>
+            <p>追蹤你的答題正確率、解鎖成就徽章，並一鍵重練答錯的題目</p>
           </div>
-          <div class="bg-white px-4 py-3 rounded-2xl border border-brand-200 text-sm font-bold text-slate-700 shrink-0">
-            已完成單元：<span id="learn-completed-count" class="text-brand-600 text-lg font-black">0</span> / 5
+          <button class="btn btn-warning" id="startWrongPracticeBtn">📝 重新練習全部錯題</button>
+        </div>
+
+        <!-- 總覽數據卡片 -->
+        <div class="stats-four mb-24">
+          <div class="card stat-item">
+            <span class="stat-label">累積總積分</span>
+            <span class="stat-val text-blue" id="recScore">0 分</span>
+          </div>
+          <div class="card stat-item">
+            <span class="stat-label">已完成測驗局數</span>
+            <span class="stat-val" id="recSessions">0 局</span>
+          </div>
+          <div class="card stat-item">
+            <span class="stat-label">累計答題正確率</span>
+            <span class="stat-val text-green" id="recAccuracy">0%</span>
+          </div>
+          <div class="card stat-item">
+            <span class="stat-label">待複習錯題數量</span>
+            <span class="stat-val text-amber" id="recWrongCount">0 題</span>
           </div>
         </div>
 
-        <!-- 五大單元切換標籤列 -->
-        <div id="learn-tabs" class="flex flex-wrap gap-2 mt-6 pt-5 border-t border-brand-100">
-          <!-- 由 JS 動態渲染五個單元按鈕 -->
-        </div>
-      </div>
-
-      <!-- 單元內容動態渲染容器 -->
-      <div id="learn-content-area" class="space-y-6"></div>
-    </section>
-
-    <!-- -------------------------------------------------------------------
-         頁面三：駕照筆試測驗 (License Quiz View)
-         ------------------------------------------------------------------- -->
-    <section id="view-quiz" class="page-section hidden space-y-6">
-      <!-- 測驗大廳（選擇測驗分類） -->
-      <div id="quiz-lobby" class="space-y-6">
-        <div class="edu-card p-6 sm:p-8 bg-gradient-to-r from-white to-amber-50/50">
-          <span class="text-xs font-bold text-amber-800 bg-amber-100 px-3 py-1 rounded-full">Taiwan DMV Practice</span>
-          <h1 class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">駕照筆試模擬測驗</h1>
-          <p class="text-slate-600 text-sm sm:text-base mt-1">題庫依據台灣現行交通法規編寫，每次隨機抽題。作答後立即提供法規詳解，並可一鍵收藏答錯題目！</p>
+        <!-- 成就徽章牆 -->
+        <div class="card mb-24">
+          <h2>🏅 交通安全成就徽章</h2>
+          <p class="muted-text mb-16">完成學習與闖關挑戰即可點亮專屬榮譽徽章：</p>
+          <div class="badges-wall" id="badgesWall"></div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <!-- 分類 1：汽車筆試 -->
-          <div class="edu-card edu-card-hover p-6 flex flex-col justify-between space-y-4">
+        <!-- 答錯題目清單 -->
+        <div class="card">
+          <div class="strip-head">
             <div>
-              <div class="flex items-center justify-between">
-                <span class="text-3xl">🚗</span>
-                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">隨機 8 題</span>
-              </div>
-              <h2 class="text-xl font-bold text-slate-800 mt-3">汽車駕照模擬測驗</h2>
-              <p class="text-sm text-slate-600 mt-1">涵蓋小型車行車安全、高速公路車距、視野死角、停讓行人與共通交通法規。</p>
+              <h2>❌ 答錯題目紀錄（錯題本）</h2>
+              <p class="muted-text">系統自動記錄你曾經答錯的標誌、標線或號誌題目；在錯題練習中答對後會自動移出清單！</p>
             </div>
-            <button onclick="startQuiz('car')" class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition-colors">
-              開始汽車筆試 →
-            </button>
+            <button class="btn btn-sm btn-outline-danger" id="clearWrongListBtn">清空錯題本</button>
           </div>
-
-          <!-- 分類 2：機車筆試 -->
-          <div class="edu-card edu-card-hover p-6 flex flex-col justify-between space-y-4">
-            <div>
-              <div class="flex items-center justify-between">
-                <span class="text-3xl">🛵</span>
-                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">隨機 8 題</span>
-              </div>
-              <h2 class="text-xl font-bold text-slate-800 mt-3">機車駕照模擬測驗</h2>
-              <p class="text-sm text-slate-600 mt-1">涵蓋兩段式左轉判斷、防禦駕駛、安全帽規範、大型車內輪差與路權規則。</p>
-            </div>
-            <button onclick="startQuiz('scooter')" class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition-colors">
-              開始機車筆試 →
-            </button>
-          </div>
-
-          <!-- 分類 3：全科綜合挑戰 -->
-          <div class="edu-card edu-card-hover p-6 flex flex-col justify-between space-y-4">
-            <div>
-              <div class="flex items-center justify-between">
-                <span class="text-3xl">🎯</span>
-                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">隨機 10 題</span>
-              </div>
-              <h2 class="text-xl font-bold text-slate-800 mt-3">全科綜合大挑戰</h2>
-              <p class="text-sm text-slate-600 mt-1">混合汽車、機車、標誌號誌與最新行人停讓法規，全面檢驗你的用路觀念。</p>
-            </div>
-            <button onclick="startQuiz('all')" class="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-sm transition-colors">
-              開始綜合挑戰 →
-            </button>
-          </div>
-
-          <!-- 分類 4：錯題收藏本 -->
-          <div class="edu-card edu-card-hover p-6 flex flex-col justify-between space-y-4 border-2 border-rose-100">
-            <div>
-              <div class="flex items-center justify-between">
-                <span class="text-3xl">🔖</span>
-                <span id="quiz-bookmark-badge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">已收藏 0 題</span>
-              </div>
-              <h2 class="text-xl font-bold text-slate-800 mt-3">我的錯題收藏本特訓</h2>
-              <p class="text-sm text-slate-600 mt-1">針對平常容易搞混或曾經答錯收藏的題目進行專屬複習，徹底消滅知識盲點！</p>
-            </div>
-            <button onclick="startQuiz('bookmarks')" class="w-full py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm transition-colors">
-              複習收藏題目 →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 測驗作答進行中介面 -->
-      <div id="quiz-active" class="hidden edu-card p-6 sm:p-8 space-y-6">
-        <!-- 頂部進度與題目資訊 -->
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 pb-4">
-          <div class="flex items-center gap-2.5">
-            <button onclick="exitQuizToLobby()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">← 離開測驗</button>
-            <span id="quiz-mode-label" class="text-sm font-bold text-brand-700 bg-brand-50 px-3 py-1 rounded-full">汽車駕照測驗</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="text-sm font-bold text-slate-600">第 <span id="quiz-current-num" class="text-brand-600 text-base">1</span> / <span id="quiz-total-num">8</span> 題</span>
-            <button id="quiz-bookmark-btn" onclick="toggleCurrentQuestionBookmark()" class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-colors flex items-center gap-1">
-              <span>☆ 收藏此題</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 進度條 -->
-        <div class="w-full h-2.5 bg-brand-100 rounded-full overflow-hidden">
-          <div id="quiz-progress-bar" class="h-full bg-brand-500 transition-all duration-300" style="width: 12%"></div>
-        </div>
-
-        <!-- 題目文字 -->
-        <div class="space-y-2">
-          <span id="quiz-q-tag" class="inline-block text-xs font-bold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-600">交通法規</span>
-          <h2 id="quiz-question-text" class="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">題目載入中...</h2>
-        </div>
-
-        <!-- 四個選項按鈕 -->
-        <div id="quiz-options-container" class="space-y-3"></div>
-
-        <!-- 作答後即時解析區塊 -->
-        <div id="quiz-feedback-box" class="hidden rounded-2xl p-5 border-2 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div id="quiz-feedback-title" class="font-black text-lg flex items-center gap-2"></div>
-            <button id="quiz-wrong-bookmark-cta" onclick="toggleCurrentQuestionBookmark(true)" class="hidden px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs">
-              🔖 將此錯題加入收藏本
-            </button>
-          </div>
-          <p id="quiz-feedback-explanation" class="text-sm sm:text-base leading-relaxed text-slate-700"></p>
-          <div class="pt-2 flex justify-end">
-            <button id="quiz-next-btn" onclick="nextQuizQuestion()" class="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition-all">
-              下一題 →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 測驗結算畫面 -->
-      <div id="quiz-result" class="hidden edu-card p-6 sm:p-10 text-center space-y-6">
-        <div class="w-20 h-20 mx-auto rounded-3xl bg-amber-100 text-amber-500 flex items-center justify-center text-4xl shadow-inner">🎉</div>
-        <div>
-          <h2 class="text-2xl sm:text-3xl font-black text-slate-900">測驗完成！</h2>
-          <p id="quiz-result-subtitle" class="text-slate-600 mt-1">來看看你這次的筆試表現與法規掌握度</p>
-        </div>
-
-        <div class="grid grid-cols-3 gap-3 sm:gap-5 max-w-xl mx-auto">
-          <div class="p-4 rounded-2xl bg-brand-50 border border-brand-200">
-            <div class="text-xs font-bold text-brand-700">答對題數</div>
-            <div class="text-2xl sm:text-3xl font-black text-brand-600 mt-1"><span id="res-correct">0</span>/<span id="res-total">8</span></div>
-          </div>
-          <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
-            <div class="text-xs font-bold text-emerald-700">正確率</div>
-            <div class="text-2xl sm:text-3xl font-black text-emerald-600 mt-1"><span id="res-accuracy">0</span>%</div>
-          </div>
-          <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200">
-            <div class="text-xs font-bold text-amber-700">獲得積分</div>
-            <div class="text-2xl sm:text-3xl font-black text-amber-600 mt-1">+<span id="res-points">0</span></div>
-          </div>
-        </div>
-
-        <!-- 本次錯題快速清單（若有答錯） -->
-        <div id="quiz-result-wrong-list" class="hidden text-left max-w-2xl mx-auto bg-rose-50/70 border border-rose-200 rounded-2xl p-5 space-y-3">
-          <h3 class="font-bold text-rose-800 text-sm flex items-center gap-1.5">📌 本次答錯題目回顧（點擊可收藏）：</h3>
-          <div id="quiz-result-wrong-items" class="space-y-2.5"></div>
-        </div>
-
-        <div class="flex flex-wrap justify-center gap-3 pt-2">
-          <button onclick="restartCurrentQuizMode()" class="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md">
-            🔄 重新抽題再測一次
-          </button>
-          <button onclick="exitQuizToLobby()" class="px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-sm">
-            返回測驗分類
-          </button>
-          <button onclick="navigateTo('scenarios')" class="px-6 py-3 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-sm">
-            🚦 前往情境闖關
-          </button>
+          <div id="wrongQuestionsContainer" class="wrong-list-grid"></div>
         </div>
       </div>
     </section>
-
-    <!-- -------------------------------------------------------------------
-         頁面四：道路情境闖關 (Road Scenarios Challenge View - 核心特色)
-         ------------------------------------------------------------------- -->
-    <section id="view-scenarios" class="page-section hidden space-y-6">
-      <!-- 頂部標題與「自由體驗全解鎖開關」 -->
-      <div class="edu-card p-6 sm:p-8 bg-gradient-to-r from-white via-brand-50/60 to-amber-50/70">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <div class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-signal-yellowLight text-amber-900 border border-amber-300">
-              <span>🚦 核心互動特色</span>
-              <span>•</span>
-              <span>7 大台灣真實道路情境模擬</span>
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">道路情境模擬闖關</h1>
-            <p class="text-slate-600 text-sm sm:text-base mt-1">觀察道路俯視模擬圖中的號誌、標線與車輛動態，做出符合台灣法規的安全決策，每關首次通關獲得 <strong class="text-amber-600">+30 積分</strong>並解鎖下一關！</p>
-          </div>
-
-          <!-- 自由體驗全解鎖切換開關 -->
-          <div class="bg-white p-4 rounded-2xl border border-brand-200 flex items-center justify-between lg:justify-end gap-4 shrink-0 shadow-xs">
-            <div>
-              <div class="text-sm font-bold text-slate-800">自由體驗模式</div>
-              <div class="text-xs text-slate-500">開啟後可直接體驗所有關卡</div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="free-play-toggle" class="sr-only peer" onchange="toggleFreePlayMode(this.checked)" />
-              <div class="w-12 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
-            </label>
-          </div>
-        </div>
-
-        <!-- 7 關進度條 -->
-        <div class="mt-5 pt-4 border-t border-brand-100 flex items-center justify-between text-sm">
-          <span class="font-bold text-slate-700">通關進度：<span id="scenarios-cleared-count" class="text-brand-600 font-black">0</span> / 7 關</span>
-          <span class="text-xs text-slate-500">提示：點擊下方任意已解鎖關卡即可開始模擬</span>
-        </div>
-      </div>
-
-      <!-- 關卡選單卡片網格 -->
-      <div id="scenarios-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <!-- 由 JS 動態渲染 7 大關卡卡片 -->
-      </div>
-
-      <!-- 單一關卡模擬互動劇場（選中關卡後顯示於上方或平滑捲動至此） -->
-      <div id="scenario-stage" class="hidden edu-card border-2 border-brand-300 overflow-hidden shadow-xl">
-        <!-- 關卡頂部標題列 -->
-        <div class="bg-brand-700 text-white px-6 py-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <span id="stage-badge" class="px-3 py-1 rounded-full bg-signal-yellow text-slate-900 font-black text-xs">關卡 1 / 7</span>
-            <h2 id="stage-title" class="text-lg sm:text-xl font-black">關卡標題</h2>
-          </div>
-          <button onclick="closeScenarioStage()" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition-colors">
-            ✕ 收起模擬舞台
-          </button>
-        </div>
-
-        <div class="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <!-- 左側：道路俯視模擬 SVG 畫布 -->
-          <div class="lg:col-span-6 space-y-3">
-            <div class="flex items-center justify-between text-xs font-bold text-slate-500">
-              <span>🛰️ 道路俯視情境模擬圖</span>
-              <span class="text-brand-600">藍色標示「你」代表你的車輛位置</span>
-            </div>
-            <div id="stage-svg-container" class="rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-800 shadow-inner">
-              <!-- 動態注入專屬道路 SVG -->
-            </div>
-            <!-- 圖例說明 -->
-            <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600 bg-brand-50/70 px-3.5 py-2 rounded-xl border border-brand-100">
-              <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-xs bg-sky-500 inline-block"></span> 你的車輛</span>
-              <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-xs bg-amber-400 inline-block"></span> 其他車輛/公車</span>
-              <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span> 行人/緊急車輛</span>
-            </div>
-          </div>
-
-          <!-- 右側：路況描述、決策選項與法規解析 -->
-          <div class="lg:col-span-6 space-y-5">
-            <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 sm:p-5">
-              <div class="text-xs font-black text-amber-800 uppercase tracking-wider mb-1">⚠️ 當前道路狀況描述</div>
-              <p id="stage-description" class="text-slate-800 text-sm sm:text-base leading-relaxed font-medium"></p>
-            </div>
-
-            <div class="space-y-2.5">
-              <div class="text-sm font-bold text-slate-700">請做出你的駕駛決策：</div>
-              <div id="stage-options" class="space-y-3"></div>
-            </div>
-
-            <!-- 決策結果與法規解析區塊 -->
-            <div id="stage-feedback" class="hidden rounded-2xl p-5 border-2 space-y-3">
-              <div id="stage-feedback-header" class="font-black text-lg flex items-center gap-2"></div>
-              <p id="stage-feedback-reason" class="text-sm sm:text-base text-slate-700 leading-relaxed"></p>
-              <div class="pt-2 flex flex-wrap items-center justify-between gap-3">
-                <button onclick="retryCurrentScenario()" class="px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold">
-                  🔄 重新選擇此關
-                </button>
-                <button id="stage-next-btn" onclick="goToNextScenario()" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md">
-                  挑戰下一關 →
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- -------------------------------------------------------------------
-         頁面五：學習紀錄與成就 (Progress & Achievements View)
-         ------------------------------------------------------------------- -->
-    <section id="view-progress" class="page-section hidden space-y-6">
-      <!-- 頂部個人學習統計儀表 -->
-      <div class="edu-card p-6 sm:p-8 bg-gradient-to-r from-white to-brand-50">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <span class="text-xs font-bold text-brand-600 bg-brand-100 px-3 py-1 rounded-full">Learning Portfolio</span>
-            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">學習紀錄與榮譽成就</h1>
-            <p class="text-slate-600 text-sm sm:text-base mt-1">見證你從道路新手蛻變為台灣安全駕駛員的每一步！</p>
-          </div>
-          <button onclick="confirmResetProgress()" class="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 text-xs font-bold transition-colors">
-            🗑️ 清除並重置紀錄
-          </button>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mt-6">
-          <div class="bg-white p-4 rounded-2xl border border-amber-200 text-center">
-            <div class="text-xs font-bold text-slate-500">累積總積分</div>
-            <div id="prog-points" class="text-2xl sm:text-3xl font-black text-amber-500 mt-1">0</div>
-          </div>
-          <div class="bg-white p-4 rounded-2xl border border-brand-200 text-center">
-            <div class="text-xs font-bold text-slate-500">完成測驗次數</div>
-            <div id="prog-quiz-count" class="text-2xl sm:text-3xl font-black text-brand-600 mt-1">0</div>
-          </div>
-          <div class="bg-white p-4 rounded-2xl border border-indigo-200 text-center">
-            <div class="text-xs font-bold text-slate-500">筆試總正確率</div>
-            <div class="text-2xl sm:text-3xl font-black text-indigo-600 mt-1"><span id="prog-accuracy">0</span>%</div>
-          </div>
-          <div class="bg-white p-4 rounded-2xl border border-emerald-200 text-center">
-            <div class="text-xs font-bold text-slate-500">情境關卡完成</div>
-            <div class="text-2xl sm:text-3xl font-black text-emerald-600 mt-1"><span id="prog-scenarios">0</span>/7</div>
-          </div>
-          <div class="bg-white p-4 rounded-2xl border border-sky-200 text-center col-span-2 sm:col-span-1">
-            <div class="text-xs font-bold text-slate-500">解鎖成就徽章</div>
-            <div class="text-2xl sm:text-3xl font-black text-sky-600 mt-1"><span id="prog-badges">0</span>/6</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 6 枚榮譽成就徽章牆 -->
-      <div class="edu-card p-6 sm:p-8 space-y-5">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-black text-slate-800">🏅 交通安全成就徽章牆</h2>
-          <span class="text-xs font-bold text-slate-500">達成條件自動點亮徽章</span>
-        </div>
-        <div id="achievements-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- 由 JS 動態渲染 6 枚成就徽章 -->
-        </div>
-      </div>
-
-      <!-- 尚未完成的關卡 & 錯題收藏夾管理（雙欄並排） -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- 尚未完成的道路情境關卡 -->
-        <div class="lg:col-span-5 edu-card p-6 space-y-4">
-          <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
-            <span>🚧 尚未完成的情境關卡</span>
-          </h2>
-          <div id="uncompleted-scenarios-list" class="space-y-2.5">
-            <!-- 由 JS 動態生成 -->
-          </div>
-        </div>
-
-        <!-- 錯題收藏夾管理 -->
-        <div class="lg:col-span-7 edu-card p-6 space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
-              <span>🔖 我的錯題收藏夾</span>
-              <span id="prog-bookmark-count" class="text-xs px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700">0 題</span>
-            </h2>
-            <button onclick="navigateTo('quiz'); startQuiz('bookmarks')" class="px-3.5 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-colors">
-              開始錯題特訓 →
-            </button>
-          </div>
-          <div id="bookmarked-questions-list" class="space-y-3 max-h-[420px] overflow-y-auto pr-1">
-            <!-- 由 JS 動態生成收藏題目列表 -->
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
 
-  <!-- =====================================================================
-       3. 頁尾資訊 (Footer)
-       ===================================================================== -->
-  <footer class="bg-white border-t border-brand-100 mt-12 py-6">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-      <div class="font-bold text-slate-700">《駕照別忘光！》台灣交通安全教育互動平台</div>
-      <div>內容參考中華民國交通部《道路交通安全規則》與《道路交通標誌標線號誌設置規則》編製</div>
+  <!-- 標誌詳情檢視彈窗 -->
+  <div class="modal-overlay" id="detailModal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalItemTitle">
+      <button class="modal-close-btn" id="closeDetailModal" aria-label="關閉詳情視窗">✕</button>
+      <div id="detailModalContent"></div>
+    </div>
+  </div>
+
+  <!-- 頁尾 -->
+  <footer class="footer">
+    <div class="container">
+      <p><strong>《駕照別忘光！交通標誌辨識大挑戰》</strong>｜台灣交通部暨公路局規範視覺教學平台</p>
+      <p class="footer-sub">
+        資料依據：中華民國交通部《道路交通標誌標線號誌設置規則》與《道路交通安全規則》。本網站供教育學習與考照複習使用，實際行車請依現場最新標誌號誌與交通警察指揮為準。
+      </p>
     </div>
   </footer>
 
-  <!-- =====================================================================
-       4. 互動彈窗與通知元件 (Modals & Toast - 取代 alert/confirm)
-       ===================================================================== -->
-  <!-- 交通標誌詳細解說 Modal -->
-  <div id="sign-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" onclick="closeSignModal(event)">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-brand-200 space-y-5 relative animate-[fadeSlideIn_0.2s_ease-out]" onclick="event.stopPropagation()">
-      <button onclick="closeSignModal()" aria-label="關閉視窗" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center">✕</button>
+  <!-- Toast 通知 -->
+  <div class="toast-box" id="toastBox" role="status" aria-live="polite"></div>
 
-      <div class="flex flex-col items-center text-center space-y-3 pt-2">
-        <div id="modal-sign-svg" class="w-28 h-28 flex items-center justify-center p-2 bg-brand-50/60 rounded-2xl border border-brand-100"></div>
-        <div>
-          <span id="modal-sign-category" class="text-xs font-bold px-3 py-1 rounded-full">禁制標誌</span>
-          <h3 id="modal-sign-name" class="text-2xl font-black text-slate-900 mt-2">標誌名稱</h3>
-        </div>
-      </div>
-
-      <div class="space-y-3 text-sm">
-        <div class="p-3.5 rounded-2xl bg-brand-50/70 border border-brand-100">
-          <div class="font-bold text-brand-800 mb-1">📖 代表含義</div>
-          <p id="modal-sign-meaning" class="text-slate-700 leading-relaxed"></p>
-        </div>
-        <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200">
-          <div class="font-bold text-amber-800 mb-1">⚠️ 台灣法規與駕駛注意事項</div>
-          <p id="modal-sign-note" class="text-slate-700 leading-relaxed"></p>
-        </div>
-      </div>
-
-      <button onclick="closeSignModal()" class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm">
-        我記住了！
-      </button>
-    </div>
-  </div>
-
-  <!-- 客製化確認對話框 Modal (取代 window.confirm) -->
-  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4">
-      <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl">⚠️</div>
-      <h3 id="confirm-modal-title" class="text-lg font-black text-slate-900">確定要重置所有進度嗎？</h3>
-      <p id="confirm-modal-desc" class="text-sm text-slate-600 leading-relaxed">這將會清除你目前的累積積分、已閱讀單元、成就徽章、情境通關紀錄與錯題收藏本，且無法復原。</p>
-      <div class="flex items-center justify-end gap-2.5 pt-2">
-        <button onclick="closeConfirmModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold">取消</button>
-        <button id="confirm-modal-action" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold">確定重置</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 懸浮 Toast 提示訊息 -->
-  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-  <!-- =====================================================================
-       5. JavaScript 核心資料結構與互動邏輯 (Modular Script)
-       ===================================================================== -->
-  <script>
-    // =========================================================================
-    // [模組一] 台灣現行交通法規獨立資料結構 (Data Layer)
-    // 方便日後擴充標誌、知識單元、筆試題庫或道路情境關卡
-    // =========================================================================
-
-    /**
-     * 1. 12 款台灣現行交通標誌資料結構 (含精繪 SVG)
-     */
-    const TRAFFIC_SIGNS = [
-      {
-        id: 'stop',
-        name: '停車再開標誌',
-        category: '禁制標誌',
-        badgeClass: 'bg-rose-100 text-rose-700',
-        meaning: '用以告示車輛駕駛人必須停車觀察，認為安全時，方得再開。設於支線道與幹線道交岔路口前。',
-        note: '看到紅底八角形「停」字標誌或地面「停」標字，車輪必須「完全靜止」並左右確認幹道無車才能起步，僅減速滑行仍屬違規。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <polygon points="30,6 70,6 94,30 94,70 70,94 30,94 6,70 6,30" fill="#EF4444" stroke="#FFFFFF" stroke-width="4"/>
-          <polygon points="32,10 68,10 90,32 90,68 68,90 32,90 10,68 10,32" fill="none" stroke="#EF4444" stroke-width="2"/>
-          <text x="50" y="65" text-anchor="middle" fill="#FFFFFF" font-size="40" font-weight="900">停</text>
-        </svg>`
-      },
-      {
-        id: 'yield',
-        name: '讓路標誌',
-        category: '禁制標誌',
-        badgeClass: 'bg-rose-100 text-rose-700',
-        meaning: '用以告示車輛駕駛人必須減速慢行，作隨時停車之準備，讓幹線道車優先通行。',
-        note: '倒三角形是所有交通標誌中唯一尖端朝下的形狀，即使在雪地或背面也能一眼辨識「必須禮讓」。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <polygon points="8,14 92,14 50,88" fill="#FFFFFF" stroke="#EF4444" stroke-width="11" stroke-linejoin="round"/>
-          <text x="50" y="45" text-anchor="middle" fill="#1E293B" font-size="22" font-weight="900">讓</text>
-        </svg>`
-      },
-      {
-        id: 'no_entry',
-        name: '禁止進入標誌',
-        category: '禁制標誌',
-        badgeClass: 'bg-rose-100 text-rose-700',
-        meaning: '用以告示任何車輛不准進入，常見於單行道出口端或專用道逆向端。',
-        note: '無論汽車或機車均不得駛入，若誤闖單行道逆向行駛，除罰鍰外極易發生正面對撞危險。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <circle cx="50" cy="50" r="42" fill="#EF4444" />
-          <rect x="18" y="41" width="64" height="18" rx="3" fill="#FFFFFF" />
-        </svg>`
-      },
-      {
-        id: 'no_left_turn',
-        name: '禁止左轉標誌',
-        category: '禁制標誌',
-        badgeClass: 'bg-rose-100 text-rose-700',
-        meaning: '用以告示車輛駕駛人禁止向左轉彎（亦不得迴車）。',
-        note: '依台灣法規，「禁止左轉」標誌同時包含禁止迴車（除非另有准許迴車標誌）；部分路段下方會附掛「時段牌」，需留意管制時間。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <circle cx="50" cy="50" r="42" fill="#FFFFFF" stroke="#EF4444" stroke-width="10"/>
-          <path d="M58,72 L58,42 L34,42" fill="none" stroke="#1E293B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-          <polygon points="22,42 38,30 38,54" fill="#1E293B"/>
-          <line x1="22" y1="22" x2="78" y2="78" stroke="#EF4444" stroke-width="10"/>
-        </svg>`
-      },
-      {
-        id: 'two_stage_left',
-        name: '機慢車兩段左轉標誌',
-        category: '禁制標誌',
-        badgeClass: 'bg-rose-100 text-rose-700',
-        meaning: '用以告示左轉機慢車駕駛人應遵照號誌指示，在號誌顯示直行時先行駛至右前方路口之機慢車兩段左轉待轉區等待，俟橫向號誌轉為綠燈再行續駛。',
-        note: '設有本標誌或內側車道劃有「禁行機車」之多車道路口，普通重型機車均須依規定兩段式左轉。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <circle cx="50" cy="50" r="43" fill="#0284C7" stroke="#FFFFFF" stroke-width="3"/>
-          <path d="M64,74 L64,34 L34,34" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-          <polygon points="22,34 36,24 36,44" fill="#FFFFFF"/>
-          <circle cx="46" cy="62" r="7" fill="none" stroke="#FDE047" stroke-width="3"/>
-          <circle cx="28" cy="62" r="7" fill="none" stroke="#FDE047" stroke-width="3"/>
-          <path d="M28,62 L36,50 L46,62" fill="none" stroke="#FDE047" stroke-width="3"/>
-        </svg>`
-      },
-      {
-        id: 'speed_limit_50',
-        name: '最高速限 50 標誌',
-        category: '禁制標誌',
-        badgeClass: 'bg-rose-100 text-rose-700',
-        meaning: '用以告示車輛駕駛人前方道路最高行車時速限制為 50 公里，不得超速。',
-        note: '市區一般道路若無特別標誌，依規定最高速限亦為 50 公里；行經學校、醫院周邊或雨霧視線不良時應更低速行駛。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <circle cx="50" cy="50" r="42" fill="#FFFFFF" stroke="#EF4444" stroke-width="10"/>
-          <text x="50" y="63" text-anchor="middle" fill="#1E293B" font-size="36" font-weight="900">50</text>
-        </svg>`
-      },
-      {
-        id: 'warn_pedestrian',
-        name: '當心行人標誌',
-        category: '警告標誌',
-        badgeClass: 'bg-amber-100 text-amber-800',
-        meaning: '用以促使車輛駕駛人減速慢行，注意前方行人穿越道或行人頻繁出沒。',
-        note: '三角形紅框白底為「警告標誌」。看到此標誌應提高警覺、預備煞車，遇行人穿越馬路必須保持 3 公尺以上距離完全停讓。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <polygon points="50,10 92,86 8,86" fill="#FFFFFF" stroke="#EF4444" stroke-width="9" stroke-linejoin="round"/>
-          <circle cx="50" cy="38" r="5.5" fill="#1E293B"/>
-          <path d="M50,45 L50,62 L41,77 M50,62 L59,77 M40,53 L50,48 L60,55" stroke="#1E293B" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-        </svg>`
-      },
-      {
-        id: 'warn_children',
-        name: '當心兒童標誌',
-        category: '警告標誌',
-        badgeClass: 'bg-amber-100 text-amber-800',
-        meaning: '設於小學、幼稚園、公園、遊樂場所等兒童經常出現地點之前方，提醒駕駛減速慢行。',
-        note: '兒童身高較矮容易進入汽車視野死角，且可能突然衝出路邊，行經學區務必放慢車速並注意路側停放車輛縫隙。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <polygon points="50,10 92,86 8,86" fill="#FFFFFF" stroke="#EF4444" stroke-width="9" stroke-linejoin="round"/>
-          <circle cx="43" cy="42" r="4.5" fill="#1E293B"/>
-          <circle cx="58" cy="46" r="4" fill="#1E293B"/>
-          <path d="M43,48 L43,63 L37,76 M43,63 L49,76 M58,51 L58,64 L53,76 M58,64 L63,76 M36,54 L58,54" stroke="#1E293B" stroke-width="4" stroke-linecap="round" fill="none"/>
-        </svg>`
-      },
-      {
-        id: 'winding_road',
-        name: '連續彎路標誌',
-        category: '警告標誌',
-        badgeClass: 'bg-amber-100 text-amber-800',
-        meaning: '用以促使車輛駕駛人減速慢行，前方有連續兩個以上之反向彎道。',
-        note: '山區道路彎道盲區多，入彎前應先減速、沿自己車道靠右行駛，嚴禁跨越雙黃線超車或佔用對向車道切西瓜。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <polygon points="50,10 92,86 8,86" fill="#FFFFFF" stroke="#EF4444" stroke-width="9" stroke-linejoin="round"/>
-          <path d="M44,76 L44,64 C44,56 58,56 58,48 C58,40 44,40 44,32" fill="none" stroke="#1E293B" stroke-width="6.5" stroke-linecap="round"/>
-          <polygon points="44,22 36,34 52,34" fill="#1E293B"/>
-        </svg>`
-      },
-      {
-        id: 'railroad_crossing',
-        name: '鐵路平交道標誌',
-        category: '警告標誌',
-        badgeClass: 'bg-amber-100 text-amber-800',
-        meaning: '用以促使車輛駕駛人減速慢行，注意前方設有柵欄或無柵欄之鐵路平交道。',
-        note: '通過平交道前務必確認前方道路有足夠淨空（能容納整輛車完全通過軌道），切勿在軌道上塞車停等；警鈴響起或遮斷器開始放下時嚴禁搶越！',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <polygon points="50,10 92,86 8,86" fill="#FFFFFF" stroke="#EF4444" stroke-width="9" stroke-linejoin="round"/>
-          <rect x="38" y="45" width="24" height="22" rx="3" fill="#1E293B"/>
-          <rect x="42" y="37" width="6" height="9" fill="#1E293B"/>
-          <circle cx="44" cy="71" r="4" fill="#1E293B"/>
-          <circle cx="56" cy="71" r="4" fill="#1E293B"/>
-          <path d="M44,33 Q48,26 56,28" stroke="#64748B" stroke-width="3" fill="none" stroke-linecap="round"/>
-        </svg>`
-      },
-      {
-        id: 'pedestrian_crossing_info',
-        name: '行人穿越道指示標誌',
-        category: '指示標誌',
-        badgeClass: 'bg-brand-100 text-brand-700',
-        meaning: '設於行人穿越道處，指示駕駛人及行人該處為合法行人穿越道。',
-        note: '方形藍底為「指示標誌」。看到此藍牌與地上斑馬線時，駕駛人應主動減速並隨時準備停車禮讓行人。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <rect x="12" y="12" width="76" height="76" rx="10" fill="#0284C7" stroke="#FFFFFF" stroke-width="3"/>
-          <polygon points="50,24 80,76 20,76" fill="#FFFFFF"/>
-          <circle cx="50" cy="44" r="4.5" fill="#1E293B"/>
-          <path d="M50,50 L50,62 L43,72 M50,62 L57,72 M42,56 L50,52 L58,57" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-        </svg>`
-      },
-      {
-        id: 'one_way',
-        name: '單行道指示標誌',
-        category: '指示標誌',
-        badgeClass: 'bg-brand-100 text-brand-700',
-        meaning: '設於單行道入口及沿線，指示車輛僅准依箭頭所指方向單向行駛。',
-        note: '單行道內嚴禁逆向行駛或倒車行駛，欲左轉時若無特別禁制標誌，應靠左車道轉彎。',
-        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
-          <rect x="14" y="14" width="72" height="72" rx="10" fill="#0284C7" stroke="#FFFFFF" stroke-width="3"/>
-          <path d="M50,74 L50,36" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round"/>
-          <polygon points="50,20 32,42 68,42" fill="#FFFFFF"/>
-        </svg>`
-      }
-    ];
-
-    /**
-     * 2. 五大交通知識複習單元資料結構
-     */
-    const KNOWLEDGE_UNITS = [
-      {
-        id: 'signs',
-        title: '交通標誌認識',
-        icon: '🛑',
-        summary: '掌握「形狀與顏色」口訣，一秒看懂台灣路上所有標誌的強制力與警告等級！',
-        isSignGallery: true,
-        highlights: [
-          { title: '三角形＝警告標誌', desc: '紅框白底三角形，提醒前方路況變化或潛在危險（如當心行人、連續彎路），看到就要減速警覺。' },
-          { title: '圓形／八角形／倒三角＝禁制標誌', desc: '代表強制命令或禁止事項（如停車再開、速限、禁止左轉），違反將直接受罰並危及安全。' },
-          { title: '方形／梅花形＝指示標誌', desc: '藍底或綠底方形提供方向、距離與設施指引（如單行道、行人穿越道、國道編號）。' }
-        ]
-      },
-      {
-        id: 'rules',
-        title: '道路交通規則',
-        icon: '⚖️',
-        summary: '台灣路口事故有超過六成源於「未依規定讓車」，搞懂路權優先順序就能避開絕大多數車禍。',
-        highlights: [
-          { title: '路口指揮與號誌優先序', desc: '交警指揮 ＞ 紅綠燈號誌 ＞ 標誌與標線 ＞ 無號誌路口規則。' },
-          { title: '無號誌路口三大讓車原則', desc: '① 支線道讓幹線道（有「停/讓」標誌或地上「倒三角/停」字為支道）；② 少車道讓多車道；③ 同車道數時：轉彎車讓直行車、左方車讓右方車。' },
-          { title: '閃光號誌不可搞混', desc: '「閃光紅燈」＝停車再開（支道）；「閃光黃燈」＝減速慢行（幹道）。' },
-          { title: '標線禁制速記', desc: '「雙白實線」禁止變換車道；「雙黃實線」禁止跨越超車或迴轉；「黃色網狀線」路口保持淨空禁止臨停。' }
-        ]
-      },
-      {
-        id: 'car',
-        title: '汽車行車安全',
-        icon: '🚗',
-        summary: '開車包覆在鐵殼中，更要注意視野盲區、內輪差與對弱勢用路人的保護責任。',
-        highlights: [
-          { title: '路口停讓行人「3 公尺標準」', desc: '汽車行近斑馬線遇行人穿越，無論有無號誌，車頭前懸須與行人保持 3 公尺（約一個車道寬）以上距離完全暫停禮讓。' },
-          { title: '變換車道與轉彎三步驟', desc: '提前 30 公尺打方向燈 → 查看後照鏡並「擺頭確認 B 柱盲點」 → 禮讓直行車與行人後再平穩轉向。' },
-          { title: '高速公路安全車距公式', desc: '小型車安全距離（公尺）＝ 時速 ÷ 2（例如時速 100 km/h 應保持至少 50 公尺以上）；雨天或夜間應再加倍。' },
-          { title: '荷蘭式兩段開門法', desc: '駕駛人下車時用「右手」開啟左側車門，身體會自然向後轉頭，直接看清後方是否有直行機車，避免門殺事故。' }
-        ]
-      },
-      {
-        id: 'scooter',
-        title: '機車行車安全',
-        icon: '🛵',
-        summary: '台灣機車密度居全球之冠，「防禦駕駛」與遠離大型車是騎士保命的最高指導原則。',
-        highlights: [
-          { title: '遠離大型車內輪差與視野死角', desc: '遊覽車、砂石車與公車轉彎時，前後輪軌跡不同會產生巨大「內輪差」捲入區，且車身四周有大片盲區，絕對不要與大車並行或從右側鑽車縫。' },
-          { title: '兩段式左轉判斷口訣', desc: '觀察路口有無「機慢車兩段左轉標誌」，以及內側車道地面有無「禁行機車」標字；兩者其一存在就必須兩段式左轉。' },
-          { title: '雨天濕滑路面煞車技巧', desc: '避開白色標線、鐵製人孔蓋與積水處；煞車時應「前後輪同時平均點放」，避免單獨急按前煞導致鎖死打滑。' },
-          { title: '安全帽正確配戴', desc: '選擇貼有商檢合格標章之安全帽（建議 3/4 罩或全罩式），扣環頤帶應繫緊並留約 1～2 指幅空隙，鬆脫等於沒戴。' }
-        ]
-      },
-      {
-        id: 'pedestrian',
-        title: '行人安全',
-        icon: '🚶',
-        summary: '法規保障行人優先路權，但馬路如虎口，主動觀察環境才能確保平安回家。',
-        highlights: [
-          { title: '過馬路五字訣：停、看、轉、揮、動', desc: '在人行道安全處「停」等 → 左「看」右看再左看 → 「轉」頭注意後方轉彎車 → 必要時舉手「揮」示駕駛 → 確認安全再快步「動」身通過。' },
-          { title: '綠燈秒數不足不搶快', desc: '當行人號誌已開始閃爍或剩餘秒數不足以從容走完斑馬線時，應留在人行道等待下一次綠燈，切勿奔跑搶過。' },
-          { title: '過馬路不做低頭族', desc: '穿越道路時應收起手機、取下降噪耳機，隨時聽覺與視覺並用察覺突發車輛動態。' },
-          { title: '夜間與雨天提升可見度', desc: '夜晚或雨天視線不佳，外出建議穿著淺色、亮色衣物或配戴反光配件，讓駕駛人能在遠處就看見你。' }
-        ]
-      }
-    ];
-
-    /**
-     * 3. 駕照筆試測驗題庫 (台灣現行法規，共 20 題涵蓋汽車/機車/共通)
-     */
-    const QUIZ_BANK = [
-      {
-        id: 'q01',
-        category: 'car',
-        tag: '汽車與行人路權',
-        question: '駕駛汽車行近行人穿越道，遇有行人正在穿越時，下列哪種做法才符合台灣現行交通法規？',
-        options: [
-          '輕按喇叭提醒行人加快腳步後直接通過',
-          '在斑馬線前完全暫停，與行人保持 3 公尺（約一個車道寬）以上距離禮讓通行',
-          '只要沒有撞到行人，貼身慢速滑行通過即可',
-          '只有紅綠燈路口才需要讓行人，無號誌斑馬線不用讓'
-        ],
-        answerIndex: 1,
-        explanation: '依《道路交通安全規則》第 103 條及現行取締標準，汽車行近行人穿越道有行人穿越時，無論有無號誌，均應暫停並與行人保持 3 公尺以上距離禮讓行人優先通過。'
-      },
-      {
-        id: 'q02',
-        category: 'common',
-        tag: '號誌辨識',
-        question: '深夜行經路口發現前方交通號誌為「閃光紅燈」，駕駛人應該怎麼做？',
-        options: [
-          '減速慢行至時速 20 公里直接通過',
-          '代表故障無效，加速通過以免後方追撞',
-          '等同「停車再開」，必須在停止線前完全停車，左右查看確認幹道無車再通行',
-          '閃兩下遠光燈後直接通過'
-        ],
-        answerIndex: 2,
-        explanation: '「閃光紅燈」表示「停車再開」，車輛應先停止於交岔路口前，讓幹道車（閃光黃燈方向）優先通行後，確認安全時方得續行。'
-      },
-      {
-        id: 'q03',
-        category: 'common',
-        tag: '無號誌路權',
-        question: '行經沒有號誌、也沒有設置「停」或「讓」標誌標線的同車道數十字路口，兩輛直行車同時接近路口，誰有優先路權？',
-        options: [
-          '右方車優先（左方車應暫停讓右方車先行）',
-          '左方車優先（右方車應讓左方車先行）',
-          '車體較大的汽車優先於機車',
-          '喇叭按得比較大聲的一方優先'
-        ],
-        answerIndex: 0,
-        explanation: '依《道路交通安全規則》第 102 條，無號誌且未劃分幹支線道之同車道數路口，同為直行車時，「左方車應暫停讓右方車先行」。'
-      },
-      {
-        id: 'q04',
-        category: 'scooter',
-        tag: '機車左轉規則',
-        question: '騎乘普通重型機車行駛在市區多車道馬路準備左轉時，下列何種情況「必須」進行兩段式左轉？',
-        options: [
-          '只要路上車很多就一定要兩段式左轉',
-          '路口設有「機慢車兩段左轉標誌」或內側車道劃有「禁行機車」標字時',
-          '所有三線道以上馬路不管有沒有標誌都要兩段式左轉',
-          '只要打方向燈就可以直接從最外側切到最內側左轉'
-        ],
-        answerIndex: 1,
-        explanation: '依規定，在設有「機慢車兩段左轉標誌」或內側車道設有「禁行機車」標誌標線之交岔路口，普通重型機車應依兩段式方式進行左轉。'
-      },
-      {
-        id: 'q05',
-        category: 'car',
-        tag: '高速公路行車',
-        question: '小型車行駛在高速公路上，天候良好時速 100 公里，依規定至少應與前車保持多少公尺以上的安全距離？',
-        options: [
-          '20 公尺',
-          '30 公尺',
-          '50 公尺',
-          '10 公尺'
-        ],
-        answerIndex: 2,
-        explanation: '小型車行駛高速公路之安全距離計算公式為「時速 ÷ 2（公尺）」。時速 100 公里時，100 ÷ 2 ＝ 50 公尺（大型車則為時速減 20，即 80 公尺）。'
-      },
-      {
-        id: 'q06',
-        category: 'common',
-        tag: '緊急車輛避讓',
-        question: '行駛在雙向各一車道的道路上，聽到後方有救護車鳴笛快速接近時，正確的避讓方式為何？',
-        options: [
-          '立即在路中央緊急煞車停住',
-          '加速在救護車前方幫忙開道',
-          '減速並盡量向「右側」路邊靠攏暫停，讓出左側空間供救護車超越',
-          '向左側對向車道靠攏停車'
-        ],
-        answerIndex: 2,
-        explanation: '聞救護車、消防車等緊急車輛警號時，在單車道（雙向各一車道）應減速慢行「向右緊靠道路右側」避讓並暫停；同向二車道以上則分別向兩側避讓。'
-      },
-      {
-        id: 'q07',
-        category: 'scooter',
-        tag: '大型車安全',
-        question: '騎乘機車在路口遇到大型貨車或公車正在右轉時，最危險的行為是什麼？',
-        options: [
-          '減速在大型車後方保持安全距離等待其轉彎完成',
-          '加速從大型車右側與人行道之間的縫隙鑽過去',
-          '提前切換至左側安全車道避開',
-          '觀察大型車方向燈動態預作準備'
-        ],
-        answerIndex: 1,
-        explanation: '大型車右轉時會產生巨大的「內輪差」且右側有嚴重視野死角，機車若從右側硬鑽極易被捲入後輪，務必減速禮讓大車先轉。'
-      },
-      {
-        id: 'q08',
-        category: 'car',
-        tag: '開車門安全',
-        question: '汽車駕駛人路邊停車後準備開啟左側車門下車，為避免撞傷後方直行機車，應採用哪種標準動作？',
-        options: [
-          '用左手直接一把推開車門迅速下車',
-          '先按喇叭再直接推開車門',
-          '採「兩段式開門法（荷蘭式開門）」：用右手開門自然轉頭向後察看，確認無來車先開縫隙再全開',
-          '只要有打雙黃燈就可以直接開門'
-        ],
-        answerIndex: 2,
-        explanation: '用反手（右手開左門）會迫使上半身自然向後轉動，視線直接涵蓋左後方來車盲點，確認安全後先開約 15 公分縫隙再次確認再下車，可有效防範門殺事故。'
-      },
-      {
-        id: 'q09',
-        category: 'common',
-        tag: '道路標線規範',
-        question: '行車時看到車道與車道之間畫設「雙白實線」，代表什麼意義？',
-        options: [
-          '可以隨時變換車道超車',
-          '禁止變換車道',
-          '僅供機車行駛的專用道',
-          '前方有測速照相機'
-        ],
-        answerIndex: 1,
-        explanation: '「雙白實線」設於同向車道之間，用以分隔同向車道，並「禁止變換車道」（常見於接近路口停止線前或隧道內）。'
-      },
-      {
-        id: 'q10',
-        category: 'common',
-        tag: '交通標誌形狀',
-        question: '在台灣交通標誌系統中，外型為「紅框白底正三角形」的標誌屬於哪一類？',
-        options: [
-          '禁制標誌',
-          '指示標誌',
-          '警告標誌',
-          '輔助標誌'
-        ],
-        answerIndex: 2,
-        explanation: '三角形紅框白底為「警告標誌」（如當心行人、連續彎路、鐵路平交道），用以促使車輛駕駛人及行人了解道路上之特殊狀況，提高警覺。'
-      },
-      {
-        id: 'q11',
-        category: 'car',
-        tag: '轉彎與變換車道',
-        question: '汽車在一般道路準備右轉或變換車道前，最晚應在距離路口或變換車道處多少公尺前顯示方向燈？',
-        options: [
-          '5 公尺前',
-          '10 公尺前',
-          '30 公尺前',
-          '轉方向盤的同時再打即可'
-        ],
-        answerIndex: 2,
-        explanation: '依《道路交通安全規則》第 102 條與第 109 條，汽車轉彎或變換車道時，應在「30 公尺前」顯示方向燈或手勢，讓後方及對向用路人有充足反應時間。'
-      },
-      {
-        id: 'q12',
-        category: 'scooter',
-        tag: '機車安全配備',
-        question: '關於騎乘機車配戴安全帽的規定，下列敘述何者正確？',
-        options: [
-          '只要把安全帽戴在頭上，扣環沒扣也沒關係',
-          '可使用工地用安全帽替代機車安全帽',
-          '應配戴經經濟部標準檢驗局檢驗合格之安全帽，並將扣環繫緊（約留 1～2 指幅空間）',
-          '只有騎乘大型重型機車才需要戴安全帽'
-        ],
-        answerIndex: 2,
-        explanation: '安全帽若未扣緊頤帶，發生碰撞瞬間帽子會直接飛脫失去保護作用；且必須使用標檢局檢驗合格之機車用安全帽。'
-      },
-      {
-        id: 'q13',
-        category: 'common',
-        tag: '黄網線規範',
-        question: '路口地面畫有黃色方格交叉的「網狀線」，其主要作用為何？',
-        options: [
-          '機車停等區',
-          '告示車輛駕駛人禁止在設置本標線之範圍內臨時停車，防止交通阻塞',
-          '行人專屬休息區',
-          '大貨車卸貨專用區'
-        ],
-        answerIndex: 1,
-        explanation: '黃色網狀線設於交岔路口或消防隊、醫院門口，用以保持路口淨空。若前方車流回堵，車輛應停在網狀線後方等待，不可停在網狀線上。'
-      },
-      {
-        id: 'q14',
-        category: 'car',
-        tag: '雨天與夜間行車',
-        question: '夜間遇到大雨視線不佳時，駕駛汽車應如何正確使用燈光？',
-        options: [
-          '全程開啟遠光燈，並開啟雙黃危險警告燈',
-          '開亮頭燈（近光燈），遇豪雨或濃霧能見度極差時可開啟霧燈，並減速拉長車距',
-          '關掉大燈只開小燈，避免反光',
-          '緊跟前車尾燈並維持最高速限'
-        ],
-        answerIndex: 1,
-        explanation: '雨天及夜間應依規定開亮近光燈（不可亂開遠光燈影響前車與對向視線）；雙黃警告燈僅供車輛故障或前方突發塞車減速警示使用。'
-      },
-      {
-        id: 'q15',
-        category: 'scooter',
-        tag: '機車行車路權',
-        question: '騎乘機車行駛在市區道路，遇到路邊有計程車突然打右轉方向燈靠邊停下，騎士應該怎麼應對？',
-        options: [
-          '不減速直接從計程車右側人行道縫隙鑽過',
-          '提前減速警覺，注意計程車乘客可能突然開啟左側車門下車，確認左側安全後再繞行',
-          '緊貼計程車車尾按喇叭催促',
-          '直接騎上人行道繞過'
-        ],
-        answerIndex: 1,
-        explanation: '計程車靠邊停車時，後座乘客極常未觀察後方就直接開左側車門下車，騎士應減速預留安全橫向間隔，切勿高速貼近車身。'
-      },
-      {
-        id: 'q16',
-        category: 'common',
-        tag: '酒精與藥駕規範',
-        question: '依台灣現行法規，駕駛人飲酒後吐氣所含酒精濃度達每公升多少毫克以上，即屬酒駕違規？',
-        options: [
-          '0.15 毫克',
-          '0.25 毫克',
-          '0.55 毫克',
-          '1.00 毫克'
-        ],
-        answerIndex: 0,
-        explanation: '台灣酒駕取締標準極為嚴格，吐氣酒精濃度達每公升 0.15 毫克（或血液中酒精濃度達 0.03%）即構成酒駕違規受罰；達 0.25 毫克更觸犯刑法公共危險罪。'
-      }
-    ];
-
-    /**
-     * 4. 7 大真實台灣道路情境模擬關卡 (Scenarios Data + Custom Top-Down SVGs)
-     */
-    const SCENARIOS = [
-      {
-        id: 1,
-        title: '十字路口號誌轉黃燈的瞬間',
-        shortDesc: '綠燈轉黃燈、距離停止線尚有 25 公尺，該衝過去還是減速停車？',
-        difficulty: '基礎路權',
-        description: '你駕駛藍色自小客車以時速 45 公里接近市區大型十字路口，前方號誌剛從綠燈轉為「黃燈」，此時你距離白色停止線還有約 25 公尺，後方車輛也保持著安全車距。',
-        options: [
-          '踩油門加速衝過去，反正紅燈還沒亮起不算闖紅燈',
-          '確認後照鏡安全後，平穩減速煞車並停在白色停止線後方',
-          '猛踩急煞讓車頭停在斑馬線正中央'
-        ],
-        correctIndex: 1,
-        reason: '依台灣《道路交通標誌標線號誌設置規則》，黃燈是用以警告車輛駕駛人紅燈即將顯示，尚未越過停止線者應減速煞車停於停止線前。搶黃燈極易與橫向提早起步車輛或對向急著左轉車輛發生嚴重側撞，也不可將車停在斑馬線上占用行人空間。',
-        svg: `<svg viewBox="0 0 600 300" class="w-full h-auto block">
-          <!-- 路面底色 -->
-          <rect width="600" height="300" fill="#334155"/>
-          <!-- 四角人行道街區 -->
-          <rect x="0" y="0" width="210" height="85" fill="#94A3B8"/>
-          <rect x="390" y="0" width="210" height="85" fill="#94A3B8"/>
-          <rect x="0" y="215" width="210" height="85" fill="#94A3B8"/>
-          <rect x="390" y="215" width="210" height="85" fill="#94A3B8"/>
-          <!-- 中央雙黃線 -->
-          <line x1="0" y1="148" x2="185" y2="148" stroke="#FBBF24" stroke-width="3"/>
-          <line x1="0" y1="152" x2="185" y2="152" stroke="#FBBF24" stroke-width="3"/>
-          <line x1="415" y1="148" x2="600" y2="148" stroke="#FBBF24" stroke-width="3"/>
-          <line x1="415" y1="152" x2="600" y2="152" stroke="#FBBF24" stroke-width="3"/>
-          <!-- 白色停止線 -->
-          <line x1="185" y1="154" x2="185" y2="212" stroke="#FFFFFF" stroke-width="6"/>
-          <!-- 斑馬線 -->
-          <g fill="#FFFFFF" opacity="0.9">
-            <rect x="196" y="92" width="26" height="10"/><rect x="196" y="112" width="26" height="10"/>
-            <rect x="196" y="132" width="26" height="10"/><rect x="196" y="152" width="26" height="10"/>
-            <rect x="196" y="172" width="26" height="10"/><rect x="196" y="192" width="26" height="10"/>
-          </g>
-          <!-- 黃燈號誌特寫 -->
-          <g transform="translate(398, 22)">
-            <rect x="0" y="0" width="34" height="76" rx="8" fill="#0F172A" stroke="#CBD5E1" stroke-width="2"/>
-            <circle cx="17" cy="17" r="8" fill="#450A0A"/>
-            <circle cx="17" cy="38" r="9" fill="#F59E0B"/>
-            <circle cx="17" cy="59" r="8" fill="#064E3B"/>
-            <text x="55" y="43" fill="#FDE047" font-size="14" font-weight="900">號誌剛轉黃燈！</text>
-          </g>
-          <!-- 距離停止線 25m 標註 -->
-          <line x1="125" y1="205" x2="182" y2="205" stroke="#38BDF8" stroke-width="2" stroke-dasharray="4,3"/>
-          <text x="153" y="232" text-anchor="middle" fill="#BAE6FD" font-size="12" font-weight="700">距停止線 25m</text>
-          <!-- 你的車輛 (藍色俯視) -->
-          <g transform="translate(65, 166)">
-            <rect x="0" y="0" width="58" height="32" rx="8" fill="#0EA5E9" stroke="#FFFFFF" stroke-width="2"/>
-            <rect x="34" y="4" width="12" height="24" rx="2" fill="#E0F2FE"/>
-            <text x="20" y="21" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="900">你</text>
-          </g>
-          <!-- 對向等待左轉車輛 (黃色) -->
-          <g transform="translate(425, 108)">
-            <rect x="0" y="0" width="56" height="30" rx="8" fill="#F59E0B" stroke="#FFFFFF" stroke-width="1.5"/>
-            <text x="28" y="19" text-anchor="middle" fill="#1E293B" font-size="11" font-weight="800">對向車</text>
-          </g>
-        </svg>`
-      },
-      {
-        id: 2,
-        title: '汽車右轉遇到斑馬線行人',
-        shortDesc: '綠燈右轉時斑馬線上出現行人，車頭距行人僅 2 公尺！',
-        difficulty: '重點考題',
-        description: '你在綠燈路口準備右轉進入橫向道路，此時右轉方向的行人穿越道上有一位行人正在走過馬路，距離你車頭行進路徑僅約 2 公尺（不到一個車道寬）。',
-        options: [
-          '趁行人還沒走到路中央，輕按喇叭快速從行人前方搶先繞過',
-          '在斑馬線前完全暫停，保持 3 公尺（約一個車道寬）以上距離禮讓行人優先通過後再右轉',
-          '緊貼行人身旁以時速 10 公里慢慢滑行過去'
-        ],
-        correctIndex: 1,
-        reason: '依據台灣現行《道路交通安全規則》第 103 條與警察機關取締基準，汽車行近行人穿越道有行人穿越時，無論有無號誌，都必須暫停禮讓行人先行，且車輛前懸與行人距離須保持 3 公尺（約一個車道寬）以上。未停讓行人最高可罰 6,000 元並記點及道安講習！',
-        svg: `<svg viewBox="0 0 600 300" class="w-full h-auto block">
-          <rect width="600" height="300" fill="#334155"/>
-          <rect x="0" y="0" width="190" height="75" fill="#94A3B8"/>
-          <rect x="410" y="0" width="190" height="75" fill="#94A3B8"/>
-          <rect x="0" y="225" width="190" height="75" fill="#94A3B8"/>
-          <rect x="410" y="225" width="190" height="75" fill="#94A3B8"/>
-          <!-- 橫向斑馬線 (右側路口) -->
-          <g fill="#FFFFFF" opacity="0.95">
-            <rect x="416" y="84" width="32" height="12" rx="2"/>
-            <rect x="416" y="108" width="32" height="12" rx="2"/>
-            <rect x="416" y="132" width="32" height="12" rx="2"/>
-            <rect x="416" y="156" width="32" height="12" rx="2"/>
-            <rect x="416" y="180" width="32" height="12" rx="2"/>
-            <rect x="416" y="204" width="32" height="12" rx="2"/>
-          </g>
-          <!-- 3公尺停讓警戒區示意框 -->
-          <rect x="372" y="82" width="40" height="136" fill="#EF4444" opacity="0.22" stroke="#F87171" stroke-width="2" stroke-dasharray="5,4"/>
-          <text x="345" y="65" text-anchor="middle" fill="#FCA5A5" font-size="12" font-weight="800">須保持 3 公尺停讓淨空</text>
-          <!-- 行人 -->
-          <g transform="translate(432, 165)">
-            <circle cx="0" cy="0" r="13" fill="#EF4444" stroke="#FFFFFF" stroke-width="2.5"/>
-            <text x="0" y="4" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="900">行人</text>
-          </g>
-          <!-- 右轉軌跡箭頭 -->
-          <path d="M325,245 Q325,180 395,180" fill="none" stroke="#38BDF8" stroke-width="3.5" stroke-dasharray="6,5" class="animate-path-flow"/>
-          <!-- 你的車輛準備右轉 -->
-          <g transform="translate(308, 222)">
-            <rect x="0" y="0" width="34" height="56" rx="8" fill="#0EA5E9" stroke="#FFFFFF" stroke-width="2"/>
-            <text x="17" y="34" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="900">你</text>
-          </g>
-        </svg>`
-      },
-      {
-        id: 3,
-        title: '機車變換車道繞過靠站公車',
-        shortDesc: '前方公車靠站上下客，左側車道有汽車駛來，騎士該如何安全繞行？',
-        difficulty: '防禦駕駛',
-        description: '你騎乘普通重型機車行駛在外側車道，前方大型公車打右轉燈靠站停下，佔據了大半外側車道。你準備向左變換車道繞過公車，此時左側快車道後方有一輛汽車正在接近。',
-        options: [
-          '不減速直接往左切出車道，讓後方汽車自己急煞閃避',
-          '先減速，提前開啟左轉方向燈，確認後照鏡並「擺頭查看盲區」確認左後方安全車距足夠後再切出',
-          '從公車右側與人行道之間僅剩的窄縫硬鑽過去'
-        ],
-        correctIndex: 1,
-        reason: '變換車道時「直行車優先」，切出前必須先減速、打方向燈並擺頭確認後照鏡盲點無來車才能平穩變換車道；更絕對不可從公車右側鑽縫，以免撞及下車乘客或落入公車右側視野死角。',
-        svg: `<svg viewBox="0 0 600 300" class="w-full h-auto block">
-          <rect width="600" height="300" fill="#334155"/>
-          <!-- 人行道與公車站牌 -->
-          <rect x="0" y="235" width="600" height="65" fill="#94A3B8"/>
-          <rect x="430" y="245" width="75" height="24" rx="6" fill="#0284C7"/>
-          <text x="467" y="261" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="800">公車停靠區</text>
-          <!-- 車道分隔白虛線 -->
-          <line x1="0" y1="145" x2="600" y2="145" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="18,14"/>
-          <line x1="0" y1="65" x2="600" y2="65" stroke="#FBBF24" stroke-width="3"/>
-          <!-- 靠站公車 (大型黃色方塊) -->
-          <g transform="translate(360, 168)">
-            <rect x="0" y="0" width="155" height="54" rx="8" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2"/>
-            <text x="77" y="32" text-anchor="middle" fill="#1E293B" font-size="15" font-weight="900">靠站公車</text>
-          </g>
-          <!-- 左後方直行汽車 -->
-          <g transform="translate(80, 92)">
-            <rect x="0" y="0" width="68" height="34" rx="8" fill="#E2E8F0" stroke="#64748B" stroke-width="2"/>
-            <text x="34" y="21" text-anchor="middle" fill="#1E293B" font-size="11" font-weight="800">直行汽車</text>
-          </g>
-          <path d="M155,109 L260,109" stroke="#FCA5A5" stroke-width="3" stroke-dasharray="6,4"/>
-          <!-- 你的機車 -->
-          <g transform="translate(225, 182)">
-            <rect x="0" y="0" width="44" height="22" rx="10" fill="#0EA5E9" stroke="#FFFFFF" stroke-width="2"/>
-            <text x="22" y="15" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="900">你</text>
-          </g>
-          <!-- 安全繞行路徑虛線 -->
-          <path d="M275,193 Q315,193 335,120 L480,120" fill="none" stroke="#38BDF8" stroke-width="3" stroke-dasharray="6,5" class="animate-path-flow"/>
-        </svg>`
-      },
-      {
-        id: 4,
-        title: '閃光紅燈與閃光黃燈路口',
-        shortDesc: '深夜路口閃著「閃光紅燈」，橫向幹道則是「閃光黃燈」，該怎麼走？',
-        difficulty: '號誌判讀',
-        description: '深夜 11 點，你開車行經郊區十字路口，發現你面對的號誌呈現「閃光紅燈」，而橫向幹道的號誌則是「閃光黃燈」，且路口轉角有建築物略微遮擋視線。',
-        options: [
-          '閃光紅燈代表注意就好，放慢到時速 20 公里直接滑過去',
-          '閃光紅燈等同「停車再開」，必須在停止線前完全停車，左右查看確認幹道無來車後再通行',
-          '先按兩聲喇叭提醒橫向車輛後直接加速通過'
-        ],
-        correctIndex: 1,
-        reason: '「閃光紅燈」表示「停車再開」，車輛應先停止於停止線前，讓幹道車（閃光黃燈方向）優先通行後，確認左右安全方得續行；「閃光黃燈」則表示警告，應減速慢行小心通過。',
-        svg: `<svg viewBox="0 0 600 300" class="w-full h-auto block">
-          <rect width="600" height="300" fill="#1E293B"/>
-          <!-- 四角建築街區 -->
-          <rect x="0" y="0" width="210" height="90" fill="#475569"/>
-          <rect x="390" y="0" width="210" height="90" fill="#475569"/>
-          <rect x="0" y="210" width="210" height="90" fill="#475569"/>
-          <rect x="390" y="210" width="210" height="90" fill="#475569"/>
-          <!-- 橫向幹道 (閃光黃燈) -->
-          <line x1="0" y1="150" x2="205" y2="150" stroke="#FBBF24" stroke-width="3"/>
-          <line x1="395" y1="150" x2="600" y2="150" stroke="#FBBF24" stroke-width="3"/>
-          <!-- 你的支線道停止線 -->
-          <line x1="302" y1="212" x2="385" y2="212" stroke="#FFFFFF" stroke-width="6"/>
-          <!-- 閃光紅燈標示 -->
-          <g transform="translate(405, 222)">
-            <circle cx="16" cy="16" r="14" fill="#EF4444" stroke="#FCA5A5" stroke-width="3"/>
-            <text x="38" y="21" fill="#FCA5A5" font-size="13" font-weight="900">你的方向：閃光紅燈</text>
-          </g>
-          <!-- 閃光黃燈標示 -->
-          <g transform="translate(35, 32)">
-            <circle cx="16" cy="16" r="14" fill="#F59E0B" stroke="#FDE047" stroke-width="3"/>
-            <text x="38" y="21" fill="#FDE047" font-size="13" font-weight="900">橫向幹道：閃光黃燈</text>
-          </g>
-          <!-- 幹道來車 (黃色) -->
-          <g transform="translate(115, 162)">
-            <rect x="0" y="0" width="60" height="30" rx="8" fill="#F59E0B" stroke="#FFFFFF" stroke-width="1.5"/>
-            <text x="30" y="19" text-anchor="middle" fill="#1E293B" font-size="11" font-weight="800">幹道車</text>
-          </g>
-          <path d="M185,177 L270,177" stroke="#FDE047" stroke-width="3" stroke-dasharray="6,4"/>
-          <!-- 你的車輛 -->
-          <g transform="translate(326, 228)">
-            <rect x="0" y="0" width="32" height="56" rx="8" fill="#0EA5E9" stroke="#FFFFFF" stroke-width="2"/>
-            <text x="16" y="33" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="900">你</text>
-          </g>
-        </svg>`
-      },
-      {
-        id: 5,
-        title: '無號誌同寬路口（左讓右原則）',
-        shortDesc: '無紅綠燈也無「停/讓」標誌的同寬路口，右方橫向有車同時接近！',
-        difficulty: '路權魔王題',
-        description: '你開車行駛在社區巷道，來到一個沒有紅綠燈、也沒有畫設「停」或「讓」標誌標線的十字路口，兩條道路寬度與車道數完全相同。此時你的「右前方」橫向道路也有一輛機車同時接近路口！',
-        options: [
-          '我是汽車體積比較大，先開過去機車自然會煞車',
-          '減速慢行並暫停，禮讓「右方來車」優先通過路口',
-          '踩油門搶在機車到達路口中心前衝過去'
-        ],
-        correctIndex: 1,
-        reason: '依《道路交通安全規則》第 102 條，無號誌且未設標誌標線劃分幹、支線道之交岔路口，車道數相同且同為直行車時，「左方車應暫停讓右方車先行」。你的右手邊來車擁有優先路權！',
-        svg: `<svg viewBox="0 0 600 300" class="w-full h-auto block">
-          <rect width="600" height="300" fill="#334155"/>
-          <rect x="0" y="0" width="225" height="90" fill="#94A3B8"/>
-          <rect x="375" y="0" width="225" height="90" fill="#94A3B8"/>
-          <rect x="0" y="210" width="225" height="90" fill="#94A3B8"/>
-          <rect x="375" y="210" width="225" height="90" fill="#94A3B8"/>
-          <text x="112" y="50" text-anchor="middle" fill="#1E293B" font-size="13" font-weight="800">無號誌・無標誌同寬路口</text>
-          <!-- 右方來車 (機車) -->
-          <g transform="translate(420, 114)">
-            <rect x="0" y="0" width="46" height="22" rx="10" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2"/>
-            <text x="23" y="15" text-anchor="middle" fill="#1E293B" font-size="11" font-weight="900">右方車</text>
-          </g>
-          <path d="M410,125 L315,125" stroke="#FDE047" stroke-width="3.5" stroke-dasharray="6,4" class="animate-path-flow"/>
-          <text x="455" y="160" text-anchor="middle" fill="#FDE047" font-size="12" font-weight="800">你的右手邊來車</text>
-          <!-- 你的車輛 -->
-          <g transform="translate(315, 222)">
-            <rect x="0" y="0" width="32" height="56" rx="8" fill="#0EA5E9" stroke="#FFFFFF" stroke-width="2"/>
-            <text x="16" y="33" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="900">你</text>
-          </g>
-        </svg>`
-      },
-      {
-        id: 6,
-        title: '雙向單線道後方遇到救護車鳴笛',
-        shortDesc: '後方救護車鳴笛閃燈快速逼近，雙向各一車道該往哪裡避讓？',
-        difficulty: '緊急應變',
-        description: '你行駛在市區雙向各只有一車道的馬路上，後方突然傳來急促的救護車警笛聲並閃爍紅藍警示燈，正快速逼近你的車尾。',
-        options: [
-          '立刻踩油門加速狂飆，幫救護車在前面開道',
-          '直接停在車道正中央不動，讓救護車自己繞開',
-          '減速並盡量向「右側」路邊靠攏暫停，讓出左側空間供救護車安全超越'
-        ],
-        correctIndex: 2,
-        reason: '聞消防車、救護車、警備車等執行緊急任務車輛警號時，在單車道（雙向各一車道）應減速慢行「向右緊靠道路右側」避讓並暫停；不避讓者將處新臺幣 3,600 元罰鍰並吊銷駕駛執照！',
-        svg: `<svg viewBox="0 0 600 300" class="w-full h-auto block">
-          <rect width="600" height="300" fill="#334155"/>
-          <rect x="0" y="0" width="600" height="45" fill="#94A3B8"/>
-          <rect x="0" y="255" width="600" height="45" fill="#94A3B8"/>
-          <!-- 中央雙黃線 (雙向各一車道) -->
-          <line x1="0" y1="148" x2="600" y2="148" stroke="#FBBF24" stroke-width="3"/>
-          <line x1="0" y1="152" x2="600" y2="152" stroke="#FBBF24" stroke-width="3"/>
-          <!-- 救護車 (後方鳴笛) -->
-          <g transform="translate(80, 178)">
-            <rect x="0" y="0" width="84" height="38" rx="8" fill="#FFFFFF" stroke="#EF4444" stroke-width="3"/>
-            <rect x="36" y="6" width="12" height="26" fill="#EF4444"/>
-            <rect x="29" y="13" width="26" height="12" fill="#EF4444"/>
-            <circle cx="72" cy="10" r="5" fill="#EF4444"/>
-            <circle cx="72" cy="28" r="5" fill="#38BDF8"/>
-            <text x="122" y="-12" text-anchor="middle" fill="#FCA5A5" font-size="13" font-weight="900">🚑 救護車鳴笛逼近！</text>
-          </g>
-          <!-- 你的車輛 -->
-          <g transform="translate(310, 178)">
-            <rect x="0" y="0" width="62" height="34" rx="8" fill="#0EA5E9" stroke="#FFFFFF" stroke-width="2"/>
-            <text x="31" y="21" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="900">你</text>
-          </g>
-          <!-- 向右靠攏示意箭頭 -->
-          <path d="M355,216 Q385,236 435,236" fill="none" stroke="#38BDF8" stroke-width="3.5" stroke-dasharray="6,4" class="animate-path-flow"/>
-          <text x="455" y="226" text-anchor="middle" fill="#BAE6FD" font-size="12" font-weight="800">向右側路邊靠攏暫停</text>
-        </svg>`
-      },
-      {
-        id: 7,
-        title: '夜間傾盆大雨與路面積水路段',
-        shortDesc: '夜晚豪雨視線模糊、路面有積水，如何正確開燈與控制車距？',
-        difficulty: '天候防禦',
-        description: '夜晚下起傾盆大雨，你開車行駛在快速道路上，雨刷開到最大檔位仍感覺前方視線模糊，前車尾燈在雨霧中變得朦朧，路面也有明顯水膜。',
-        options: [
-          '開啟遠光燈照亮遠方，並緊跟前車尾燈以免迷路',
-          '開啟頭燈（近光燈，視能見度開啟霧燈），降低車速並加倍拉長與前車的安全車距，預防打滑水漂',
-          '打開雙黃危險警告燈（雙閃燈）並維持最高速限行駛'
-        ],
-        correctIndex: 1,
-        reason: '雨天及夜間視線不良時，應依規定開亮頭燈（近光燈，切勿亂開遠光燈造成前車後照鏡與對向嚴重眩光），能見度極差時可開啟霧燈；同時雨天煞車距離變長且高速壓過積水易發生「水漂現象（Hydroplaning）」，務必減速並拉長安全車距。',
-        svg: `<svg viewBox="0 0 600 300" class="w-full h-auto block">
-          <rect width="600" height="300" fill="#0F172A"/>
-          <!-- 車道白虛線 -->
-          <line x1="0" y1="150" x2="600" y2="150" stroke="#64748B" stroke-width="3" stroke-dasharray="18,14"/>
-          <!-- 雨滴斜線特效 -->
-          <g stroke="#7DD3FC" stroke-width="1.5" opacity="0.45">
-            <line x1="60" y1="20" x2="45" y2="55"/><line x1="140" y1="30" x2="125" y2="65"/>
-            <line x1="230" y1="15" x2="215" y2="50"/><line x1="330" y1="25" x2="315" y2="60"/>
-            <line x1="440" y1="20" x2="425" y2="55"/><line x1="530" y1="35" x2="515" y2="70"/>
-            <line x1="100" y1="220" x2="85" y2="255"/><line x1="280" y1="230" x2="265" y2="265"/>
-            <line x1="470" y1="225" x2="455" y2="260"/>
-          </g>
-          <!-- 積水區 -->
-          <ellipse cx="345" cy="195" rx="45" ry="18" fill="#38BDF8" opacity="0.25" stroke="#38BDF8" stroke-width="1.5" stroke-dasharray="4,3"/>
-          <text x="345" y="232" text-anchor="middle" fill="#7DD3FC" font-size="11" font-weight="700">路面積水區（防範水漂）</text>
-          <!-- 近光燈光束示意 -->
-          <polygon points="180,182 285,162 285,222 180,206" fill="#FEF08A" opacity="0.28"/>
-          <!-- 你的車輛 -->
-          <g transform="translate(120, 178)">
-            <rect x="0" y="0" width="62" height="32" rx="8" fill="#0EA5E9" stroke="#FFFFFF" stroke-width="2"/>
-            <text x="31" y="20" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="900">你</text>
-          </g>
-          <!-- 前方車輛 -->
-          <g transform="translate(455, 178)">
-            <rect x="0" y="0" width="60" height="32" rx="8" fill="#64748B" stroke="#CBD5E1" stroke-width="1.5"/>
-            <circle cx="3" cy="7" r="3.5" fill="#EF4444"/>
-            <circle cx="3" cy="25" r="3.5" fill="#EF4444"/>
-            <text x="30" y="20" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="800">前車</text>
-          </g>
-          <text x="300" y="45" text-anchor="middle" fill="#FDE047" font-size="14" font-weight="900">🌧️ 夜間豪雨・視線不良・路面濕滑</text>
-        </svg>`
-      }
-    ];
-
-    /**
-     * 5. 6 枚成就徽章定義
-     */
-    const ACHIEVEMENTS = [
-      {
-        id: 'rookie',
-        title: '交通新手',
-        icon: '🌱',
-        desc: '踏出安全駕駛第一步！完成任意 1 個知識單元、1 次筆試或 1 個情境關卡。',
-        check: (state) => (state.completedUnits.length + state.quizStats.totalAttempts + state.completedScenarios.length) >= 1,
-        progressText: (state) => (state.completedUnits.length + state.quizStats.totalAttempts + state.completedScenarios.length) >= 1 ? '已達成' : '0 / 1 項任務'
-      },
-      {
-        id: 'sign_master',
-        title: '標誌達人',
-        icon: '🛑',
-        desc: '在「交通標誌認識」點擊查看至少 8 款台灣交通標誌詳解。',
-        check: (state) => state.clickedSigns.length >= 8,
-        progressText: (state) => `已查看 ${Math.min(state.clickedSigns.length, 8)} / 8 款標誌`
-      },
-      {
-        id: 'knowledge_scholar',
-        title: '法規知識通',
-        icon: '📚',
-        desc: '完整閱讀並標記完成全部 5 個交通知識複習單元。',
-        check: (state) => state.completedUnits.length >= 5,
-        progressText: (state) => `已完成 ${state.completedUnits.length} / 5 單元`
-      },
-      {
-        id: 'exam_ace',
-        title: '筆試高手',
-        icon: '🎓',
-        desc: '完成至少 1 次駕照筆試測驗，且單次正確率達到 80% 以上。',
-        check: (state) => state.quizStats.bestAccuracy >= 80,
-        progressText: (state) => `最高正確率 ${state.quizStats.bestAccuracy}% / 80%`
-      },
-      {
-        id: 'scenario_navigator',
-        title: '路況小神童',
-        icon: '🧭',
-        desc: '在道路情境模擬闖關中，成功通關至少 4 個真實路況關卡。',
-        check: (state) => state.completedScenarios.length >= 4,
-        progressText: (state) => `已通關 ${Math.min(state.completedScenarios.length, 4)} / 4 關`
-      },
-      {
-        id: 'safe_driver',
-        title: '安全駕駛員',
-        icon: '🏆',
-        desc: '最高榮譽！成功通關全部 7 個台灣道路情境模擬關卡。',
-        check: (state) => state.completedScenarios.length >= 7,
-        progressText: (state) => `已通關 ${state.completedScenarios.length} / 7 關`
-      }
-    ];
-
-
-    // =========================================================================
-    // [模組二] 狀態管理與 localStorage 持久化 (State & Persistence)
-    // =========================================================================
-    const STORAGE_KEY = 'dontForgetLicense_tw_v1';
-
-    const DEFAULT_STATE = {
-      points: 0,
-      completedUnits: [],
-      clickedSigns: [],
-      quizStats: {
-        totalAttempts: 0,
-        totalQuestions: 0,
-        totalCorrect: 0,
-        bestAccuracy: 0
-      },
-      bookmarkedQuestions: [],
-      completedScenarios: [],
-      freePlayMode: false,
-      unlockedAchievements: []
-    };
-
-    let appState = loadState();
-
-    // 載入 localStorage
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
-        const parsed = JSON.parse(raw);
-        return {
-          ...JSON.parse(JSON.stringify(DEFAULT_STATE)),
-          ...parsed,
-          quizStats: {
-            ...DEFAULT_STATE.quizStats,
-            ...(parsed.quizStats || {})
-          }
-        };
-      } catch (e) {
-        console.error('讀取學習紀錄失敗，使用預設狀態:', e);
-        return JSON.parse(JSON.stringify(DEFAULT_STATE));
-      }
-    }
-
-    // 儲存至 localStorage 並自動檢查成就與更新 UI
-    function saveState() {
-      try {
-        checkNewAchievements();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        updateGlobalUI();
-      } catch (e) {
-        console.error('儲存學習紀錄失敗:', e);
-      }
-    }
-
-    // 增加積分並顯示通知
-    function addPoints(amount, reasonText) {
-      appState.points += amount;
-      saveState();
-      showToast(`+${amount} 安全積分！${reasonText}`, 'points');
-    }
-
-    // 檢查是否達成新成就
-    function checkNewAchievements() {
-      ACHIEVEMENTS.forEach((ach) => {
-        if (!appState.unlockedAchievements.includes(ach.id) && ach.check(appState)) {
-          appState.unlockedAchievements.push(ach.id);
-          showToast(`🏅 解鎖新成就：【${ach.title}】！`, 'achievement');
-        }
-      });
-    }
-
-
-    // =========================================================================
-    // [模組三] 頁面導覽與全域 UI 更新 (Navigation & Global UI)
-    // =========================================================================
-    let currentPage = 'home';
-    let currentLearnTab = 'signs';
-
-    function navigateTo(pageId) {
-      currentPage = pageId;
-
-      // 隱藏所有頁面並顯示目標頁面
-      document.querySelectorAll('.page-section').forEach((sec) => {
-        sec.classList.add('hidden');
-      });
-      const target = document.getElementById(`view-${pageId}`);
-      if (target) target.classList.remove('hidden');
-
-      // 更新導覽列按鈕高亮樣式
-      document.querySelectorAll('.nav-btn').forEach((btn) => {
-        const isActive = btn.getAttribute('data-nav') === pageId;
-        if (isActive) {
-          btn.className = 'nav-btn px-3.5 py-2 rounded-xl text-sm font-bold transition-all bg-brand-600 text-white shadow-xs flex items-center gap-1';
-        } else {
-          btn.className = 'nav-btn px-3.5 py-2 rounded-xl text-sm font-bold transition-all text-slate-600 hover:text-brand-700 hover:bg-white flex items-center gap-1';
-        }
-      });
-
-      document.querySelectorAll('.nav-btn-mobile').forEach((btn) => {
-        const isActive = btn.getAttribute('data-nav') === pageId;
-        btn.className = isActive
-          ? 'nav-btn-mobile p-3 rounded-xl text-sm font-bold text-left bg-brand-600 text-white'
-          : 'nav-btn-mobile p-3 rounded-xl text-sm font-bold text-left bg-brand-50 text-slate-700 hover:bg-brand-100';
-      });
-
-      // 依頁面觸發專屬渲染
-      if (pageId === 'home') renderHomeStats();
-      if (pageId === 'learn') renderLearnPage();
-      if (pageId === 'quiz') updateQuizLobbyBadges();
-      if (pageId === 'scenarios') renderScenariosPage();
-      if (pageId === 'progress') renderProgressPage();
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function toggleMobileMenu(forceState) {
-      const menu = document.getElementById('mobile-menu');
-      if (typeof forceState === 'boolean') {
-        menu.classList.toggle('hidden', !forceState);
-      } else {
-        menu.classList.toggle('hidden');
-      }
-    }
-
-    function updateGlobalUI() {
-      document.getElementById('header-points').textContent = appState.points;
-      if (currentPage === 'home') renderHomeStats();
-      if (currentPage === 'progress') renderProgressPage();
-    }
-
-
-    // =========================================================================
-    // [模組四] 首頁互動彩蛋與數據渲染 (Home View Logic)
-    // =========================================================================
-    let heroLightState = 0; // 0: 綠燈, 1: 黃燈, 2: 紅燈
-
-    function cycleHeroTrafficLight() {
-      heroLightState = (heroLightState + 1) % 3;
-      const red = document.getElementById('hero-bulb-red');
-      const yellow = document.getElementById('hero-bulb-yellow');
-      const green = document.getElementById('hero-bulb-green');
-      const label = document.getElementById('hero-light-label');
-      const car = document.getElementById('hero-car-group');
-
-      red.setAttribute('fill', '#450A0A');
-      yellow.setAttribute('fill', '#451A03');
-      green.setAttribute('fill', '#064E3B');
-
-      if (heroLightState === 0) {
-        green.setAttribute('fill', '#10B981');
-        label.textContent = '目前：綠燈通行';
-        label.className = 'text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full';
-        car.style.animationPlayState = 'running';
-      } else if (heroLightState === 1) {
-        yellow.setAttribute('fill', '#F59E0B');
-        label.textContent = '目前：黃燈減速準備停車';
-        label.className = 'text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full';
-        car.style.animationPlayState = 'paused';
-      } else {
-        red.setAttribute('fill', '#EF4444');
-        label.textContent = '目前：紅燈停止線前停車';
-        label.className = 'text-xs font-bold text-rose-700 bg-rose-100 px-2.5 py-1 rounded-full';
-        car.style.animationPlayState = 'paused';
-      }
-    }
-
-    function renderHomeStats() {
-      const totalTasks = KNOWLEDGE_UNITS.length + SCENARIOS.length; // 5 + 7 = 12
-      const completedTasks = appState.completedUnits.length + appState.completedScenarios.length;
-      const overallPercent = Math.round((completedTasks / totalTasks) * 100);
-
-      document.getElementById('home-overall-percent').textContent = `${overallPercent}%`;
-      document.getElementById('home-overall-bar').style.width = `${overallPercent}%`;
-
-      document.getElementById('home-stat-points').textContent = appState.points;
-      document.getElementById('home-stat-units').textContent = appState.completedUnits.length;
-      document.getElementById('home-stat-scenarios').textContent = appState.completedScenarios.length;
-
-      const acc = appState.quizStats.totalQuestions > 0
-        ? Math.round((appState.quizStats.totalCorrect / appState.quizStats.totalQuestions) * 100)
-        : 0;
-      document.getElementById('home-stat-accuracy').textContent = acc;
-    }
-
-
-    // =========================================================================
-    // [模組五] 交通知識複習與標誌互動圖鑑 (Knowledge Review Logic)
-    // =========================================================================
-    function renderLearnPage() {
-      document.getElementById('learn-completed-count').textContent = appState.completedUnits.length;
-
-      // 渲染五大單元頁籤
-      const tabsContainer = document.getElementById('learn-tabs');
-      tabsContainer.innerHTML = KNOWLEDGE_UNITS.map((unit) => {
-        const isSelected = unit.id === currentLearnTab;
-        const isDone = appState.completedUnits.includes(unit.id);
-        return `
-          <button onclick="selectLearnUnit('${unit.id}')"
-            class="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border ${
-              isSelected
-                ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                : 'bg-white text-slate-700 border-brand-200 hover:bg-brand-50'
-            }">
-            <span>${unit.icon}</span>
-            <span>${unit.title}</span>
-            ${isDone ? `<span class="text-xs px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}">✓</span>` : ''}
-          </button>
-        `;
-      }).join('');
-
-      // 渲染當前選中的單元內容
-      const unit = KNOWLEDGE_UNITS.find((u) => u.id === currentLearnTab) || KNOWLEDGE_UNITS[0];
-      const isUnitCompleted = appState.completedUnits.includes(unit.id);
-      const contentArea = document.getElementById('learn-content-area');
-
-      let signGalleryHTML = '';
-      if (unit.isSignGallery) {
-        signGalleryHTML = `
-          <div class="edu-card p-6 sm:p-8 space-y-5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h3 class="text-lg sm:text-xl font-black text-slate-900">🚦 台灣現行交通標誌互動圖鑑（點擊查看詳解）</h3>
-                <p class="text-xs sm:text-sm text-slate-500 mt-0.5">點擊下方任一標誌卡片，可開啟法規含義與注意事項（已查看 ${appState.clickedSigns.length} / ${TRAFFIC_SIGNS.length} 款）</p>
-              </div>
-              <div class="flex items-center gap-2 text-xs font-bold">
-                <span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">禁制標誌</span>
-                <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">警告標誌</span>
-                <span class="px-2.5 py-1 rounded-full bg-brand-100 text-brand-700">指示標誌</span>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              ${TRAFFIC_SIGNS.map((sign) => {
-                const isViewed = appState.clickedSigns.includes(sign.id);
-                return `
-                  <button onclick="openSignModal('${sign.id}')"
-                    class="group relative p-4 rounded-2xl bg-brand-50/40 hover:bg-white border-2 ${isViewed ? 'border-emerald-200' : 'border-brand-100'} hover:border-brand-400 transition-all flex flex-col items-center text-center shadow-xs hover:shadow-md">
-                    ${isViewed ? '<span class="absolute top-2.5 right-2.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200">已閱</span>' : ''}
-                    <div class="w-20 h-20 my-1 group-hover:scale-105 transition-transform">${sign.svg}</div>
-                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-full mt-2 ${sign.badgeClass}">${sign.category}</span>
-                    <div class="font-bold text-sm text-slate-800 mt-1.5">${sign.name}</div>
-                  </button>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        `;
-      }
-
-      contentArea.innerHTML = `
-        <div class="edu-card p-6 sm:p-8 space-y-6">
-          <div class="border-b border-brand-100 pb-4">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">${unit.icon}</span>
-              <div>
-                <h2 class="text-xl sm:text-2xl font-black text-slate-900">${unit.title}</h2>
-                <p class="text-sm text-slate-600 mt-0.5">${unit.summary}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- 核心重點卡片網格 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${unit.highlights.map((item, idx) => `
-              <div class="p-5 rounded-2xl bg-brand-50/60 border border-brand-100 space-y-2">
-                <div class="flex items-center gap-2">
-                  <span class="w-6 h-6 rounded-lg bg-brand-600 text-white text-xs font-black flex items-center justify-center shrink-0">${idx + 1}</span>
-                  <h3 class="font-bold text-base text-slate-900">${item.title}</h3>
-                </div>
-                <p class="text-sm text-slate-700 leading-relaxed pl-8">${item.desc}</p>
-              </div>
-            `).join('')}
-          </div>
-
-          <!-- 單元完成按鈕區 -->
-          <div class="pt-4 border-t border-brand-100 flex flex-wrap items-center justify-between gap-4">
-            <div class="text-xs sm:text-sm text-slate-500">
-              ${isUnitCompleted ? '🎉 你已完成此單元的重點複習！' : '閱讀完上述重點後，點擊右側按鈕標記完成並領取積分：'}
-            </div>
-            <div class="flex items-center gap-3">
-              <button onclick="markUnitComplete('${unit.id}')"
-                ${isUnitCompleted ? 'disabled' : ''}
-                class="px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
-                  isUnitCompleted
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 cursor-default'
-                    : 'bg-amber-400 hover:bg-amber-500 text-slate-900 shadow-md'
-                }">
-                <span>${isUnitCompleted ? '✓ 已完成本單元' : '✨ 標記完成本單元 (+20 積分)'}</span>
-              </button>
-              <button onclick="goNextLearnUnit()" class="px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm">
-                下一單元 →
-              </button>
-            </div>
-          </div>
-        </div>
-        ${signGalleryHTML}
-      `;
-    }
-
-    function selectLearnUnit(unitId) {
-      currentLearnTab = unitId;
-      renderLearnPage();
-    }
-
-    function markUnitComplete(unitId) {
-      if (!appState.completedUnits.includes(unitId)) {
-        appState.completedUnits.push(unitId);
-        addPoints(20, '完成知識單元複習');
-        renderLearnPage();
-      }
-    }
-
-    function goNextLearnUnit() {
-      const idx = KNOWLEDGE_UNITS.findIndex((u) => u.id === currentLearnTab);
-      const nextIdx = (idx + 1) % KNOWLEDGE_UNITS.length;
-      currentLearnTab = KNOWLEDGE_UNITS[nextIdx].id;
-      renderLearnPage();
-    }
-
-    // 交通標誌 Modal 開啟與關閉
-    function openSignModal(signId) {
-      const sign = TRAFFIC_SIGNS.find((s) => s.id === signId);
-      if (!sign) return;
-
-      // 記錄已點擊查看過此標誌（用於解鎖「標誌達人」成就）
-      if (!appState.clickedSigns.includes(signId)) {
-        appState.clickedSigns.push(signId);
-        saveState();
-        if (currentPage === 'learn') renderLearnPage();
-      }
-
-      document.getElementById('modal-sign-svg').innerHTML = sign.svg;
-      const catEl = document.getElementById('modal-sign-category');
-      catEl.textContent = sign.category;
-      catEl.className = `text-xs font-bold px-3 py-1 rounded-full ${sign.badgeClass}`;
-      document.getElementById('modal-sign-name').textContent = sign.name;
-      document.getElementById('modal-sign-meaning').textContent = sign.meaning;
-      document.getElementById('modal-sign-note').textContent = sign.note;
-
-      const modal = document.getElementById('sign-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function closeSignModal(e) {
-      if (e && e.target !== e.currentTarget) return;
-      const modal = document.getElementById('sign-modal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-
-    // =========================================================================
-    // [模組六] 駕照筆試隨機模擬測驗 (Quiz Logic)
-    // =========================================================================
-    let activeQuiz = {
-      mode: 'all',
-      questions: [],
-      currentIndex: 0,
-      scoreCount: 0,
-      answered: false,
-      wrongIds: []
-    };
-
-    function updateQuizLobbyBadges() {
-      document.getElementById('quiz-bookmark-badge').textContent = `已收藏 ${appState.bookmarkedQuestions.length} 題`;
-    }
-
-    // 洗牌演算法 (Fisher-Yates Shuffle)
-    function shuffleArray(arr) {
-      const copy = [...arr];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    }
-
-    function startQuiz(mode) {
-      let pool = [];
-      let count = 8;
-      let modeTitle = '';
-
-      if (mode === 'car') {
-        pool = QUIZ_BANK.filter((q) => q.category === 'car' || q.category === 'common');
-        count = Math.min(8, pool.length);
-        modeTitle = '🚗 汽車駕照模擬測驗';
-      } else if (mode === 'scooter') {
-        pool = QUIZ_BANK.filter((q) => q.category === 'scooter' || q.category === 'common');
-        count = Math.min(8, pool.length);
-        modeTitle = '🛵 機車駕照模擬測驗';
-      } else if (mode === 'all') {
-        pool = [...QUIZ_BANK];
-        count = Math.min(10, pool.length);
-        modeTitle = '🎯 全科綜合大挑戰';
-      } else if (mode === 'bookmarks') {
-        pool = QUIZ_BANK.filter((q) => appState.bookmarkedQuestions.includes(q.id));
-        if (pool.length === 0) {
-          showToast('你目前還沒有收藏任何錯題喔！請先進行測驗並收藏題目。', 'info');
-          return;
-        }
-        count = pool.length;
-        modeTitle = '🔖 錯題收藏本特訓';
-      }
-
-      activeQuiz = {
-        mode,
-        modeTitle,
-        questions: shuffleArray(pool).slice(0, count),
-        currentIndex: 0,
-        scoreCount: 0,
-        answered: false,
-        wrongIds: []
-      };
-
-      document.getElementById('quiz-lobby').classList.add('hidden');
-      document.getElementById('quiz-result').classList.add('hidden');
-      document.getElementById('quiz-active').classList.remove('hidden');
-
-      renderQuizQuestion();
-    }
-
-    function renderQuizQuestion() {
-      const q = activeQuiz.questions[activeQuiz.currentIndex];
-      activeQuiz.answered = false;
-
-      document.getElementById('quiz-mode-label').textContent = activeQuiz.modeTitle;
-      document.getElementById('quiz-current-num').textContent = activeQuiz.currentIndex + 1;
-      document.getElementById('quiz-total-num').textContent = activeQuiz.questions.length;
-
-      const percent = ((activeQuiz.currentIndex + 1) / activeQuiz.questions.length) * 100;
-      document.getElementById('quiz-progress-bar').style.width = `${percent}%`;
-
-      document.getElementById('quiz-q-tag').textContent = q.tag;
-      document.getElementById('quiz-question-text').textContent = q.question;
-
-      updateQuizBookmarkButtonUI(q.id);
-
-      // 隱藏解析區
-      const feedbackBox = document.getElementById('quiz-feedback-box');
-      feedbackBox.classList.add('hidden');
-      document.getElementById('quiz-wrong-bookmark-cta').classList.add('hidden');
-
-      // 渲染選項
-      const labels = ['A', 'B', 'C', 'D'];
-      const optionsContainer = document.getElementById('quiz-options-container');
-      optionsContainer.innerHTML = q.options.map((opt, idx) => `
-        <button onclick="submitQuizAnswer(${idx})" id="quiz-opt-${idx}"
-          class="w-full text-left p-4 rounded-2xl border-2 border-brand-100 bg-brand-50/30 hover:bg-brand-50 hover:border-brand-400 transition-all flex items-start gap-3.5 group">
-          <span class="w-7 h-7 rounded-lg bg-white border border-brand-200 text-brand-700 font-black text-sm flex items-center justify-center shrink-0 group-hover:bg-brand-600 group-hover:text-white transition-colors">${labels[idx]}</span>
-          <span class="text-sm sm:text-base font-medium text-slate-800 pt-0.5">${opt}</span>
-        </button>
-      `).join('');
-    }
-
-    function submitQuizAnswer(selectedIndex) {
-      if (activeQuiz.answered) return;
-      activeQuiz.answered = true;
-
-      const q = activeQuiz.questions[activeQuiz.currentIndex];
-      const isCorrect = selectedIndex === q.answerIndex;
-
-      if (isCorrect) {
-        activeQuiz.scoreCount++;
-      } else {
-        activeQuiz.wrongIds.push(q.id);
-      }
-
-      // 鎖定所有選項並標示正誤顏色
-      q.options.forEach((_, idx) => {
-        const btn = document.getElementById(`quiz-opt-${idx}`);
-        btn.disabled = true;
-        btn.classList.remove('hover:bg-brand-50', 'hover:border-brand-400');
-
-        if (idx === q.answerIndex) {
-          btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 flex items-start gap-3.5';
-          btn.querySelector('span').className = 'w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-sm flex items-center justify-center shrink-0';
-        } else if (idx === selectedIndex && !isCorrect) {
-          btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-rose-500 bg-rose-50 flex items-start gap-3.5';
-          btn.querySelector('span').className = 'w-7 h-7 rounded-lg bg-rose-600 text-white font-black text-sm flex items-center justify-center shrink-0';
-        } else {
-          btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-100 bg-slate-50/50 opacity-60 flex items-start gap-3.5';
-        }
-      });
-
-      // 顯示即時法規解析
-      const feedbackBox = document.getElementById('quiz-feedback-box');
-      const feedbackTitle = document.getElementById('quiz-feedback-title');
-      const feedbackExp = document.getElementById('quiz-feedback-explanation');
-      const nextBtn = document.getElementById('quiz-next-btn');
-
-      feedbackBox.classList.remove('hidden');
-      if (isCorrect) {
-        feedbackBox.className = 'rounded-2xl p-5 border-2 border-emerald-300 bg-emerald-50/70 space-y-3';
-        feedbackTitle.innerHTML = '<span class="text-emerald-700">✅ 回答正確！觀念非常清楚！</span>';
-      } else {
-        feedbackBox.className = 'rounded-2xl p-5 border-2 border-rose-300 bg-rose-50/70 space-y-3';
-        feedbackTitle.innerHTML = `<span class="text-rose-700">❌ 答錯了！正確答案是選項 (${['A', 'B', 'C', 'D'][q.answerIndex]})</span>`;
-        if (!appState.bookmarkedQuestions.includes(q.id)) {
-          document.getElementById('quiz-wrong-bookmark-cta').classList.remove('hidden');
-        }
-      }
-
-      feedbackExp.innerHTML = `<strong>📖 法規解析：</strong>${q.explanation}`;
-      nextBtn.textContent = activeQuiz.currentIndex === activeQuiz.questions.length - 1 ? '查看測驗結算 →' : '下一題 →';
-    }
-
-    function nextQuizQuestion() {
-      if (activeQuiz.currentIndex < activeQuiz.questions.length - 1) {
-        activeQuiz.currentIndex++;
-        renderQuizQuestion();
-      } else {
-        finishQuiz();
-      }
-    }
-
-    function finishQuiz() {
-      const total = activeQuiz.questions.length;
-      const correct = activeQuiz.scoreCount;
-      const accuracy = Math.round((correct / total) * 100);
-      const earnedPoints = correct * 10 + (accuracy === 100 ? 20 : 0);
-
-      // 更新學習紀錄
-      appState.quizStats.totalAttempts += 1;
-      appState.quizStats.totalQuestions += total;
-      appState.quizStats.totalCorrect += correct;
-      if (accuracy > appState.quizStats.bestAccuracy) {
-        appState.quizStats.bestAccuracy = accuracy;
-      }
-
-      document.getElementById('quiz-active').classList.add('hidden');
-      document.getElementById('quiz-result').classList.remove('hidden');
-
-      document.getElementById('res-correct').textContent = correct;
-      document.getElementById('res-total').textContent = total;
-      document.getElementById('res-accuracy').textContent = accuracy;
-      document.getElementById('res-points').textContent = earnedPoints;
-
-      // 渲染本次錯題回顧
-      const wrongContainer = document.getElementById('quiz-result-wrong-list');
-      const wrongItems = document.getElementById('quiz-result-wrong-items');
-      if (activeQuiz.wrongIds.length > 0) {
-        wrongContainer.classList.remove('hidden');
-        wrongItems.innerHTML = activeQuiz.wrongIds.map((qid) => {
-          const item = QUIZ_BANK.find((q) => q.id === qid);
-          const isSaved = appState.bookmarkedQuestions.includes(qid);
-          return `
-            <div class="p-3.5 rounded-xl bg-white border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div class="text-xs sm:text-sm text-slate-800 font-medium">${item.question}</div>
-              <button onclick="bookmarkById('${qid}', this)"
-                class="self-start sm:self-auto shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold ${
-                  isSaved ? 'bg-amber-100 text-amber-800' : 'bg-rose-600 text-white hover:bg-rose-700'
-                }">
-                ${isSaved ? '★ 已收藏' : '☆ 收藏錯題'}
-              </button>
-            </div>
-          `;
-        }).join('');
-      } else {
-        wrongContainer.classList.add('hidden');
-      }
-
-      if (earnedPoints > 0) {
-        addPoints(earnedPoints, '完成駕照筆試測驗');
-      } else {
-        saveState();
-      }
-    }
-
-    function toggleCurrentQuestionBookmark(forceAdd = false) {
-      const q = activeQuiz.questions[activeQuiz.currentIndex];
-      if (!q) return;
-      const idx = appState.bookmarkedQuestions.indexOf(q.id);
-      if (idx === -1) {
-        appState.bookmarkedQuestions.push(q.id);
-        showToast('🔖 已將題目加入錯題收藏本！', 'info');
-      } else if (!forceAdd) {
-        appState.bookmarkedQuestions.splice(idx, 1);
-        showToast('已從收藏本移除此題', 'info');
-      }
-      saveState();
-      updateQuizBookmarkButtonUI(q.id);
-      document.getElementById('quiz-wrong-bookmark-cta').classList.add('hidden');
-    }
-
-    function bookmarkById(qid, btnEl) {
-      if (!appState.bookmarkedQuestions.includes(qid)) {
-        appState.bookmarkedQuestions.push(qid);
-        saveState();
-        if (btnEl) {
-          btnEl.textContent = '★ 已收藏';
-          btnEl.className = 'self-start sm:self-auto shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-800';
-        }
-        showToast('🔖 已加入錯題收藏本！', 'info');
-      }
-    }
-
-    function updateQuizBookmarkButtonUI(qid) {
-      const btn = document.getElementById('quiz-bookmark-btn');
-      const isSaved = appState.bookmarkedQuestions.includes(qid);
-      if (isSaved) {
-        btn.className = 'px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 text-xs font-bold transition-colors flex items-center gap-1';
-        btn.innerHTML = '<span>★ 已收藏</span>';
-      } else {
-        btn.className = 'px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors flex items-center gap-1';
-        btn.innerHTML = '<span>☆ 收藏此題</span>';
-      }
-    }
-
-    function restartCurrentQuizMode() {
-      startQuiz(activeQuiz.mode);
-    }
-
-    function exitQuizToLobby() {
-      document.getElementById('quiz-active').classList.add('hidden');
-      document.getElementById('quiz-result').classList.add('hidden');
-      document.getElementById('quiz-lobby').classList.remove('hidden');
-      updateQuizLobbyBadges();
-    }
-
-
-    // =========================================================================
-    // [模組七] 道路情境模擬闖關 (Road Scenarios Challenge Logic)
-    // =========================================================================
-    let activeScenarioId = null;
-    let scenarioAnswered = false;
-
-    function isScenarioUnlocked(scenarioId) {
-      if (appState.freePlayMode) return true;
-      if (scenarioId === 1) return true;
-      return appState.completedScenarios.includes(scenarioId - 1);
-    }
-
-    function toggleFreePlayMode(enabled) {
-      appState.freePlayMode = enabled;
-      saveState();
-      renderScenariosPage();
-      showToast(enabled ? '🔓 已開啟自由體驗模式，所有關卡皆可挑戰！' : '🔒 已切換回循序解鎖闖關模式', 'info');
-    }
-
-    function renderScenariosPage() {
-      document.getElementById('free-play-toggle').checked = appState.freePlayMode;
-      document.getElementById('scenarios-cleared-count').textContent = appState.completedScenarios.length;
-
-      const grid = document.getElementById('scenarios-grid');
-      grid.innerHTML = SCENARIOS.map((sc) => {
-        const unlocked = isScenarioUnlocked(sc.id);
-        const cleared = appState.completedScenarios.includes(sc.id);
-        const isSelected = activeScenarioId === sc.id;
-
-        return `
-          <div onclick="${unlocked ? `openScenarioStage(${sc.id})` : `showToast('請先完成第 ${sc.id - 1} 關，或開啟右上角「自由體驗模式」！', 'info')`}"
-            class="edu-card p-5 flex flex-col justify-between space-y-4 transition-all ${
-              unlocked
-                ? `cursor-pointer edu-card-hover ${isSelected ? 'ring-2 ring-brand-500 border-brand-500' : ''}`
-                : 'opacity-65 bg-slate-50 cursor-not-allowed'
-            }">
-            <div class="space-y-2.5">
-              <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-black px-2.5 py-1 rounded-full ${
-                  cleared
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : unlocked
-                    ? 'bg-brand-100 text-brand-700'
-                    : 'bg-slate-200 text-slate-600'
-                }">
-                  ${cleared ? '✓ 已通關' : unlocked ? `關卡 0${sc.id}` : `🔒 關卡 0${sc.id}`}
-                </span>
-                <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">${sc.difficulty}</span>
-              </div>
-
-              <h3 class="font-bold text-lg text-slate-900 leading-snug">${sc.title}</h3>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">${sc.shortDesc}</p>
-            </div>
-
-            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold">
-              <span class="${cleared ? 'text-emerald-600' : unlocked ? 'text-brand-600' : 'text-slate-400'}">
-                ${cleared ? '點擊再次複習路況 →' : unlocked ? '點擊進入情境模擬 →' : `完成關卡 0${sc.id - 1} 解鎖`}
-              </span>
-              <span class="text-amber-600">+30 分</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function openScenarioStage(scenarioId) {
-      const sc = SCENARIOS.find((s) => s.id === scenarioId);
-      if (!sc) return;
-
-      activeScenarioId = scenarioId;
-      scenarioAnswered = false;
-      renderScenariosPage();
-
-      const stage = document.getElementById('scenario-stage');
-      stage.classList.remove('hidden');
-
-      document.getElementById('stage-badge').textContent = `關卡 ${sc.id} / ${SCENARIOS.length}`;
-      document.getElementById('stage-title').textContent = sc.title;
-      document.getElementById('stage-svg-container').innerHTML = sc.svg;
-      document.getElementById('stage-description').textContent = sc.description;
-      document.getElementById('stage-feedback').classList.add('hidden');
-
-      const labels = ['A', 'B', 'C'];
-      document.getElementById('stage-options').innerHTML = sc.options.map((opt, idx) => `
-        <button onclick="selectScenarioOption(${idx})" id="sc-opt-${idx}"
-          class="w-full text-left p-4 rounded-2xl border-2 border-brand-100 bg-white hover:bg-brand-50 hover:border-brand-400 transition-all flex items-start gap-3 shadow-2xs">
-          <span class="w-7 h-7 rounded-lg bg-brand-100 text-brand-700 font-black text-sm flex items-center justify-center shrink-0">${labels[idx]}</span>
-          <span class="text-sm sm:text-base font-bold text-slate-800 pt-0.5">${opt}</span>
-        </button>
-      `).join('');
-
-      stage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function selectScenarioOption(selectedIndex) {
-      if (scenarioAnswered) return;
-      scenarioAnswered = true;
-
-      const sc = SCENARIOS.find((s) => s.id === activeScenarioId);
-      const isCorrect = selectedIndex === sc.correctIndex;
-
-      sc.options.forEach((_, idx) => {
-        const btn = document.getElementById(`sc-opt-${idx}`);
-        btn.disabled = true;
-        btn.classList.remove('hover:bg-brand-50', 'hover:border-brand-400');
-
-        if (idx === sc.correctIndex) {
-          btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 flex items-start gap-3';
-          btn.querySelector('span').className = 'w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-sm flex items-center justify-center shrink-0';
-        } else if (idx === selectedIndex && !isCorrect) {
-          btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-rose-500 bg-rose-50 flex items-start gap-3';
-          btn.querySelector('span').className = 'w-7 h-7 rounded-lg bg-rose-600 text-white font-black text-sm flex items-center justify-center shrink-0';
-        } else {
-          btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 opacity-55 flex items-start gap-3';
-        }
-      });
-
-      const feedback = document.getElementById('stage-feedback');
-      const header = document.getElementById('stage-feedback-header');
-      const reason = document.getElementById('stage-feedback-reason');
-      const nextBtn = document.getElementById('stage-next-btn');
-
-      feedback.classList.remove('hidden');
-
-      if (isCorrect) {
-        feedback.className = 'rounded-2xl p-5 border-2 border-emerald-400 bg-emerald-50/90 space-y-3';
-        header.innerHTML = '<span class="text-emerald-700">🎉 判斷正確！成功化解道路危機！</span>';
-
-        // 首次通關發放積分與解鎖下一關
-        if (!appState.completedScenarios.includes(sc.id)) {
-          appState.completedScenarios.push(sc.id);
-          addPoints(30, `通關【${sc.title}】`);
-        } else {
-          saveState();
-        }
-        renderScenariosPage();
-      } else {
-        feedback.className = 'rounded-2xl p-5 border-2 border-rose-400 bg-rose-50/90 space-y-3';
-        header.innerHTML = '<span class="text-rose-700">🚨 危險決策！這樣做容易發生交通事故！</span>';
-      }
-
-      reason.innerHTML = `<strong>⚖️ 台灣法規與安全解析：</strong>${sc.reason}`;
-
-      if (sc.id < SCENARIOS.length) {
-        const nextUnlocked = isScenarioUnlocked(sc.id + 1);
-        nextBtn.classList.remove('hidden');
-        nextBtn.disabled = !nextUnlocked;
-        nextBtn.textContent = nextUnlocked ? `挑戰第 ${sc.id + 1} 關 →` : '請先答對本關以解鎖下一關';
-        nextBtn.className = nextUnlocked
-          ? 'px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md'
-          : 'px-4 py-2.5 rounded-xl bg-slate-200 text-slate-500 text-xs font-bold cursor-not-allowed';
-      } else {
-        nextBtn.classList.remove('hidden');
-        nextBtn.disabled = false;
-        nextBtn.textContent = '🏅 查看學習成就總覽';
-        nextBtn.className = 'px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-900 text-sm font-bold shadow-md';
-      }
-    }
-
-    function retryCurrentScenario() {
-      if (activeScenarioId) openScenarioStage(activeScenarioId);
-    }
-
-    function goToNextScenario() {
-      if (activeScenarioId < SCENARIOS.length) {
-        if (isScenarioUnlocked(activeScenarioId + 1)) {
-          openScenarioStage(activeScenarioId + 1);
-        }
-      } else {
-        navigateTo('progress');
-      }
-    }
-
-    function closeScenarioStage() {
-      activeScenarioId = null;
-      document.getElementById('scenario-stage').classList.add('hidden');
-      renderScenariosPage();
-    }
-
-
-    // =========================================================================
-    // [模組八] 學習紀錄、成就徽章與錯題本管理 (Progress View Logic)
-    // =========================================================================
-    function renderProgressPage() {
-      document.getElementById('prog-points').textContent = appState.points;
-      document.getElementById('prog-quiz-count').textContent = appState.quizStats.totalAttempts;
-
-      const acc = appState.quizStats.totalQuestions > 0
-        ? Math.round((appState.quizStats.totalCorrect / appState.quizStats.totalQuestions) * 100)
-        : 0;
-      document.getElementById('prog-accuracy').textContent = acc;
-      document.getElementById('prog-scenarios').textContent = appState.completedScenarios.length;
-      document.getElementById('prog-badges').textContent = appState.unlockedAchievements.length;
-
-      // 1. 渲染 6 枚成就徽章
-      const achGrid = document.getElementById('achievements-grid');
-      achGrid.innerHTML = ACHIEVEMENTS.map((ach) => {
-        const unlocked = appState.unlockedAchievements.includes(ach.id) || ach.check(appState);
-        return `
-          <div class="p-5 rounded-2xl border-2 transition-all flex items-start gap-4 ${
-            unlocked
-              ? 'bg-gradient-to-br from-amber-50/90 to-white border-amber-300 shadow-xs'
-              : 'bg-slate-50/80 border-slate-200 opacity-70'
-          }">
-            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0 ${
-              unlocked ? 'bg-amber-100 shadow-inner' : 'bg-slate-200 grayscale'
-            }">
-              ${ach.icon}
-            </div>
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <h3 class="font-black text-base text-slate-900">${ach.title}</h3>
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                  unlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
-                }">
-                  ${unlocked ? '已解鎖' : '未解鎖'}
-                </span>
-              </div>
-              <p class="text-xs text-slate-600 leading-relaxed">${ach.desc}</p>
-              <div class="text-[11px] font-bold ${unlocked ? 'text-amber-700' : 'text-slate-500'} pt-1">
-                進度：${ach.progressText(appState)}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // 2. 渲染尚未完成的情境關卡清單
-      const uncompletedList = document.getElementById('uncompleted-scenarios-list');
-      const remaining = SCENARIOS.filter((s) => !appState.completedScenarios.includes(s.id));
-      if (remaining.length === 0) {
-        uncompletedList.innerHTML = `
-          <div class="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-1">
-            <div class="text-2xl">🎉</div>
-            <div class="font-bold text-emerald-800 text-sm">太神啦！你已通關全部 7 個道路情境關卡！</div>
-          </div>
-        `;
-      } else {
-        uncompletedList.innerHTML = remaining.map((sc) => `
-          <div class="p-3.5 rounded-xl bg-brand-50/50 border border-brand-100 flex items-center justify-between gap-3">
-            <div>
-              <div class="text-xs font-bold text-brand-700">關卡 0${sc.id} • ${sc.difficulty}</div>
-              <div class="text-sm font-bold text-slate-800">${sc.title}</div>
-            </div>
-            <button onclick="jumpToScenario(${sc.id})" class="shrink-0 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold">
-              前往挑戰 →
-            </button>
-          </div>
-        `).join('');
-      }
-
-      // 3. 渲染錯題收藏夾
-      document.getElementById('prog-bookmark-count').textContent = `${appState.bookmarkedQuestions.length} 題`;
-      const bookmarkContainer = document.getElementById('bookmarked-questions-list');
-      if (appState.bookmarkedQuestions.length === 0) {
-        bookmarkContainer.innerHTML = `
-          <div class="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-2">
-            <div class="text-2xl">📭</div>
-            <div class="text-sm font-bold text-slate-700">目前還沒有收藏任何錯題</div>
-            <p class="text-xs text-slate-500">在「駕照筆試測驗」中答錯或點擊「☆ 收藏此題」，題目就會出現在這裡方便隨時複習！</p>
-          </div>
-        `;
-      } else {
-        bookmarkContainer.innerHTML = appState.bookmarkedQuestions.map((qid) => {
-          const q = QUIZ_BANK.find((item) => item.id === qid);
-          if (!q) return '';
-          return `
-            <div class="p-4 rounded-2xl bg-rose-50/40 border border-rose-200 space-y-2">
-              <div class="flex items-start justify-between gap-2">
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-white border border-rose-200 text-rose-700">${q.tag}</span>
-                <button onclick="removeBookmarkedQuestion('${qid}')" class="text-xs font-bold text-slate-400 hover:text-rose-600">✕ 移除</button>
-              </div>
-              <div class="text-sm font-bold text-slate-900">${q.question}</div>
-              <div class="text-xs text-emerald-700 font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-                ✓ 正確答案：${q.options[q.answerIndex]}
-              </div>
-              <p class="text-xs text-slate-600 leading-relaxed">${q.explanation}</p>
-            </div>
-          `;
-        }).join('');
-      }
-    }
-
-    function jumpToScenario(scenarioId) {
-      if (!isScenarioUnlocked(scenarioId)) {
-        appState.freePlayMode = true;
-        saveState();
-        showToast('已自動為你開啟自由體驗模式以挑戰此關！', 'info');
-      }
-      navigateTo('scenarios');
-      openScenarioStage(scenarioId);
-    }
-
-    function removeBookmarkedQuestion(qid) {
-      appState.bookmarkedQuestions = appState.bookmarkedQuestions.filter((id) => id !== qid);
-      saveState();
-      renderProgressPage();
-      showToast('已從錯題收藏夾移除', 'info');
-    }
-
-
-    // =========================================================================
-    // [模組九] 客製化 Toast 通知與重置確認彈窗 (No alert/confirm)
-    // =========================================================================
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-
-      let styleClass = 'bg-slate-800 text-white border-slate-700';
-      if (type === 'points') {
-        styleClass = 'bg-amber-400 text-slate-900 border-amber-500 font-black';
-      } else if (type === 'achievement') {
-        styleClass = 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-brand-400 font-black';
-      }
-
-      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl shadow-xl border text-xs sm:text-sm flex items-center gap-2 animate-[fadeSlideIn_0.25s_ease-out] ${styleClass}`;
-      toast.textContent = message;
-      container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(8px)';
-        toast.style.transition = 'all 0.25s ease';
-        setTimeout(() => toast.remove(), 260);
-      }, 3200);
-    }
-
-    function confirmResetProgress() {
-      const modal = document.getElementById('confirm-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-
-      document.getElementById('confirm-modal-action').onclick = () => {
-        localStorage.removeItem(STORAGE_KEY);
-        appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-        activeScenarioId = null;
-        saveState();
-        closeConfirmModal();
-        navigateTo('home');
-        showToast('🔄 所有學習紀錄與進度已重置完畢！', 'info');
-      };
-    }
-
-    function closeConfirmModal() {
-      const modal = document.getElementById('confirm-modal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-
-    // =========================================================================
-    // [模組十] 網站初始化啟動 (Initialization)
-    // =========================================================================
-    window.addEventListener('DOMContentLoaded', () => {
-      updateGlobalUI();
-      navigateTo('home');
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(index_html)
+
+print("index.html written:", os.path.getsize("index.html"), "bytes")
