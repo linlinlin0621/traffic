@@ -1,4 +1,4 @@
-script_js = """/**
+/**
  * ============================================================================
  * 《駕照別忘光！交通標誌辨識大挑戰》核心資料結構與互動程式 (script.js)
  *
@@ -6,27 +6,13 @@ script_js = """/**
  * 1. 中華民國交通部《道路交通標誌標線號誌設置規則》
  * 2. 中華民國《道路交通安全規則》
  * 3. 中華民國《道路交通管理處罰條例》
- *
- * 【程式架構說明】
- * 一、獨立資料結構區（方便日後擴充與修改）：
- *     1. SIGNS_CATALOG       ：台灣交通標誌圖鑑（警告、禁制、指示、輔助四大類）
- *     2. MARKINGS_CATALOG    ：台灣道路標線圖鑑（黃白實虛線、停止線、枕木紋、指向線等）
- *     3. SIGNALS_CATALOG     ：台灣交通號誌教學（三色燈、閃光號誌、箭頭號誌、行人號誌）
- *     4. CHALLENGE_BANK      ：互動闖關統一題庫（支援看圖猜意思、看意思找標誌、真假辨識、限時挑戰）
- *     5. BADGES_LIST         ：成就徽章設定
- * 二、localStorage 學習紀錄與錯題重練系統
- * 三、四大互動闖關遊戲引擎（模式 A / B / C / D）
  * ============================================================================
  */
 
 /* ============================================================================
-   一、獨立資料結構區
+   一、獨立資料結構區（方便日後擴充題庫與標誌）
    ============================================================================ */
 
-/**
- * 1. 台灣交通標誌圖鑑 (SIGNS_CATALOG)
- * category: 'warning'(警告標誌) | 'prohibit'(禁制標誌) | 'guide'(指示標誌) | 'auxiliary'(輔助標誌)
- */
 const SIGNS_CATALOG = [
   // ---------- (一) 警告標誌：紅邊白底正三角形 ----------
   {
@@ -40,7 +26,7 @@ const SIGNS_CATALOG = [
     lawRef: "設置規則第 24 條",
     svg: `<svg viewBox="0 0 100 100">
       <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
-      <path d="M50 34 V74 M32 54 H68" stroke="#0F172A" stroke-width="8" stroke-linecap="square"/>
+      <path d="M50 34 V74 M32 54 H68" stroke="#111827" stroke-width="8" stroke-linecap="square"/>
     </svg>`
   },
   {
@@ -54,8 +40,8 @@ const SIGNS_CATALOG = [
     lawRef: "設置規則第 20 條",
     svg: `<svg viewBox="0 0 100 100">
       <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
-      <path d="M54 76 L54 64 L41 55 L58 45 L46 34" fill="none" stroke="#0F172A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-      <polygon points="46,24 38,37 54,37" fill="#0F172A"/>
+      <path d="M54 76 L54 64 L41 55 L58 45 L46 34" fill="none" stroke="#111827" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <polygon points="46,24 38,37 54,37" fill="#111827"/>
     </svg>`
   },
   {
@@ -69,7 +55,7 @@ const SIGNS_CATALOG = [
     lawRef: "設置規則第 33 條",
     svg: `<svg viewBox="0 0 100 100">
       <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
-      <path d="M36 76 V58 L43 46 V32 M64 76 V58 L57 46 V32" fill="none" stroke="#0F172A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M36 76 V58 L43 46 V32 M64 76 V58 L57 46 V32" fill="none" stroke="#111827" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`
   },
   {
@@ -83,8 +69,8 @@ const SIGNS_CATALOG = [
     lawRef: "設置規則第 44 條",
     svg: `<svg viewBox="0 0 100 100">
       <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
-      <circle cx="50" cy="40" r="5.5" fill="#0F172A"/>
-      <path d="M50 46 L50 63 M39 53 L61 53 M50 63 L41 76 M50 63 L59 76" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round"/>
+      <circle cx="50" cy="40" r="5.5" fill="#111827"/>
+      <path d="M50 46 L50 63 M39 53 L61 53 M50 63 L41 76 M50 63 L59 76" stroke="#111827" stroke-width="4.5" stroke-linecap="round"/>
     </svg>`
   },
   {
@@ -98,9 +84,9 @@ const SIGNS_CATALOG = [
     lawRef: "設置規則第 45 條",
     svg: `<svg viewBox="0 0 100 100">
       <polygon points="50,10 92,85 8,85" fill="#FFFFFF" stroke="#DC2626" stroke-width="8" stroke-linejoin="round"/>
-      <circle cx="42" cy="43" r="5" fill="#0F172A"/>
-      <circle cx="58" cy="48" r="4.5" fill="#0F172A"/>
-      <path d="M42 49 L42 65 M34 55 L58 57 M42 65 L36 76 M42 65 L48 76 M58 53 L58 66 M58 66 L53 76 M58 66 L63 76" stroke="#0F172A" stroke-width="3.8" stroke-linecap="round"/>
+      <circle cx="42" cy="43" r="5" fill="#111827"/>
+      <circle cx="58" cy="48" r="4.5" fill="#111827"/>
+      <path d="M42 49 L42 65 M34 55 L58 57 M42 65 L36 76 M42 65 L48 76 M58 53 L58 66 M58 66 L53 76 M58 66 L63 76" stroke="#111827" stroke-width="3.8" stroke-linecap="round"/>
     </svg>`
   },
   {
@@ -113,10 +99,10 @@ const SIGNS_CATALOG = [
     usage: "施工期間臨時設置於工區前方，提醒駕駛人注意路面開挖、機具與施工人員。",
     lawRef: "設置規則第 54 條（施工標誌採用橙底黑邊黑色圖案）",
     svg: `<svg viewBox="0 0 100 100">
-      <polygon points="50,10 92,85 8,85" fill="#F97316" stroke="#0F172A" stroke-width="6" stroke-linejoin="round"/>
-      <circle cx="46" cy="41" r="5" fill="#0F172A"/>
-      <path d="M46 47 L42 62 L35 75 M42 62 L51 75 M45 52 L58 58 L66 74" fill="none" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>
-      <polygon points="58,76 68,64 76,76" fill="#0F172A"/>
+      <polygon points="50,10 92,85 8,85" fill="#F97316" stroke="#111827" stroke-width="6" stroke-linejoin="round"/>
+      <circle cx="46" cy="41" r="5" fill="#111827"/>
+      <path d="M46 47 L42 62 L35 75 M42 62 L51 75 M45 52 L58 58 L66 74" fill="none" stroke="#111827" stroke-width="4" stroke-linecap="round"/>
+      <polygon points="58,76 68,64 76,76" fill="#111827"/>
     </svg>`
   },
 
@@ -131,8 +117,8 @@ const SIGNS_CATALOG = [
     usage: "全台唯一八角形標誌！設於支線道與幹線道交會口，僅減速滑行而未完全停下即屬違規。",
     lawRef: "設置規則第 58 條",
     svg: `<svg viewBox="0 0 100 100">
-      <polygon points="30,6 70,6 94,30 94,70 70,94 30,94 6,70 6,30" fill="#DC2626" stroke="#FFFFFF" stroke-width="3"/>
-      <text x="50" y="60" text-anchor="middle" fill="#FFFFFF" font-size="32" font-weight="900">停</text>
+      <polygon points="30,6 70,6 94,30 94,70 70,94 30,94 6,70 6,30" fill="#DC2626" stroke="#111827" stroke-width="4"/>
+      <text x="50" y="61" text-anchor="middle" fill="#FFFFFF" font-size="32" font-weight="900">停</text>
     </svg>`
   },
   {
@@ -146,7 +132,7 @@ const SIGNS_CATALOG = [
     lawRef: "設置規則第 59 條",
     svg: `<svg viewBox="0 0 100 100">
       <polygon points="8,14 92,14 50,88" fill="#FFFFFF" stroke="#DC2626" stroke-width="9" stroke-linejoin="round"/>
-      <text x="50" y="46" text-anchor="middle" fill="#0F172A" font-size="22" font-weight="900">讓</text>
+      <text x="50" y="46" text-anchor="middle" fill="#111827" font-size="22" font-weight="900">讓</text>
     </svg>`
   },
   {
@@ -159,7 +145,7 @@ const SIGNS_CATALOG = [
     usage: "常見於單行道出口端或特定管制道路入口，誤闖將構成逆向行駛。",
     lawRef: "設置規則第 60 條",
     svg: `<svg viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="42" fill="#DC2626"/>
+      <circle cx="50" cy="50" r="42" fill="#DC2626" stroke="#111827" stroke-width="4"/>
       <rect x="18" y="42" width="64" height="16" rx="3" fill="#FFFFFF"/>
     </svg>`
   },
@@ -174,8 +160,8 @@ const SIGNS_CATALOG = [
     lawRef: "設置規則第 62 條",
     svg: `<svg viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="42" fill="#FFFFFF" stroke="#DC2626" stroke-width="9"/>
-      <path d="M60 72 L60 44 Q60 34 50 34 L36 34" fill="none" stroke="#0F172A" stroke-width="7" stroke-linecap="round"/>
-      <polygon points="38,25 25,34 38,43" fill="#0F172A"/>
+      <path d="M60 72 L60 44 Q60 34 50 34 L36 34" fill="none" stroke="#111827" stroke-width="7" stroke-linecap="round"/>
+      <polygon points="38,25 25,34 38,43" fill="#111827"/>
       <line x1="22" y1="22" x2="78" y2="78" stroke="#DC2626" stroke-width="8"/>
     </svg>`
   },
@@ -189,10 +175,10 @@ const SIGNS_CATALOG = [
     usage: "看到此藍底圓形標誌時，機車左轉應先靠右行駛至右側待轉區停等，待橫向綠燈亮起後再直行通過。",
     lawRef: "設置規則第 65 條",
     svg: `<svg viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="42" fill="#0284C7" stroke="#FFFFFF" stroke-width="3"/>
+      <circle cx="50" cy="50" r="42" fill="#0284C7" stroke="#111827" stroke-width="4"/>
       <path d="M62 72 L62 35 L32 35" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
       <polygon points="32,25 18,35 32,45" fill="#FFFFFF"/>
-      <circle cx="62" cy="56" r="6" fill="#FACC15"/>
+      <circle cx="62" cy="56" r="6" fill="#FED90F"/>
     </svg>`
   },
   {
@@ -235,7 +221,7 @@ const SIGNS_CATALOG = [
     lawRef: "設置規則第 76 條",
     svg: `<svg viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="42" fill="#FFFFFF" stroke="#DC2626" stroke-width="9"/>
-      <text x="50" y="61" text-anchor="middle" fill="#0F172A" font-size="32" font-weight="900">50</text>
+      <text x="50" y="61" text-anchor="middle" fill="#111827" font-size="32" font-weight="900">50</text>
     </svg>`
   },
 
@@ -250,7 +236,7 @@ const SIGNS_CATALOG = [
     usage: "藍底白箭頭方形標誌，設於單行道入口及沿途路口，提醒駕駛人依單一方向前進。",
     lawRef: "設置規則第 96 條",
     svg: `<svg viewBox="0 0 100 100">
-      <rect x="14" y="14" width="72" height="72" rx="10" fill="#0284C7"/>
+      <rect x="14" y="14" width="72" height="72" rx="10" fill="#0284C7" stroke="#111827" stroke-width="4"/>
       <path d="M50 74 L50 32" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/>
       <polygon points="50,20 34,38 66,38" fill="#FFFFFF"/>
     </svg>`
@@ -265,10 +251,10 @@ const SIGNS_CATALOG = [
     usage: "藍底方形內嵌白色三角形與行人圖案，設於行人穿越道兩側。",
     lawRef: "設置規則第 98 條",
     svg: `<svg viewBox="0 0 100 100">
-      <rect x="12" y="12" width="76" height="76" rx="10" fill="#0284C7"/>
+      <rect x="12" y="12" width="76" height="76" rx="10" fill="#0284C7" stroke="#111827" stroke-width="4"/>
       <polygon points="50,20 82,76 18,76" fill="#FFFFFF"/>
-      <circle cx="50" cy="40" r="4.5" fill="#0F172A"/>
-      <path d="M50 45 L50 58 M42 50 L58 50 M50 58 L44 68 M50 58 L56 68" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="50" cy="40" r="4.5" fill="#111827"/>
+      <path d="M50 45 L50 58 M42 50 L58 50 M50 58 L44 68 M50 58 L56 68" stroke="#111827" stroke-width="3.5" stroke-linecap="round"/>
     </svg>`
   },
   {
@@ -281,7 +267,7 @@ const SIGNS_CATALOG = [
     usage: "藍底白色「P」字方形標誌，常見於商圈、車站及觀光區周邊道路。",
     lawRef: "設置規則第 102 條",
     svg: `<svg viewBox="0 0 100 100">
-      <rect x="14" y="14" width="72" height="72" rx="10" fill="#0284C7"/>
+      <rect x="14" y="14" width="72" height="72" rx="10" fill="#0284C7" stroke="#111827" stroke-width="4"/>
       <text x="50" y="68" text-anchor="middle" fill="#FFFFFF" font-size="52" font-weight="900">P</text>
     </svg>`
   },
@@ -295,7 +281,7 @@ const SIGNS_CATALOG = [
     usage: "藍底白邊白字盾牌形為一般省道；紅底白邊白字盾牌形則為「省道快速公路」（如台 61 線、台 74 線）。",
     lawRef: "設置規則第 89 條",
     svg: `<svg viewBox="0 0 100 100">
-      <path d="M22 16 H78 V52 Q78 78 50 88 Q22 78 22 52 Z" fill="#0284C7" stroke="#FFFFFF" stroke-width="4"/>
+      <path d="M22 16 H78 V52 Q78 78 50 88 Q22 78 22 52 Z" fill="#0284C7" stroke="#111827" stroke-width="4"/>
       <text x="50" y="58" text-anchor="middle" fill="#FFFFFF" font-size="34" font-weight="900">1</text>
     </svg>`
   },
@@ -311,9 +297,9 @@ const SIGNS_CATALOG = [
     usage: "白底黑邊黑字長方形附牌，非管制時段內車輛即可依一般規定通行或停放。",
     lawRef: "設置規則第 128 條",
     svg: `<svg viewBox="0 0 100 100">
-      <rect x="10" y="28" width="80" height="44" rx="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="4"/>
-      <text x="50" y="48" text-anchor="middle" fill="#0F172A" font-size="13" font-weight="800">07:00-09:00</text>
-      <text x="50" y="64" text-anchor="middle" fill="#DC2626" font-size="12" font-weight="800">例假日除外</text>
+      <rect x="10" y="28" width="80" height="44" rx="6" fill="#FFFFFF" stroke="#111827" stroke-width="4"/>
+      <text x="50" y="48" text-anchor="middle" fill="#111827" font-size="13" font-weight="900">07:00-09:00</text>
+      <text x="50" y="64" text-anchor="middle" fill="#DC2626" font-size="12" font-weight="900">例假日除外</text>
     </svg>`
   },
   {
@@ -326,8 +312,8 @@ const SIGNS_CATALOG = [
     usage: "幫助駕駛人預估減速距離（例如配合「道路施工」或「當心行人」標誌使用）。",
     lawRef: "設置規則第 127 條",
     svg: `<svg viewBox="0 0 100 100">
-      <rect x="14" y="30" width="72" height="40" rx="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="4"/>
-      <text x="50" y="56" text-anchor="middle" fill="#0F172A" font-size="20" font-weight="900">前方 200M</text>
+      <rect x="14" y="30" width="72" height="40" rx="6" fill="#FFFFFF" stroke="#111827" stroke-width="4"/>
+      <text x="50" y="56" text-anchor="middle" fill="#111827" font-size="20" font-weight="900">前方 200M</text>
     </svg>`
   },
   {
@@ -340,17 +326,13 @@ const SIGNS_CATALOG = [
     usage: "提醒駕駛人切勿心存僥倖違規停車，以免遭開單並拖吊。",
     lawRef: "設置規則第 129 條",
     svg: `<svg viewBox="0 0 100 100">
-      <rect x="12" y="28" width="76" height="44" rx="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="4"/>
+      <rect x="12" y="28" width="76" height="44" rx="6" fill="#FFFFFF" stroke="#111827" stroke-width="4"/>
       <text x="50" y="48" text-anchor="middle" fill="#DC2626" font-size="14" font-weight="900">違規停車</text>
-      <text x="50" y="65" text-anchor="middle" fill="#0F172A" font-size="14" font-weight="900">依法拖吊</text>
+      <text x="50" y="65" text-anchor="middle" fill="#111827" font-size="14" font-weight="900">依法拖吊</text>
     </svg>`
   }
 ];
 
-/**
- * 2. 台灣道路標線圖鑑 (MARKINGS_CATALOG)
- * category: 'longitudinal'(黃線與白線) | 'transverse'(橫向標線) | 'special'(指向線與禁止停車標線)
- */
 const MARKINGS_CATALOG = [
   {
     id: "mark_double_yellow",
@@ -362,10 +344,10 @@ const MARKINGS_CATALOG = [
     lawRef: "設置規則第 165 條",
     svg: `<svg viewBox="0 0 280 120">
       <rect width="280" height="120" fill="#334155"/>
-      <line x1="0" y1="56" x2="280" y2="56" stroke="#FACC15" stroke-width="4"/>
-      <line x1="0" y1="64" x2="280" y2="64" stroke="#FACC15" stroke-width="4"/>
-      <text x="140" y="32" text-anchor="middle" fill="#E2E8F0" font-size="13">← 對向來車道</text>
-      <text x="140" y="96" text-anchor="middle" fill="#E2E8F0" font-size="13">本向行車道 →</text>
+      <line x1="0" y1="56" x2="280" y2="56" stroke="#FED90F" stroke-width="4.5"/>
+      <line x1="0" y1="64" x2="280" y2="64" stroke="#FED90F" stroke-width="4.5"/>
+      <text x="140" y="32" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">← 對向來車道</text>
+      <text x="140" y="96" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">本向行車道 →</text>
     </svg>`
   },
   {
@@ -378,8 +360,8 @@ const MARKINGS_CATALOG = [
     lawRef: "設置規則第 164 條",
     svg: `<svg viewBox="0 0 280 120">
       <rect width="280" height="120" fill="#334155"/>
-      <line x1="10" y1="60" x2="270" y2="60" stroke="#FACC15" stroke-width="5" stroke-dasharray="24 18"/>
-      <text x="140" y="34" text-anchor="middle" fill="#FEF08A" font-size="13">安全時可暫時跨越超車</text>
+      <line x1="10" y1="60" x2="270" y2="60" stroke="#FED90F" stroke-width="5.5" stroke-dasharray="24 18"/>
+      <text x="140" y="34" text-anchor="middle" fill="#FEF08A" font-size="13" font-weight="bold">安全時可暫時跨越超車</text>
     </svg>`
   },
   {
@@ -392,10 +374,10 @@ const MARKINGS_CATALOG = [
     lawRef: "設置規則第 167 條",
     svg: `<svg viewBox="0 0 280 120">
       <rect width="280" height="120" fill="#334155"/>
-      <line x1="0" y1="56" x2="280" y2="56" stroke="#FFFFFF" stroke-width="4"/>
-      <line x1="0" y1="64" x2="280" y2="64" stroke="#FFFFFF" stroke-width="4"/>
-      <text x="140" y="32" text-anchor="middle" fill="#E2E8F0" font-size="13">同向內側車道 →</text>
-      <text x="140" y="96" text-anchor="middle" fill="#E2E8F0" font-size="13">同向外側車道 →</text>
+      <line x1="0" y1="56" x2="280" y2="56" stroke="#FFFFFF" stroke-width="4.5"/>
+      <line x1="0" y1="64" x2="280" y2="64" stroke="#FFFFFF" stroke-width="4.5"/>
+      <text x="140" y="32" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">同向內側車道 →</text>
+      <text x="140" y="96" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">同向外側車道 →</text>
     </svg>`
   },
   {
@@ -408,10 +390,10 @@ const MARKINGS_CATALOG = [
     lawRef: "設置規則第 166、167 條",
     svg: `<svg viewBox="0 0 280 120">
       <rect width="280" height="120" fill="#334155"/>
-      <line x1="10" y1="42" x2="270" y2="42" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="20 16"/>
-      <line x1="0" y1="82" x2="280" y2="82" stroke="#FFFFFF" stroke-width="4"/>
-      <text x="140" y="26" text-anchor="middle" fill="#BAE6FD" font-size="12">白色虛線：同向可變換車道</text>
-      <text x="140" y="106" text-anchor="middle" fill="#FEF08A" font-size="12">單白實線：不得任意跨越</text>
+      <line x1="10" y1="42" x2="270" y2="42" stroke="#FFFFFF" stroke-width="4.5" stroke-dasharray="20 16"/>
+      <line x1="0" y1="82" x2="280" y2="82" stroke="#FFFFFF" stroke-width="4.5"/>
+      <text x="140" y="26" text-anchor="middle" fill="#BAE6FD" font-size="12" font-weight="bold">白色虛線：同向可變換車道</text>
+      <text x="140" y="106" text-anchor="middle" fill="#FEF08A" font-size="12" font-weight="bold">單白實線：不得任意跨越</text>
     </svg>`
   },
   {
@@ -425,9 +407,9 @@ const MARKINGS_CATALOG = [
     svg: `<svg viewBox="0 0 280 120">
       <rect width="280" height="120" fill="#334155"/>
       <rect x="115" y="10" width="12" height="100" fill="#FFFFFF"/>
-      <rect x="35" y="42" width="64" height="36" rx="8" fill="#0284C7" stroke="#FFF" stroke-width="2"/>
-      <text x="67" y="64" text-anchor="middle" fill="#FFF" font-size="12" font-weight="bold">停在此線前</text>
-      <text x="198" y="64" text-anchor="middle" fill="#FEF08A" font-size="13" font-weight="bold">← 停止線</text>
+      <rect x="32" y="40" width="68" height="38" rx="9" fill="#FF69B4" stroke="#111827" stroke-width="3"/>
+      <text x="66" y="64" text-anchor="middle" fill="#FFF" font-size="12" font-weight="900">停在此線前</text>
+      <text x="198" y="64" text-anchor="middle" fill="#FED90F" font-size="13" font-weight="900">← 停止線</text>
     </svg>`
   },
   {
@@ -440,7 +422,7 @@ const MARKINGS_CATALOG = [
     lawRef: "設置規則第 185 條",
     svg: `<svg viewBox="0 0 280 120">
       <rect width="280" height="120" fill="#334155"/>
-      <g fill="#F8FAFC">
+      <g fill="#FFFFFF" stroke="#111827" stroke-width="2">
         <rect x="85" y="14" width="16" height="92" rx="2"/>
         <rect x="115" y="14" width="16" height="92" rx="2"/>
         <rect x="145" y="14" width="16" height="92" rx="2"/>
@@ -459,12 +441,10 @@ const MARKINGS_CATALOG = [
     svg: `<svg viewBox="0 0 280 120">
       <rect width="280" height="120" fill="#334155"/>
       <line x1="140" y1="0" x2="140" y2="120" stroke="#FFFFFF" stroke-width="3"/>
-      <!-- 直行箭頭 -->
       <path d="M75 95 V35" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
       <polygon points="75,20 62,40 88,40" fill="#FFFFFF"/>
-      <!-- 左轉箭頭 -->
-      <path d="M215 95 V55 Q215 42 200 42 H178" fill="none" stroke="#FACC15" stroke-width="7" stroke-linecap="round"/>
-      <polygon points="180,30 162,42 180,54" fill="#FACC15"/>
+      <path d="M215 95 V55 Q215 42 200 42 H178" fill="none" stroke="#FED90F" stroke-width="7" stroke-linecap="round"/>
+      <polygon points="180,30 162,42 180,54" fill="#FED90F"/>
     </svg>`
   },
   {
@@ -477,18 +457,15 @@ const MARKINGS_CATALOG = [
     lawRef: "設置規則第 168、169 條",
     svg: `<svg viewBox="0 0 280 120">
       <rect width="280" height="120" fill="#334155"/>
-      <rect x="0" y="0" width="280" height="22" fill="#CBD5E1"/>
+      <rect x="0" y="0" width="280" height="22" fill="#E2E8F0"/>
       <rect x="0" y="22" width="135" height="8" fill="#EF4444"/>
-      <rect x="145" y="22" width="135" height="8" fill="#FACC15"/>
-      <text x="68" y="65" text-anchor="middle" fill="#FCA5A5" font-size="13" font-weight="bold">紅線：禁臨停</text>
-      <text x="212" y="65" text-anchor="middle" fill="#FEF08A" font-size="13" font-weight="bold">黃線：禁停車</text>
+      <rect x="145" y="22" width="135" height="8" fill="#FED90F"/>
+      <text x="68" y="65" text-anchor="middle" fill="#FCA5A5" font-size="13" font-weight="900">紅線：禁臨停</text>
+      <text x="212" y="65" text-anchor="middle" fill="#FEF08A" font-size="13" font-weight="900">黃線：禁停車</text>
     </svg>`
   }
 ];
 
-/**
- * 3. 台灣交通號誌教學 (SIGNALS_CATALOG)
- */
 const SIGNALS_CATALOG = [
   {
     id: "sig_green",
@@ -499,7 +476,7 @@ const SIGNALS_CATALOG = [
     rule: "注意！「圓形綠燈」並未給予轉彎車絕對路權，左轉或右轉時仍須禮讓對向直行車與斑馬線行人。",
     lawRef: "設置規則第 206 條第 1 款",
     svg: `<svg viewBox="0 0 70 110">
-      <rect x="12" y="6" width="46" height="98" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <rect x="12" y="6" width="46" height="98" rx="12" fill="#0F172A" stroke="#FED90F" stroke-width="3"/>
       <circle cx="35" cy="26" r="11" fill="#334155"/>
       <circle cx="35" cy="55" r="11" fill="#334155"/>
       <circle cx="35" cy="84" r="12" fill="#22C55E"/>
@@ -514,9 +491,9 @@ const SIGNALS_CATALOG = [
     rule: "黃燈亮起時，尚未越過停止線之車輛「應減速煞車停於停止線前」；已越過停止線進入路口者，應迅速通過路口。",
     lawRef: "設置規則第 206 條第 2 款",
     svg: `<svg viewBox="0 0 70 110">
-      <rect x="12" y="6" width="46" height="98" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <rect x="12" y="6" width="46" height="98" rx="12" fill="#0F172A" stroke="#FED90F" stroke-width="3"/>
       <circle cx="35" cy="26" r="11" fill="#334155"/>
-      <circle cx="35" cy="55" r="12" fill="#FACC15"/>
+      <circle cx="35" cy="55" r="12" fill="#FED90F"/>
       <circle cx="35" cy="84" r="11" fill="#334155"/>
     </svg>`
   },
@@ -529,7 +506,7 @@ const SIGNALS_CATALOG = [
     rule: "在台灣，圓形紅燈亮起時「紅燈右轉同樣屬於闖紅燈違規」（除非另有右轉箭頭綠燈亮起）！",
     lawRef: "設置規則第 206 條第 3 款",
     svg: `<svg viewBox="0 0 70 110">
-      <rect x="12" y="6" width="46" height="98" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <rect x="12" y="6" width="46" height="98" rx="12" fill="#0F172A" stroke="#FED90F" stroke-width="3"/>
       <circle cx="35" cy="26" r="12" fill="#EF4444"/>
       <circle cx="35" cy="55" r="11" fill="#334155"/>
       <circle cx="35" cy="84" r="11" fill="#334155"/>
@@ -544,7 +521,7 @@ const SIGNALS_CATALOG = [
     rule: "常見考題陷阱！當路口亮「直行箭頭綠燈」而「左轉箭頭尚未亮起」時，左轉車輛必須停等，不可搶先左轉。",
     lawRef: "設置規則第 206 條第 4 款",
     svg: `<svg viewBox="0 0 90 110">
-      <rect x="10" y="6" width="70" height="98" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <rect x="10" y="6" width="70" height="98" rx="12" fill="#0F172A" stroke="#FED90F" stroke-width="3"/>
       <circle cx="32" cy="26" r="10" fill="#EF4444"/>
       <circle cx="32" cy="55" r="10" fill="#334155"/>
       <circle cx="32" cy="84" r="10" fill="#334155"/>
@@ -561,7 +538,7 @@ const SIGNALS_CATALOG = [
     rule: "閃光紅燈設於「支線道」，效力等同於八角形「停」標誌，車輪必須完全靜止後再起步。",
     lawRef: "設置規則第 211 條第 1 款",
     svg: `<svg viewBox="0 0 70 110">
-      <rect x="14" y="22" width="42" height="66" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <rect x="14" y="22" width="42" height="66" rx="12" fill="#0F172A" stroke="#FED90F" stroke-width="3"/>
       <circle cx="35" cy="55" r="15" fill="#EF4444" class="blink-red"/>
     </svg>`
   },
@@ -574,8 +551,8 @@ const SIGNALS_CATALOG = [
     rule: "閃光黃燈設於「幹線道」，雖擁有優先於閃光紅燈支線道的路權，仍須減速防禦駕駛。",
     lawRef: "設置規則第 211 條第 2 款",
     svg: `<svg viewBox="0 0 70 110">
-      <rect x="14" y="22" width="42" height="66" rx="12" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
-      <circle cx="35" cy="55" r="15" fill="#FACC15" class="blink-yellow"/>
+      <rect x="14" y="22" width="42" height="66" rx="12" fill="#0F172A" stroke="#FED90F" stroke-width="3"/>
+      <circle cx="35" cy="55" r="15" fill="#FED90F" class="blink-yellow"/>
     </svg>`
   },
   {
@@ -587,7 +564,7 @@ const SIGNALS_CATALOG = [
     rule: "綠燈倒數閃爍時，已在斑馬線上的行人應加快腳步通過；尚未踏出人行道者應停下等待下一輪綠燈。",
     lawRef: "設置規則第 207 條",
     svg: `<svg viewBox="0 0 70 110">
-      <rect x="12" y="6" width="46" height="98" rx="10" fill="#0F172A" stroke="#64748B" stroke-width="2"/>
+      <rect x="12" y="6" width="46" height="98" rx="10" fill="#0F172A" stroke="#FED90F" stroke-width="3"/>
       <circle cx="35" cy="24" r="4" fill="#EF4444"/>
       <rect x="31" y="29" width="8" height="14" rx="2" fill="#EF4444"/>
       <circle cx="35" cy="64" r="4.5" fill="#22C55E"/>
@@ -596,11 +573,6 @@ const SIGNALS_CATALOG = [
   }
 ];
 
-/**
- * 4. 互動闖關題庫 (CHALLENGE_BANK)
- * 說明：每道題目皆包含圖片 SVG、正確名稱與說明、3 個干擾選項（供模式 A/B 使用），
- *       以及一段真假敘述（供模式 C 真假辨識使用），方便未來直接新增題目物件！
- */
 const CHALLENGE_BANK = [
   {
     id: "ch_01",
@@ -842,9 +814,6 @@ const CHALLENGE_BANK = [
   }
 ];
 
-/**
- * 5. 成就徽章定義 (BADGES_LIST)
- */
 const BADGES_LIST = [
   {
     id: "badge_first_try",
@@ -872,8 +841,8 @@ const BADGES_LIST = [
   },
   {
     id: "badge_points_300",
-    icon: "🏅",
-    title: "優良駕駛人",
+    icon: "🍩",
+    title: "甜甜圈優良駕駛",
     desc: "累積交通安全學習積分達到 300 分！"
   },
   {
@@ -888,7 +857,7 @@ const BADGES_LIST = [
    二、localStorage 狀態管理
    ============================================================================ */
 
-const STORAGE_KEY = "dont_forget_license_signs_v2";
+const STORAGE_KEY = "dont_forget_license_signs_cartoon_v3";
 
 const DEFAULT_RECORDS = {
   totalScore: 0,
@@ -898,7 +867,7 @@ const DEFAULT_RECORDS = {
   bestAccuracy: 0,
   timedBestCorrect: 0,
   fixedWrongCount: 0,
-  wrongQuestionIds: [] // 儲存答錯過的 CHALLENGE_BANK 題目 ID
+  wrongQuestionIds: []
 };
 
 let userRecords = loadRecords();
@@ -936,19 +905,16 @@ function showToast(msg) {
    三、頁面導覽與全域同步
    ============================================================================ */
 
-let activePage = "home";
 let signFilterCategory = "all";
 let signSearchKeyword = "";
 let markingFilterCategory = "all";
 
 function navigateTo(pageId) {
-  // 若正在進行限時挑戰中途離開頁面，清除計時器
   if (gameSession.timerId && pageId !== "game") {
     clearInterval(gameSession.timerId);
     gameSession.timerId = null;
   }
 
-  activePage = pageId;
   document.querySelectorAll(".page-section").forEach((sec) => {
     sec.classList.toggle("active", sec.id === `page-${pageId}`);
   });
@@ -964,13 +930,11 @@ function navigateTo(pageId) {
 }
 
 function syncAllDisplays() {
-  // 導覽列與橫幅積分
   const navScore = document.getElementById("navScore");
   const gameBannerScore = document.getElementById("gameBannerScore");
   if (navScore) navScore.textContent = userRecords.totalScore;
   if (gameBannerScore) gameBannerScore.textContent = userRecords.totalScore;
 
-  // 首頁儀表板
   const homeTotalScore = document.getElementById("homeTotalScore");
   const homeQuizCount = document.getElementById("homeQuizCount");
   const homeAccuracy = document.getElementById("homeAccuracy");
@@ -1028,7 +992,7 @@ function renderSignsCatalog() {
       <article class="sign-item-card" data-detail-type="sign" data-item-id="${sign.id}" role="button" tabindex="0">
         <div class="sign-card-top">
           <span class="cat-badge cat-${sign.category}">${sign.categoryName}</span>
-          <span class="muted-text" style="font-size:0.78rem;">點擊看詳解 🔍</span>
+          <span class="muted-text" style="font-size:0.8rem; font-weight:800;">點擊看詳解 🔍</span>
         </div>
         <div class="sign-svg-box">${sign.svg}</div>
         <h3>${sign.name}</h3>
@@ -1099,15 +1063,21 @@ function renderSignalsCatalog() {
 
 function updateSignalSimulator(simKey) {
   const target = SIGNALS_CATALOG.find((s) => s.simKey === simKey) || SIGNALS_CATALOG[0];
-  document.getElementById("simSignalName").textContent = target.name;
-  document.getElementById("simSignalRule").textContent = `${target.meaning} ${target.rule}`;
-  document.getElementById("simSignalLaw").textContent = `法規依據：《道路交通標誌標線號誌設置規則》${target.lawRef}`;
-  document.getElementById("simVisualStage").innerHTML = `<div style="width:120px; height:175px;">${target.svg}</div>`;
+  const nameEl = document.getElementById("simSignalName");
+  const ruleEl = document.getElementById("simSignalRule");
+  const lawEl = document.getElementById("simSignalLaw");
+  const stageEl = document.getElementById("simVisualStage");
+  if (!nameEl || !stageEl) return;
+
+  nameEl.textContent = target.name;
+  ruleEl.textContent = `${target.meaning} ${target.rule}`;
+  lawEl.textContent = `法規依據：《道路交通標誌標線號誌設置規則》${target.lawRef}`;
+  stageEl.innerHTML = `<div style="width:120px; height:175px;">${target.svg}</div>`;
 
   document.querySelectorAll("#simButtonGroup button").forEach((btn) => {
     const isSelected = btn.dataset.sim === simKey;
-    btn.classList.toggle("btn-primary", isSelected);
-    btn.classList.toggle("btn-secondary", !isSelected);
+    btn.classList.toggle("btn-yellow", isSelected);
+    btn.classList.toggle("btn-blue", !isSelected);
   });
 }
 
@@ -1122,8 +1092,8 @@ function openItemDetailModal(type, id) {
       <div class="modal-svg-large">${item.svg}</div>
       <div>
         <span class="cat-badge cat-${item.category}">${item.categoryName}</span>
-        <h3 id="modalItemTitle" style="font-size:1.38rem; margin-top:6px;">${item.name}</h3>
-        <span class="muted-text" style="font-size:0.84rem;">交通部${item.lawRef}</span>
+        <h3 id="modalItemTitle" style="font-size:1.38rem; font-weight:900; margin-top:6px;">${item.name}</h3>
+        <span class="muted-text" style="font-size:0.86rem; font-weight:800;">交通部${item.lawRef}</span>
       </div>
     </div>
     <div class="modal-info-block">
@@ -1144,7 +1114,7 @@ function openItemDetailModal(type, id) {
    ============================================================================ */
 
 let gameSession = {
-  mode: "pic_to_meaning", // 'pic_to_meaning' | 'meaning_to_pic' | 'true_false' | 'timed' | 'wrong_review'
+  mode: "pic_to_meaning",
   questions: [],
   index: 0,
   score: 0,
@@ -1167,7 +1137,6 @@ function shuffleList(arr) {
 }
 
 function startGameMode(mode, customQuestionList = null) {
-  // 清除舊計時器
   if (gameSession.timerId) {
     clearInterval(gameSession.timerId);
     gameSession.timerId = null;
@@ -1184,8 +1153,7 @@ function startGameMode(mode, customQuestionList = null) {
         : CHALLENGE_BANK.filter((q) => q.topic === selectedTopic);
   }
 
-  // 若選取範圍題數不足 4 題（看意思找圖片需要 4 個不同選項），自動補入綜合題庫
-  if (pool.length < 4) {
+  if (pool.length < 4 && !customQuestionList) {
     pool = [...CHALLENGE_BANK];
   }
 
@@ -1242,7 +1210,6 @@ function startGameMode(mode, customQuestionList = null) {
 }
 
 function renderCurrentGameQuestion() {
-  // 若限時模式題庫用完則自動循環補題
   if (gameSession.index >= gameSession.questions.length) {
     if (gameSession.mode === "timed") {
       gameSession.questions.push(...shuffleList(CHALLENGE_BANK));
@@ -1259,7 +1226,6 @@ function renderCurrentGameQuestion() {
   fbArea.classList.add("hidden");
   fbArea.classList.remove("fb-pass", "fb-fail");
 
-  // 更新頂部進度條
   if (gameSession.mode === "timed") {
     document.getElementById("hudProgressText").textContent = `已作答 ${gameSession.answeredCount} 題（連對 ${gameSession.combo} 題）`;
     document.getElementById("gameProgressBar").style.width = `${Math.max(0, (gameSession.timeLeft / 60) * 100)}%`;
@@ -1270,7 +1236,6 @@ function renderCurrentGameQuestion() {
     document.getElementById("gameProgressBar").style.width = `${Math.round((current / total) * 100)}%`;
   }
 
-  // 決定本題呈現的玩法（限時模式與錯題重練會隨機混搭 A / B / C 三種題型）
   let effectiveType = gameSession.mode;
   if (effectiveType === "timed" || effectiveType === "wrong_review") {
     const types = ["pic_to_meaning", "meaning_to_pic", "true_false"];
@@ -1281,7 +1246,6 @@ function renderCurrentGameQuestion() {
     q.visualType === "marking" ? "q-visual-center is-marking" : q.visualType === "signal" ? "q-visual-center is-signal" : "q-visual-center";
 
   if (effectiveType === "pic_to_meaning") {
-    // 模式 A：看圖猜意思（顯示圖片，四選一文字意思）
     const correctText = `【${q.title}】${q.promptMeaning}`;
     const choices = shuffleList([
       { text: correctText, isCorrect: true },
@@ -1318,7 +1282,6 @@ function renderCurrentGameQuestion() {
       });
     });
   } else if (effectiveType === "meaning_to_pic") {
-    // 模式 B：看意思找標誌（顯示文字規則，點選正確圖片）
     const distractors = shuffleList(CHALLENGE_BANK.filter((item) => item.id !== q.id)).slice(0, 3);
     const picChoices = shuffleList([
       { item: q, isCorrect: true },
@@ -1327,7 +1290,7 @@ function renderCurrentGameQuestion() {
 
     renderArea.innerHTML = `
       <div class="tf-statement-box">
-        <span class="muted-text" style="display:block; font-size:0.84rem; margin-bottom:4px;">請根據下列規則找出對應的正確圖示：</span>
+        <span class="muted-text" style="display:block; font-size:0.86rem; font-weight:800; margin-bottom:4px;">請根據下列規則找出對應的正確圖示：</span>
         「${q.promptMeaning}」
       </div>
       <div class="pic-options-grid">
@@ -1336,7 +1299,7 @@ function renderCurrentGameQuestion() {
             (pc, idx) => `
           <button class="pic-choice-btn" data-correct="${pc.isCorrect}" aria-label="圖片選項 ${idx + 1}">
             <div class="pic-choice-svg">${pc.item.svg}</div>
-            <span class="muted-text" style="font-size:0.82rem; font-weight:700;">選項 ${idx + 1}</span>
+            <span style="font-size:0.86rem; font-weight:900;">選項 ${idx + 1}</span>
           </button>
         `
           )
@@ -1356,16 +1319,15 @@ function renderCurrentGameQuestion() {
       });
     });
   } else {
-    // 模式 C：真假辨識（顯示圖片＋說明，判斷相符或錯誤）
     renderArea.innerHTML = `
       <div class="${visualClass}">${q.svg}</div>
       <div class="tf-statement-box">
-        <span class="muted-text" style="display:block; font-size:0.84rem; margin-bottom:4px;">請判斷圖片與下列說明是否相符：</span>
+        <span class="muted-text" style="display:block; font-size:0.86rem; font-weight:800; margin-bottom:4px;">請判斷圖片與下列說明是否相符：</span>
         「${q.tfStatement}」
       </div>
       <div class="tf-buttons-row">
-        <button class="btn btn-primary tf-btn" data-tf="true">⭕ 正確（完全相符）</button>
-        <button class="btn btn-outline-danger tf-btn" data-tf="false">❌ 錯誤（說明有誤）</button>
+        <button class="btn btn-yellow tf-btn" data-tf="true">⭕ 正確（完全相符）</button>
+        <button class="btn btn-danger tf-btn" data-tf="false">❌ 錯誤（說明有誤）</button>
       </div>
     `;
 
@@ -1377,11 +1339,10 @@ function renderCurrentGameQuestion() {
           b.disabled = true;
           const btnVal = b.dataset.tf === "true";
           if (btnVal === q.tfIsTrue) {
-            b.style.background = "var(--success)";
-            b.style.color = "#fff";
-            b.style.borderColor = "var(--success)";
+            b.style.background = "var(--grass-green)";
+            b.style.color = "var(--ink)";
           } else if (b === btn && !isCorrect) {
-            b.style.background = "var(--danger)";
+            b.style.background = "var(--alert-red)";
             b.style.color = "#fff";
           }
         });
@@ -1412,15 +1373,13 @@ function submitGameAnswer(q, isCorrect) {
     const gained = 15 + bonus;
     gameSession.score += gained;
 
-    // 若原本在錯題本中，答對後自動從錯題本移除
     if (userRecords.wrongQuestionIds.includes(q.id)) {
       userRecords.wrongQuestionIds = userRecords.wrongQuestionIds.filter((id) => id !== q.id);
       userRecords.fixedWrongCount += 1;
     }
 
     fbArea.classList.add("fb-pass");
-    headline.textContent = bonus > 0 ? `🔥 太神啦！連續答對 ${gameSession.combo} 題！` : "✅ 答對了！辨識完全正確！";
-    headline.style.color = "var(--success)";
+    headline.textContent = bonus > 0 ? `🔥 Woo-hoo! 連續答對 ${gameSession.combo} 題！` : "✅ Woo-hoo! 答對了！辨識完全正確！";
     deltaEl.textContent = `+${gained} 分`;
   } else {
     gameSession.combo = 0;
@@ -1432,8 +1391,7 @@ function submitGameAnswer(q, isCorrect) {
     }
 
     fbArea.classList.add("fb-fail");
-    headline.textContent = `❌ 答錯囉！正確答案是【${q.title}】`;
-    headline.style.color = "var(--danger)";
+    headline.textContent = `❌ D'oh! 答錯囉！正確答案是【${q.title}】`;
     deltaEl.textContent = "+0 分（已收錄至錯題本）";
   }
 
@@ -1458,7 +1416,6 @@ function finishGameSession() {
   const correct = gameSession.correctCount;
   const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
 
-  // 寫入累計紀錄
   if (answered > 0) {
     userRecords.completedQuizzes += 1;
     userRecords.totalAnswered += answered;
@@ -1486,15 +1443,15 @@ function finishGameSession() {
 
   if (accuracy >= 85) {
     emojiEl.textContent = "🏆";
-    titleEl.textContent = "太強了！滿分級交通辨識達人！";
-    subEl.textContent = "你對台灣交通標誌、標線與號誌的掌握度非常出色！";
+    titleEl.textContent = "Woo-hoo! 滿分級交通辨識達人！";
+    subEl.textContent = "你對台灣交通標誌、標線與號誌的掌握度超強！";
   } else if (accuracy >= 60) {
-    emojiEl.textContent = "🎉";
-    titleEl.textContent = "表現不錯！順利完成挑戰！";
+    emojiEl.textContent = "🍩";
+    titleEl.textContent = "表現不錯！獎勵一顆粉紅甜甜圈！";
     subEl.textContent = "答錯的題目已自動收錄至「錯題本」，隨時可以針對弱點複習。";
   } else {
     emojiEl.textContent = "📘";
-    titleEl.textContent = "加油！再多複習一下圖鑑吧！";
+    titleEl.textContent = "D'oh! 再多翻翻圖鑑複習一下吧！";
     subEl.textContent = "建議先逛逛「標誌圖鑑」與「道路標線」，再回來挑戰一次！";
   }
 
@@ -1536,7 +1493,6 @@ function renderRecordsPage() {
     userRecords.totalAnswered > 0 ? `${acc}%` : "0%";
   document.getElementById("recWrongCount").textContent = `${userRecords.wrongQuestionIds.length} 題`;
 
-  // 渲染成就徽章
   const unlocked = getUnlockedBadgesSet();
   const badgesWall = document.getElementById("badgesWall");
   badgesWall.innerHTML = BADGES_LIST.map((b) => {
@@ -1545,7 +1501,7 @@ function renderRecordsPage() {
       <div class="badge-item ${isOpen ? "unlocked" : ""}">
         <div class="badge-circle">${isOpen ? b.icon : "🔒"}</div>
         <div>
-          <h4>${b.title}</h4>
+          <h4 style="font-weight:900;">${b.title}</h4>
           <p class="muted-text" style="font-size:0.84rem;">${b.desc}</p>
           <span class="badge-tag">${isOpen ? "✨ 已解鎖成就" : "尚未獲得"}</span>
         </div>
@@ -1553,12 +1509,11 @@ function renderRecordsPage() {
     `;
   }).join("");
 
-  // 渲染錯題本清單
   const wrongContainer = document.getElementById("wrongQuestionsContainer");
   const wrongItems = CHALLENGE_BANK.filter((q) => userRecords.wrongQuestionIds.includes(q.id));
 
   if (wrongItems.length === 0) {
-    wrongContainer.innerHTML = `<div style="grid-column:1/-1; padding:18px; background:#f8fafc; border-radius:12px; text-align:center;" class="muted-text">🎉 目前沒有待複習的錯題！繼續保持滿分紀錄吧！</div>`;
+    wrongContainer.innerHTML = `<div style="grid-column:1/-1; padding:18px; background:#FEF9C3; border:3px solid #111827; border-radius:14px; text-align:center; font-weight:800;">🎉 目前沒有待複習的錯題！繼續保持滿分紀錄吧！</div>`;
   } else {
     wrongContainer.innerHTML = wrongItems
       .map(
@@ -1566,9 +1521,9 @@ function renderRecordsPage() {
         <div class="wrong-item-card">
           <div class="wrong-mini-svg">${item.svg}</div>
           <div style="flex:1;">
-            <strong style="color:var(--danger); font-size:1rem;">${item.title}</strong>
+            <strong style="color:#DC2626; font-size:1.02rem; font-weight:900;">${item.title}</strong>
             <p class="muted-text" style="font-size:0.86rem; margin:4px 0 8px;">${item.explanation}</p>
-            <button class="btn btn-sm btn-primary" data-repractice-id="${item.id}">單題重新練習 →</button>
+            <button class="btn btn-sm btn-yellow" data-repractice-id="${item.id}">單題重新練習 →</button>
           </div>
         </div>
       `
@@ -1588,11 +1543,13 @@ function renderRecordsPage() {
 }
 
 /* ============================================================================
-   七、初始化所有按鈕與事件監聽
+   七、初始化所有按鈕與事件監聽（支援任何載入時機）
    ============================================================================ */
 
-document.addEventListener("DOMContentLoaded", () => {
-  // 導覽列切換
+function initApp() {
+  if (window.__appInitialized) return;
+  window.__appInitialized = true;
+
   document.querySelectorAll(".nav-btn, .brand").forEach((el) => {
     el.addEventListener("click", (e) => {
       e.preventDefault();
@@ -1600,12 +1557,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 頁面內快捷跳轉按鈕
   document.querySelectorAll("[data-goto]").forEach((btn) => {
     btn.addEventListener("click", () => navigateTo(btn.dataset.goto));
   });
 
-  // 手機版漢堡選單
   const navToggle = document.getElementById("navToggle");
   const navLinks = document.getElementById("navLinks");
   if (navToggle && navLinks) {
@@ -1615,7 +1570,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 重置紀錄
   document.getElementById("resetAllBtn")?.addEventListener("click", () => {
     if (confirm("確定要清除所有積分、測驗次數與錯題本紀錄嗎？")) {
       userRecords = JSON.parse(JSON.stringify(DEFAULT_RECORDS));
@@ -1624,7 +1578,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 標誌圖鑑分類與搜尋
   document.querySelectorAll("#signCategoryPills .pill-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll("#signCategoryPills .pill-btn").forEach((b) => b.classList.remove("active"));
@@ -1639,7 +1592,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSignsCatalog();
   });
 
-  // 道路標線分類篩選
   document.querySelectorAll("#markingFilterPills .pill-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll("#markingFilterPills .pill-btn").forEach((b) => b.classList.remove("active"));
@@ -1649,13 +1601,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 交通號誌互動模擬器按鈕
   document.querySelectorAll("#simButtonGroup button").forEach((btn) => {
     btn.addEventListener("click", () => updateSignalSimulator(btn.dataset.sim));
   });
   updateSignalSimulator("green");
 
-  // 關閉詳情彈窗
   const detailModal = document.getElementById("detailModal");
   document.getElementById("closeDetailModal")?.addEventListener("click", () => {
     detailModal.classList.remove("open");
@@ -1668,12 +1618,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 互動闖關四大模式啟動按鈕
   document.querySelectorAll("[data-mode]").forEach((btn) => {
     btn.addEventListener("click", () => startGameMode(btn.dataset.mode));
   });
 
-  // 遊戲內控制按鈕
   document.getElementById("nextGameQuestionBtn")?.addEventListener("click", () => {
     gameSession.index += 1;
     renderCurrentGameQuestion();
@@ -1702,7 +1650,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("gameMenuArea").classList.remove("hidden");
   });
 
-  // 學習紀錄頁面錯題練習與清空按鈕
   document.getElementById("startWrongPracticeBtn")?.addEventListener("click", () => {
     const list = CHALLENGE_BANK.filter((q) => userRecords.wrongQuestionIds.includes(q.id));
     if (list.length === 0) {
@@ -1722,12 +1669,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 初始渲染全站資料
   syncAllDisplays();
-});
-"""
+}
 
-with open("script.js", "w", encoding="utf-8") as f:
-    f.write(script_js)
-
-print("script.js written:", os.path.getsize("script.js"), "bytes")
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
