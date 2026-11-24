@@ -1,24 +1,23 @@
-import os
-
-# Write index.html, style.css, and script.js for 《駕照別忘光！交通標誌辨識大挑戰》
-
-index_html = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>駕照別忘光！交通標誌辨識大挑戰</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>駕照別忘光！交通標誌辨識大挑戰（美式卡通版）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <!-- 頂部導覽列 -->
+  <!-- 頂部美式卡通導覽列 -->
   <header class="navbar">
     <div class="container nav-container">
       <a href="#home" class="brand" data-page="home">
         <span class="brand-icon" aria-hidden="true">🚦</span>
         <div class="brand-text">
           <span class="brand-title">駕照別忘光！</span>
-          <span class="brand-subtitle">交通標誌辨識大挑戰</span>
+          <span class="brand-subtitle">SPRINGFIELD 台灣交通大挑戰</span>
         </div>
       </a>
 
@@ -36,7 +35,7 @@ index_html = """<!DOCTYPE html>
       </nav>
 
       <div class="nav-score-pill" title="目前累積積分">
-        <span>⭐</span>
+        <span>🍩</span>
         <span id="navScore">0</span> 分
       </div>
     </div>
@@ -48,88 +47,117 @@ index_html = """<!DOCTYPE html>
       <div class="container">
         <div class="hero-card">
           <div class="hero-text">
-            <span class="hero-badge">🇹🇼 依據交通部《道路交通標誌標線號誌設置規則》編製</span>
-            <h1>考到駕照後就忘光了嗎？<br /><span class="highlight">《駕照別忘光！》</span>交通標誌辨識大挑戰</h1>
+            <span class="hero-badge">🇹🇼 交通部官方規則 × 美式卡通圖解！</span>
+            <h1>D'oh! 考到駕照後就忘光了嗎？<br /><span class="highlight">《駕照別忘光！》</span>交通標誌大挑戰</h1>
             <p class="hero-desc">
-              專為高中生、大學生、準考照族與已領照駕駛人打造的台灣交通視覺辨識學習平台。
-              透過高精準向量圖解、分類搜尋圖鑑與四大互動闖關玩法，徹底搞懂標誌、標線與號誌！
+              別像荷馬一樣在路上橫衝直撞！專為高中生、大學生與已領照駕駛打造的台灣交通視覺辨識網站，
+              透過超鮮明卡通圖鑑與四大互動闖關，一口氣搞懂標誌、標線與號誌！
             </p>
             <div class="hero-actions">
-              <button class="btn btn-primary btn-lg" data-goto="signs">🚸 瀏覽交通標誌圖鑑</button>
-              <button class="btn btn-warning btn-lg" data-goto="game">🎮 開始互動闖關遊戲</button>
+              <button class="btn btn-yellow btn-lg" data-goto="signs">🚸 翻開標誌圖鑑</button>
+              <button class="btn btn-pink btn-lg" data-goto="game">🎮 立即開始闖關！</button>
             </div>
           </div>
 
           <div class="hero-visual">
-            <svg viewBox="0 0 460 320" class="hero-svg" role="img" aria-label="台灣道路標誌與號誌主視覺">
-              <defs>
-                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#DBEAFE" />
-                  <stop offset="100%" stop-color="#F0F9FF" />
-                </linearGradient>
-              </defs>
-              <rect width="460" height="320" rx="24" fill="url(#skyGrad)" />
-              <!-- 雲朵 -->
-              <g fill="#FFFFFF" opacity="0.9">
-                <circle cx="80" cy="54" r="16" /><circle cx="100" cy="50" r="20" /><circle cx="120" cy="56" r="15" />
-                <circle cx="340" cy="46" r="14" /><circle cx="358" cy="42" r="18" /><circle cx="376" cy="48" r="13" />
-              </g>
-              <!-- 城市輪廓 -->
-              <rect x="28" y="135" width="46" height="85" rx="6" fill="#BFDBFE" />
-              <rect x="82" y="110" width="54" height="110" rx="6" fill="#93C5FD" />
-              <rect x="320" y="118" width="52" height="102" rx="6" fill="#93C5FD" />
-              <rect x="380" y="140" width="46" height="80" rx="6" fill="#BFDBFE" />
+            <!-- 辛普森風格美式卡通主視覺 SVG（粗黑墨線 + 經典黃藍粉綠配色） -->
+            <svg viewBox="0 0 460 320" class="hero-svg" role="img" aria-label="美式卡通風格台灣街道與交通號誌插畫">
+              <!-- 經典辛普森藍天 -->
+              <rect x="3" y="3" width="454" height="314" rx="22" fill="#67B7F7" stroke="#111827" stroke-width="5" />
 
-              <!-- 人行道與綠地 -->
-              <rect x="0" y="212" width="460" height="18" fill="#86EFAC" />
-              <rect x="0" y="226" width="460" height="14" fill="#CBD5E1" />
-
-              <!-- 柏油路面與標線 -->
-              <rect x="0" y="240" width="460" height="80" fill="#334155" />
-              <!-- 停止線 -->
-              <rect x="155" y="244" width="8" height="72" fill="#FFFFFF" />
-              <!-- 枕木紋行人穿越道 -->
-              <g fill="#F8FAFC">
-                <rect x="180" y="246" width="14" height="68" rx="2" />
-                <rect x="204" y="246" width="14" height="68" rx="2" />
-                <rect x="228" y="246" width="14" height="68" rx="2" />
-                <rect x="252" y="246" width="14" height="68" rx="2" />
+              <!-- 粗黑邊白雲朵 -->
+              <g fill="#FFFFFF" stroke="#111827" stroke-width="4" stroke-linejoin="round">
+                <path d="M52 64 C40 64 34 52 44 44 C46 30 66 26 76 36 C86 24 110 28 112 44 C124 46 126 64 110 64 Z" />
+                <path d="M312 56 C300 56 296 44 306 38 C310 24 330 22 338 32 C348 22 370 26 372 40 C382 44 380 56 368 56 Z" />
               </g>
+
+              <!-- 卡通建築剪影（經典黃、粉紅、薄荷綠 + 粗黑外框） -->
+              <g stroke="#111827" stroke-width="4" stroke-linejoin="round">
+                <!-- 左側粉紅建築 -->
+                <rect x="22" y="118" width="64" height="96" fill="#FF85B3" />
+                <rect x="34" y="132" width="16" height="18" fill="#FEF08A" />
+                <rect x="58" y="132" width="16" height="18" fill="#BAE6FD" />
+                <rect x="34" y="162" width="16" height="18" fill="#BAE6FD" />
+                <rect x="58" y="162" width="16" height="18" fill="#FEF08A" />
+                <!-- 左中黃色建築 -->
+                <rect x="86" y="96" width="58" height="118" fill="#FED90F" />
+                <rect x="98" y="112" width="14" height="16" fill="#FFFFFF" />
+                <rect x="120" y="112" width="14" height="16" fill="#FFFFFF" />
+                <rect x="98" y="140" width="14" height="16" fill="#FFFFFF" />
+                <rect x="120" y="140" width="14" height="16" fill="#FFFFFF" />
+                <!-- 右側薄荷綠建築與屋頂甜甜圈裝飾 -->
+                <rect x="316" y="108" width="66" height="106" fill="#6EE7B7" />
+                <rect x="328" y="126" width="16" height="18" fill="#FEF08A" />
+                <rect x="352" y="126" width="16" height="18" fill="#FFFFFF" />
+                <circle cx="349" cy="88" r="20" fill="#FF69B4" />
+                <circle cx="349" cy="88" r="7" fill="#67B7F7" />
+                <!-- 右邊橘黃小屋 -->
+                <rect x="382" y="134" width="56" height="80" fill="#FDBA74" />
+                <rect x="396" y="150" width="26" height="22" fill="#FFFFFF" />
+              </g>
+
+              <!-- 卡通綠草地與人行道 -->
+              <rect x="3" y="210" width="454" height="16" fill="#4ADE80" stroke="#111827" stroke-width="4" />
+              <rect x="3" y="224" width="454" height="14" fill="#E2E8F0" stroke="#111827" stroke-width="4" />
+
+              <!-- 柏油路面 -->
+              <rect x="3" y="238" width="454" height="79" fill="#334155" stroke="#111827" stroke-width="4" />
+
+              <!-- 停止線與枕木紋斑馬線 -->
+              <rect x="152" y="242" width="10" height="71" fill="#FFFFFF" stroke="#111827" stroke-width="2.5" />
+              <g fill="#FFFFFF" stroke="#111827" stroke-width="2.5">
+                <rect x="176" y="245" width="15" height="66" rx="2" />
+                <rect x="201" y="245" width="15" height="66" rx="2" />
+                <rect x="226" y="245" width="15" height="66" rx="2" />
+                <rect x="251" y="245" width="15" height="66" rx="2" />
+              </g>
+
               <!-- 雙黃實線 -->
-              <rect x="16" y="275" width="125" height="3.5" fill="#FACC15" />
-              <rect x="16" y="282" width="125" height="3.5" fill="#FACC15" />
-              <rect x="285" y="275" width="155" height="3.5" fill="#FACC15" />
-              <rect x="285" y="282" width="155" height="3.5" fill="#FACC15" />
+              <rect x="12" y="273" width="128" height="4.5" fill="#FED90F" stroke="#111827" stroke-width="1.5" />
+              <rect x="12" y="281" width="128" height="4.5" fill="#FED90F" stroke="#111827" stroke-width="1.5" />
+              <rect x="280" y="273" width="166" height="4.5" fill="#FED90F" stroke="#111827" stroke-width="1.5" />
+              <rect x="280" y="281" width="166" height="4.5" fill="#FED90F" stroke="#111827" stroke-width="1.5" />
 
-              <!-- 三色行車管制號誌 -->
-              <rect x="148" y="102" width="7" height="124" rx="3.5" fill="#475569" />
-              <rect x="134" y="84" width="34" height="84" rx="9" fill="#0F172A" stroke="#64748B" stroke-width="2" />
-              <circle cx="151" cy="103" r="8.5" fill="#EF4444" />
-              <circle cx="151" cy="126" r="8.5" fill="#FACC15" />
-              <circle cx="151" cy="149" r="8.5" fill="#22C55E" />
-
-              <!-- 警告標誌（當心行人） -->
-              <rect x="288" y="146" width="6" height="80" rx="3" fill="#64748B" />
-              <polygon points="291,104 321,152 261,152" fill="#FFFFFF" stroke="#DC2626" stroke-width="5" stroke-linejoin="round" />
-              <circle cx="291" cy="128" r="4" fill="#0F172A" />
-              <path d="M291 133 L291 143 M285 138 L297 138 M291 143 L286 149 M291 143 L296 149" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" />
-
-              <!-- 藍色汽車 -->
-              <g transform="translate(36, 224)">
-                <rect x="10" y="18" width="102" height="28" rx="9" fill="#0284C7" />
-                <path d="M26 18 L40 4 L82 4 L96 18 Z" fill="#38BDF8" />
-                <rect x="104" y="24" width="7" height="7" rx="2" fill="#FEF08A" />
-                <circle cx="32" cy="46" r="10.5" fill="#0F172A" /><circle cx="32" cy="46" r="4.5" fill="#CBD5E1" />
-                <circle cx="90" cy="46" r="10.5" fill="#0F172A" /><circle cx="90" cy="46" r="4.5" fill="#CBD5E1" />
+              <!-- 美式卡通三色紅綠燈 -->
+              <g stroke="#111827" stroke-width="3.5">
+                <rect x="148" y="102" width="8" height="122" fill="#94A3B8" />
+                <rect x="132" y="76" width="40" height="92" rx="12" fill="#FED90F" />
+                <circle cx="152" cy="96" r="9.5" fill="#EF4444" />
+                <circle cx="152" cy="122" r="9.5" fill="#FACC15" />
+                <circle cx="152" cy="148" r="9.5" fill="#22C55E" />
               </g>
 
-              <!-- 機車 -->
-              <g transform="translate(330, 228)">
-                <circle cx="16" cy="40" r="9.5" fill="#0F172A" /><circle cx="16" cy="40" r="4" fill="#CBD5E1" />
-                <circle cx="60" cy="40" r="9.5" fill="#0F172A" /><circle cx="60" cy="40" r="4" fill="#CBD5E1" />
-                <path d="M16 38 L25 23 L50 23 L58 38 Z" fill="#FACC15" />
-                <circle cx="38" cy="8" r="6.5" fill="#0284C7" />
-                <rect x="32" y="15" width="12" height="13" rx="4" fill="#38BDF8" />
+              <!-- 台灣當心行人警告標誌 -->
+              <g stroke="#111827" stroke-width="3.5" stroke-linejoin="round">
+                <rect x="288" y="148" width="7" height="76" fill="#94A3B8" />
+                <polygon points="291,100 324,154 258,154" fill="#FFFFFF" stroke="#DC2626" stroke-width="6" />
+                <polygon points="291,97 327,156 255,156" fill="none" stroke="#111827" stroke-width="2.5" />
+                <circle cx="291" cy="127" r="4" fill="#111827" stroke="none" />
+                <path d="M291 132 L291 143 M284 137 L298 137 M291 143 L285 150 M291 143 L297 150" stroke="#111827" stroke-width="3" stroke-linecap="round" />
+              </g>
+
+              <!-- 荷馬風粉紅卡通轎車 -->
+              <g transform="translate(24, 218)" stroke="#111827" stroke-width="3.5" stroke-linejoin="round">
+                <path d="M24 22 L38 5 L84 5 L98 22 Z" fill="#FF85B3" />
+                <rect x="42" y="9" width="18" height="12" fill="#BAE6FD" stroke-width="2.5" />
+                <rect x="64" y="9" width="18" height="12" fill="#BAE6FD" stroke-width="2.5" />
+                <rect x="8" y="20" width="108" height="28" rx="10" fill="#FF69B4" />
+                <rect x="108" y="26" width="8" height="8" rx="2" fill="#FED90F" stroke-width="2" />
+                <circle cx="32" cy="48" r="11" fill="#1E293B" />
+                <circle cx="32" cy="48" r="4.5" fill="#FFFFFF" stroke-width="2" />
+                <circle cx="92" cy="48" r="11" fill="#1E293B" />
+                <circle cx="92" cy="48" r="4.5" fill="#FFFFFF" stroke-width="2" />
+              </g>
+
+              <!-- 台灣黃色卡通機車 -->
+              <g transform="translate(326, 224)" stroke="#111827" stroke-width="3.5" stroke-linejoin="round">
+                <circle cx="18" cy="42" r="10" fill="#1E293B" />
+                <circle cx="18" cy="42" r="4" fill="#FFFFFF" stroke-width="2" />
+                <circle cx="64" cy="42" r="10" fill="#1E293B" />
+                <circle cx="64" cy="42" r="4" fill="#FFFFFF" stroke-width="2" />
+                <path d="M16 40 L26 23 L54 23 L62 40 Z" fill="#FED90F" />
+                <circle cx="40" cy="8" r="7" fill="#38BDF8" />
+                <rect x="33" y="15" width="14" height="13" rx="4" fill="#FFFFFF" />
               </g>
             </svg>
           </div>
@@ -140,26 +168,26 @@ index_html = """<!DOCTYPE html>
           <div class="strip-head">
             <div>
               <h2>📊 我的學習即時儀表板</h2>
-              <p class="muted-text">學習進度自動儲存於瀏覽器 localStorage，無需註冊帳號即可累積積分與徽章。</p>
+              <p class="muted-text">學習紀錄自動保存在瀏覽器裡，免註冊就能累積甜甜圈積分與徽章！</p>
             </div>
-            <button class="btn btn-outline-danger btn-sm" id="resetAllBtn">🔄 重置學習紀錄</button>
+            <button class="btn btn-danger btn-sm" id="resetAllBtn">🔄 重置學習紀錄</button>
           </div>
           <div class="stats-four">
-            <div class="stat-item">
-              <span class="stat-label">累積學習積分</span>
-              <span class="stat-val text-blue" id="homeTotalScore">0 分</span>
+            <div class="stat-item stat-yellow">
+              <span class="stat-label">🍩 累積學習積分</span>
+              <span class="stat-val" id="homeTotalScore">0 分</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">完成測驗次數</span>
+            <div class="stat-item stat-blue">
+              <span class="stat-label">🎯 完成測驗次數</span>
               <span class="stat-val" id="homeQuizCount">0 次</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">平均答題正確率</span>
-              <span class="stat-val text-green" id="homeAccuracy">尚未作答</span>
+            <div class="stat-item stat-green">
+              <span class="stat-label">✅ 平均答題正確率</span>
+              <span class="stat-val" id="homeAccuracy">尚未作答</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">待複習錯題數</span>
-              <span class="stat-val text-amber" id="homeWrongCount">0 題</span>
+            <div class="stat-item stat-pink">
+              <span class="stat-label">📌 待複習錯題數</span>
+              <span class="stat-val" id="homeWrongCount">0 題</span>
             </div>
           </div>
         </div>
@@ -167,44 +195,44 @@ index_html = """<!DOCTYPE html>
         <!-- 五大功能入口卡片 -->
         <div class="section-title-box">
           <h2>🧭 選擇學習與挑戰單元</h2>
-          <p>先透過三大圖鑑建立視覺記憶，再到「互動闖關」測試你的辨識實力</p>
+          <p>先逛逛三大卡通圖鑑複習規則，再到「互動闖關」測試你的駕駛直覺！</p>
         </div>
 
         <div class="module-grid">
           <article class="card module-card">
-            <div class="mod-icon bg-blue-soft">🚸</div>
+            <div class="mod-icon bg-yellow-pop">🚸</div>
             <h3>1. 交通標誌圖鑑</h3>
             <p>涵蓋「警告、禁制、指示、輔助」四大類台灣官方交通標誌，支援分類篩選與關鍵字搜尋。</p>
-            <button class="btn btn-secondary btn-block" data-goto="signs">進入標誌圖鑑 →</button>
+            <button class="btn btn-blue btn-block" data-goto="signs">進入標誌圖鑑 →</button>
           </article>
 
           <article class="card module-card">
-            <div class="mod-icon bg-yellow-soft">🛣️</div>
+            <div class="mod-icon bg-green-pop">🛣️</div>
             <h3>2. 道路標線圖鑑</h3>
-            <p>圖解黃白實虛線、雙黃實線、雙白實線、停止線、枕木紋斑馬線、網狀線與指向線規定。</p>
-            <button class="btn btn-secondary btn-block" data-goto="markings">學習道路標線 →</button>
+            <p>圖解黃白實虛線、雙黃實線、雙白實線、停止線、枕木紋斑馬線與車道指向線規定。</p>
+            <button class="btn btn-blue btn-block" data-goto="markings">學習道路標線 →</button>
           </article>
 
           <article class="card module-card">
-            <div class="mod-icon bg-blue-soft">🚦</div>
+            <div class="mod-icon bg-pink-pop">🚦</div>
             <h3>3. 交通號誌教學</h3>
-            <p>完整解析紅黃綠三色燈、閃光紅黃燈、箭頭燈號（圓形綠燈 vs 箭頭綠燈）與行人專用號誌。</p>
-            <button class="btn btn-secondary btn-block" data-goto="signals">認識交通號誌 →</button>
+            <p>完整解析紅黃綠三色燈、閃光紅黃燈、箭頭燈號（圓形綠燈 vs 箭頭綠燈）與行人號誌。</p>
+            <button class="btn btn-blue btn-block" data-goto="signals">認識交通號誌 →</button>
           </article>
 
           <article class="card module-card featured-card">
             <span class="hot-tag">🔥 四大玩法</span>
-            <div class="mod-icon bg-yellow-soft">🎮</div>
+            <div class="mod-icon bg-yellow-pop">🎮</div>
             <h3>4. 互動闖關遊戲</h3>
             <p>看圖猜意思、看意思找標誌、真假辨識、60 秒限時挑戰！每題作答立即顯示官方解析。</p>
-            <button class="btn btn-primary btn-block" data-goto="game">立即開始闖關 →</button>
+            <button class="btn btn-yellow btn-block" data-goto="game">立即開始闖關 →</button>
           </article>
 
           <article class="card module-card">
-            <div class="mod-icon bg-blue-soft">🏆</div>
+            <div class="mod-icon bg-blue-pop">🏆</div>
             <h3>5. 學習紀錄與錯題本</h3>
             <p>查看答題正確率、累積積分、解鎖成就徽章，並針對答錯題目一鍵重新練習。</p>
-            <button class="btn btn-secondary btn-block" data-goto="records">查看學習紀錄 →</button>
+            <button class="btn btn-blue btn-block" data-goto="records">查看學習紀錄 →</button>
           </article>
         </div>
       </div>
@@ -237,7 +265,7 @@ index_html = """<!DOCTYPE html>
 
         <!-- 標誌規則快速口訣提示 -->
         <div class="shape-guide-bar" id="shapeGuideBar">
-          <span><strong>形狀辨識口訣：</strong></span>
+          <span><strong>💡 形狀辨識口訣：</strong></span>
           <span>🔺 紅邊正三角形＝<strong>警告</strong>（提醒注意危險）</span>
           <span>🛑 圓形 / 八角形 / 倒三角＝<strong>禁制</strong>（禁止、限制或遵行）</span>
           <span>🟦 方形藍底 / 綠底＝<strong>指示</strong>（路線、方向與設施指引）</span>
@@ -293,12 +321,12 @@ index_html = """<!DOCTYPE html>
             <div class="sim-law-note" id="simSignalLaw">法規依據：《道路交通標誌標線號誌設置規則》第 206 條</div>
 
             <div class="sim-btn-group" id="simButtonGroup">
-              <button class="btn btn-sm btn-primary" data-sim="green">🟢 圓形綠燈</button>
-              <button class="btn btn-sm btn-secondary" data-sim="yellow">🟡 圓形黃燈</button>
-              <button class="btn btn-sm btn-secondary" data-sim="red">🔴 圓形紅燈</button>
-              <button class="btn btn-sm btn-secondary" data-sim="arrow_left">⬅️ 左轉箭頭綠燈</button>
-              <button class="btn btn-sm btn-secondary" data-sim="flash_red">🚨 閃光紅燈</button>
-              <button class="btn btn-sm btn-secondary" data-sim="flash_yellow">⚠️ 閃光黃燈</button>
+              <button class="btn btn-sm btn-yellow" data-sim="green">🟢 圓形綠燈</button>
+              <button class="btn btn-sm btn-blue" data-sim="yellow">🟡 圓形黃燈</button>
+              <button class="btn btn-sm btn-blue" data-sim="red">🔴 圓形紅燈</button>
+              <button class="btn btn-sm btn-blue" data-sim="arrow_left">⬅️ 左轉箭頭綠燈</button>
+              <button class="btn btn-sm btn-blue" data-sim="flash_red">🚨 閃光紅燈</button>
+              <button class="btn btn-sm btn-blue" data-sim="flash_yellow">⚠️ 閃光黃燈</button>
             </div>
           </div>
 
@@ -324,7 +352,7 @@ index_html = """<!DOCTYPE html>
             <h1>🎮 交通標誌辨識互動闖關</h1>
             <p>四種互動測驗模式任你挑戰，作答後立即顯示正確答案與詳細交通法規解析！</p>
           </div>
-          <div class="banner-stat">累積積分：<strong id="gameBannerScore">0</strong> 分</div>
+          <div class="banner-stat">🍩 累積積分：<strong id="gameBannerScore">0</strong> 分</div>
         </div>
 
         <!-- 遊戲模式選擇畫面 -->
@@ -350,7 +378,7 @@ index_html = """<!DOCTYPE html>
               <div class="mode-emoji">🖼️</div>
               <h3>看圖猜意思</h3>
               <p>畫面顯示台灣交通標誌、標線或號誌圖片，從四個選項中選出正確名稱與含義。（共 8 題，每題 +15 分）</p>
-              <button class="btn btn-primary btn-block" data-mode="pic_to_meaning">開始挑戰模式 A →</button>
+              <button class="btn btn-blue btn-block" data-mode="pic_to_meaning">開始挑戰模式 A →</button>
             </div>
 
             <div class="card mode-card">
@@ -358,7 +386,7 @@ index_html = """<!DOCTYPE html>
               <div class="mode-emoji">🎯</div>
               <h3>看意思找標誌</h3>
               <p>給出交通規則或情境說明，從四張標誌／標線圖片中點選出唯一正確的圖示。（共 8 題，每題 +15 分）</p>
-              <button class="btn btn-primary btn-block" data-mode="meaning_to_pic">開始挑戰模式 B →</button>
+              <button class="btn btn-blue btn-block" data-mode="meaning_to_pic">開始挑戰模式 B →</button>
             </div>
 
             <div class="card mode-card">
@@ -366,7 +394,7 @@ index_html = """<!DOCTYPE html>
               <div class="mode-emoji">⚖️</div>
               <h3>真假辨識挑戰</h3>
               <p>同時顯示圖片與一段規則說明，考驗你能否一眼識破張冠李戴的錯誤說法！（共 8 題，每題 +15 分）</p>
-              <button class="btn btn-primary btn-block" data-mode="true_false">開始挑戰模式 C →</button>
+              <button class="btn btn-blue btn-block" data-mode="true_false">開始挑戰模式 C →</button>
             </div>
 
             <div class="card mode-card mode-timed">
@@ -374,7 +402,7 @@ index_html = """<!DOCTYPE html>
               <div class="mode-emoji">⏱️</div>
               <h3>60 秒限時挑戰</h3>
               <p>在 60 秒倒數計時內盡可能答對最多隨機題目！連續答對還有額外連擊加分！</p>
-              <button class="btn btn-warning btn-block" data-mode="timed">立即開始 60 秒挑戰 →</button>
+              <button class="btn btn-yellow btn-block" data-mode="timed">立即開始 60 秒挑戰 →</button>
             </div>
           </div>
         </div>
@@ -389,7 +417,7 @@ index_html = """<!DOCTYPE html>
             <div class="hud-right">
               <span class="hud-timer hidden" id="hudTimerBox">⏱️ 剩餘 <strong id="hudTimeLeft">60</strong> 秒</span>
               <span class="hud-score">本局得分：<strong id="hudSessionScore">0</strong></span>
-              <button class="btn btn-sm btn-secondary" id="quitGameBtn">離開本局</button>
+              <button class="btn btn-sm btn-blue" id="quitGameBtn">離開本局</button>
             </div>
           </div>
 
@@ -409,7 +437,7 @@ index_html = """<!DOCTYPE html>
             <p id="fbExplanationText" class="fb-explanation"></p>
             <div id="fbLawCitation" class="fb-law"></div>
             <div class="fb-actions">
-              <button class="btn btn-primary" id="nextGameQuestionBtn">下一題 →</button>
+              <button class="btn btn-yellow" id="nextGameQuestionBtn">下一題 →</button>
             </div>
           </div>
         </div>
@@ -421,24 +449,24 @@ index_html = """<!DOCTYPE html>
           <p class="muted-text" id="summarySubtitle">本局成績已自動寫入你的學習紀錄</p>
 
           <div class="summary-stats-grid">
-            <div class="sum-box">
+            <div class="sum-box stat-green">
               <span class="stat-label">答對題數</span>
               <span class="stat-val" id="sumCorrect">0 / 8</span>
             </div>
-            <div class="sum-box">
+            <div class="sum-box stat-blue">
               <span class="stat-label">本局正確率</span>
-              <span class="stat-val text-blue" id="sumAccuracy">0%</span>
+              <span class="stat-val" id="sumAccuracy">0%</span>
             </div>
-            <div class="sum-box">
+            <div class="sum-box stat-yellow">
               <span class="stat-label">獲得積分</span>
-              <span class="stat-val text-amber" id="sumPoints">+0 分</span>
+              <span class="stat-val" id="sumPoints">+0 分</span>
             </div>
           </div>
 
           <div class="summary-buttons">
-            <button class="btn btn-primary" id="playAgainBtn">🔄 再玩一次同模式</button>
-            <button class="btn btn-warning hidden" id="practiceWrongNowBtn">📝 立即重練本局錯題</button>
-            <button class="btn btn-secondary" id="backToModesBtn">🎮 選擇其他玩法</button>
+            <button class="btn btn-yellow" id="playAgainBtn">🔄 再玩一次同模式</button>
+            <button class="btn btn-pink hidden" id="practiceWrongNowBtn">📝 立即重練本局錯題</button>
+            <button class="btn btn-blue" id="backToModesBtn">🎮 選擇其他玩法</button>
           </div>
         </div>
       </div>
@@ -452,26 +480,26 @@ index_html = """<!DOCTYPE html>
             <h1>🏆 學習紀錄與錯題複習本</h1>
             <p>追蹤你的答題正確率、解鎖成就徽章，並一鍵重練答錯的題目</p>
           </div>
-          <button class="btn btn-warning" id="startWrongPracticeBtn">📝 重新練習全部錯題</button>
+          <button class="btn btn-yellow" id="startWrongPracticeBtn">📝 重新練習全部錯題</button>
         </div>
 
         <!-- 總覽數據卡片 -->
         <div class="stats-four mb-24">
-          <div class="card stat-item">
-            <span class="stat-label">累積總積分</span>
-            <span class="stat-val text-blue" id="recScore">0 分</span>
+          <div class="card stat-item stat-yellow">
+            <span class="stat-label">🍩 累積總積分</span>
+            <span class="stat-val" id="recScore">0 分</span>
           </div>
-          <div class="card stat-item">
-            <span class="stat-label">已完成測驗局數</span>
+          <div class="card stat-item stat-blue">
+            <span class="stat-label">🎯 已完成測驗局數</span>
             <span class="stat-val" id="recSessions">0 局</span>
           </div>
-          <div class="card stat-item">
-            <span class="stat-label">累計答題正確率</span>
-            <span class="stat-val text-green" id="recAccuracy">0%</span>
+          <div class="card stat-item stat-green">
+            <span class="stat-label">✅ 累計答題正確率</span>
+            <span class="stat-val" id="recAccuracy">0%</span>
           </div>
-          <div class="card stat-item">
-            <span class="stat-label">待複習錯題數量</span>
-            <span class="stat-val text-amber" id="recWrongCount">0 題</span>
+          <div class="card stat-item stat-pink">
+            <span class="stat-label">📌 待複習錯題數量</span>
+            <span class="stat-val" id="recWrongCount">0 題</span>
           </div>
         </div>
 
@@ -489,7 +517,7 @@ index_html = """<!DOCTYPE html>
               <h2>❌ 答錯題目紀錄（錯題本）</h2>
               <p class="muted-text">系統自動記錄你曾經答錯的標誌、標線或號誌題目；在錯題練習中答對後會自動移出清單！</p>
             </div>
-            <button class="btn btn-sm btn-outline-danger" id="clearWrongListBtn">清空錯題本</button>
+            <button class="btn btn-sm btn-danger" id="clearWrongListBtn">清空錯題本</button>
           </div>
           <div id="wrongQuestionsContainer" class="wrong-list-grid"></div>
         </div>
@@ -508,7 +536,7 @@ index_html = """<!DOCTYPE html>
   <!-- 頁尾 -->
   <footer class="footer">
     <div class="container">
-      <p><strong>《駕照別忘光！交通標誌辨識大挑戰》</strong>｜台灣交通部暨公路局規範視覺教學平台</p>
+      <p><strong>《駕照別忘光！交通標誌辨識大挑戰》</strong>｜美式卡通風 × 台灣交通部規範教學平台</p>
       <p class="footer-sub">
         資料依據：中華民國交通部《道路交通標誌標線號誌設置規則》與《道路交通安全規則》。本網站供教育學習與考照複習使用，實際行車請依現場最新標誌號誌與交通警察指揮為準。
       </p>
@@ -518,12 +546,6 @@ index_html = """<!DOCTYPE html>
   <!-- Toast 通知 -->
   <div class="toast-box" id="toastBox" role="status" aria-live="polite"></div>
 
-  <script src="script.js"></script>
+  <script src="./script.js"></script>
 </body>
 </html>
-"""
-
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(index_html)
-
-print("index.html written:", os.path.getsize("index.html"), "bytes")
