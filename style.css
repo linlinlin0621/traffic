@@ -1,0 +1,1440 @@
+/* ============================================================================
+   《駕照別忘光！交通標誌辨識大挑戰》美式卡通風（辛普森家庭配色與粗墨線風格）
+   ============================================================================ */
+
+:root {
+  --simpson-yellow: #FED90F;
+  --simpson-yellow-hover: #FACC15;
+  --springfield-sky: #67B7F7;
+  --springfield-sky-light: #D6EEFF;
+  --donut-pink: #FF69B4;
+  --donut-pink-soft: #FFE4F2;
+  --grass-green: #4ADE80;
+  --grass-green-soft: #DCFCE7;
+  --alert-red: #EF4444;
+  --alert-red-soft: #FEE2E2;
+  --ink: #111827;
+  --white: #FFFFFF;
+  --text-muted: #334155;
+  --border-w: 3.5px;
+  --shadow-comic: 6px 6px 0px #111827;
+  --shadow-comic-sm: 4px 4px 0px #111827;
+  --shadow-comic-lg: 9px 9px 0px #111827;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--springfield-sky-light);
+  background-image: radial-gradient(#93C5FD 1.8px, transparent 1.8px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  line-height: 1.65;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.hidden { display: none !important; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-24 { margin-bottom: 24px; }
+.muted-text { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; }
+
+/* ==================== 頂部美式卡通導覽列 ==================== */
+.navbar {
+  background: var(--simpson-yellow);
+  border-bottom: 4px solid var(--ink);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 0 rgba(17, 24, 39, 0.15);
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 74px;
+  gap: 10px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.brand-icon {
+  font-size: 1.85rem;
+  width: 46px;
+  height: 46px;
+  background: var(--white);
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--ink);
+  letter-spacing: 0.5px;
+  text-shadow: 1.5px 1.5px 0 #FFFFFF;
+}
+
+.brand-subtitle {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #1E3A8A;
+  letter-spacing: 0.5px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-btn {
+  background: var(--white);
+  border: 3px solid var(--ink);
+  padding: 7px 13px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 900;
+  color: var(--ink);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.nav-btn:hover {
+  background: var(--springfield-sky-light);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.nav-btn.active {
+  background: var(--donut-pink);
+  color: var(--white);
+  text-shadow: 1.5px 1.5px 0 var(--ink);
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.nav-score-pill {
+  background: var(--white);
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
+  font-weight: 900;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: var(--white);
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 9px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.nav-toggle span {
+  width: 22px;
+  height: 3px;
+  background: var(--ink);
+  border-radius: 2px;
+}
+
+/* ==================== 通用卡通卡片與按鈕 ==================== */
+.main-content {
+  flex: 1;
+  padding: 28px 0 60px;
+}
+
+.page-section {
+  display: none;
+  animation: popIn 0.24s ease;
+}
+
+.page-section.active {
+  display: block;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.98) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.card {
+  background: var(--white);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-comic);
+}
+
+.btn {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 14px;
+  font-size: 0.98rem;
+  font-weight: 900;
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow-comic-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-lg { padding: 14px 26px; font-size: 1.06rem; }
+.btn-sm { padding: 7px 14px; font-size: 0.86rem; border-radius: 10px; }
+.btn-block { width: 100%; }
+
+.btn-yellow {
+  background: var(--simpson-yellow);
+  color: var(--ink);
+}
+
+.btn-pink {
+  background: var(--donut-pink);
+  color: var(--white);
+  text-shadow: 1.5px 1.5px 0 var(--ink);
+}
+
+.btn-blue {
+  background: var(--springfield-sky);
+  color: var(--ink);
+}
+
+.btn-danger {
+  background: var(--alert-red);
+  color: var(--white);
+  text-shadow: 1.5px 1.5px 0 var(--ink);
+}
+
+/* ==================== 1. 首頁 ==================== */
+.hero-card {
+  background: var(--white);
+  border: 4px solid var(--ink);
+  border-radius: 26px;
+  padding: 34px;
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 28px;
+  align-items: center;
+  box-shadow: var(--shadow-comic-lg);
+  margin-bottom: 26px;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: var(--simpson-yellow);
+  color: var(--ink);
+  font-weight: 900;
+  font-size: 0.86rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  margin-bottom: 16px;
+  transform: rotate(-1deg);
+}
+
+.hero-text h1 {
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1.35;
+  margin-bottom: 14px;
+}
+
+.hero-text .highlight {
+  display: inline-block;
+  background: var(--simpson-yellow);
+  border: 3px solid var(--ink);
+  padding: 0 10px;
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: rotate(-1.5deg);
+}
+
+.hero-desc {
+  color: var(--text-muted);
+  font-size: 1.02rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.hero-visual {
+  pointer-events: none;
+}
+
+.hero-svg {
+  pointer-events: none;
+  width: 100%;
+  max-width: 450px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(6px 6px 0 #111827);
+}
+
+.dashboard-strip {
+  margin-bottom: 32px;
+}
+
+.strip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.stats-four {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.stat-item {
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: var(--shadow-comic-sm);
+}
+
+.stat-yellow { background: #FEF08A; }
+.stat-blue { background: #BAE6FD; }
+.stat-green { background: #BBF7D0; }
+.stat-pink { background: #FBCFE8; }
+
+.stat-label {
+  font-size: 0.88rem;
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.stat-val {
+  font-size: 1.48rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.section-title-box {
+  margin-bottom: 18px;
+}
+
+.section-title-box h2 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 18px;
+}
+
+.module-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  transition: var(--transition);
+}
+
+.module-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--ink);
+}
+
+.featured-card {
+  background: #FFFBEB;
+  border-width: 4px;
+}
+
+.hot-tag {
+  position: absolute;
+  top: -12px;
+  right: 14px;
+  background: var(--donut-pink);
+  color: var(--white);
+  text-shadow: 1.5px 1.5px 0 var(--ink);
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 0.8rem;
+  font-weight: 900;
+  padding: 3px 12px;
+  border-radius: 999px;
+  transform: rotate(3deg);
+}
+
+.mod-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  display: grid;
+  place-items: center;
+  font-size: 1.7rem;
+  margin-bottom: 14px;
+}
+
+.bg-yellow-pop { background: var(--simpson-yellow); }
+.bg-green-pop { background: var(--grass-green); }
+.bg-pink-pop { background: #F9A8D4; }
+.bg-blue-pop { background: var(--springfield-sky); }
+
+.module-card h3 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.module-card p {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+  flex: 1;
+}
+
+/* ==================== 頁面橫幅與篩選列 ==================== */
+.page-header-banner {
+  background: var(--springfield-sky);
+  color: var(--ink);
+  border: 4px solid var(--ink);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 22px;
+  box-shadow: var(--shadow-comic);
+}
+
+.page-header-banner h1 {
+  font-size: 1.68rem;
+  font-weight: 900;
+  text-shadow: 2px 2px 0 #FFFFFF;
+  margin-bottom: 4px;
+}
+
+.page-header-banner p {
+  font-weight: 700;
+  font-size: 0.96rem;
+}
+
+.banner-stat {
+  background: var(--simpson-yellow);
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.94rem;
+  font-weight: 900;
+}
+
+.filter-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill-btn {
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  background: var(--white);
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: var(--ink);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.pill-btn:hover {
+  background: var(--springfield-sky-light);
+}
+
+.pill-btn.active {
+  background: var(--simpson-yellow);
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.search-box {
+  flex: 1;
+  min-width: 260px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 14px;
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 0.96rem;
+  font-weight: 700;
+  font-family: inherit;
+  outline: none;
+  background: #FFFBEB;
+}
+
+.search-input:focus {
+  background: var(--white);
+}
+
+/* ==================== 2. 交通標誌圖鑑 ==================== */
+.shape-guide-bar {
+  background: var(--simpson-yellow);
+  border: 3.5px solid var(--ink);
+  box-shadow: var(--shadow-comic-sm);
+  border-radius: 16px;
+  padding: 12px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+
+.signs-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+  gap: 18px;
+}
+
+.sign-item-card {
+  background: var(--white);
+  border: 3.5px solid var(--ink);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-comic);
+}
+
+.sign-item-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--ink);
+  background: #FFFBEB;
+}
+
+.sign-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cat-badge {
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 2.5px solid var(--ink);
+}
+
+.cat-warning { background: #FCA5A5; color: var(--ink); }
+.cat-prohibit { background: #FDBA74; color: var(--ink); }
+.cat-guide { background: #93C5FD; color: var(--ink); }
+.cat-auxiliary { background: #E2E8F0; color: var(--ink); }
+
+.sign-svg-box {
+  width: 104px;
+  height: 104px;
+  margin: 6px auto;
+  display: grid;
+  place-items: center;
+}
+
+.sign-item-card h3 {
+  font-size: 1.14rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.sign-meaning-preview {
+  font-size: 0.91rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.sign-usage-box {
+  background: var(--springfield-sky-light);
+  border: 2.5px solid var(--ink);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  margin-top: auto;
+}
+
+/* ==================== 3. 道路標線圖鑑 ==================== */
+.markings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 20px;
+}
+
+.marking-card {
+  background: var(--white);
+  border: 3.5px solid var(--ink);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-comic);
+  transition: var(--transition);
+}
+
+.marking-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--ink);
+}
+
+.marking-visual {
+  background: #334155;
+  padding: 16px;
+  display: grid;
+  place-items: center;
+  border-bottom: 3.5px solid var(--ink);
+}
+
+.marking-visual svg {
+  width: 100%;
+  max-width: 300px;
+  height: 130px;
+}
+
+.marking-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.marking-body h3 {
+  font-size: 1.16rem;
+  font-weight: 900;
+}
+
+.marking-rule-pill {
+  background: #FEF08A;
+  border: 2.5px solid var(--ink);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  margin-top: auto;
+}
+
+/* ==================== 4. 交通號誌教學 ==================== */
+.signal-simulator-card {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  align-items: center;
+  background: #FFFBEB;
+}
+
+.sim-rule-text {
+  font-size: 1.06rem;
+  font-weight: 700;
+  margin: 10px 0 12px;
+}
+
+.sim-law-note {
+  display: inline-block;
+  background: var(--grass-green-soft);
+  border: 2.5px solid var(--ink);
+  padding: 5px 12px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 900;
+  margin-bottom: 18px;
+}
+
+.sim-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sim-right {
+  background: #1E293B;
+  border: 4px solid var(--ink);
+  box-shadow: var(--shadow-comic-sm);
+  border-radius: 20px;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+}
+
+.signals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.signal-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.signal-icon-box {
+  width: 92px;
+  height: 112px;
+  background: #1E293B;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: 8px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.signal-info h3 {
+  font-size: 1.14rem;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.signal-info p {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+/* ==================== 5. 互動闖關遊戲 ==================== */
+.game-filter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.form-select {
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 0.96rem;
+  font-weight: 900;
+  font-family: inherit;
+  background: var(--simpson-yellow);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.modes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.mode-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--ink);
+}
+
+.mode-timed {
+  background: #FEF9C3;
+}
+
+.mode-badge {
+  display: inline-block;
+  margin: 0 auto 10px;
+  background: var(--springfield-sky);
+  border: 2.5px solid var(--ink);
+  font-size: 0.8rem;
+  font-weight: 900;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.badge-gold {
+  background: var(--donut-pink);
+  color: var(--white);
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+.mode-emoji {
+  font-size: 2.6rem;
+  margin-bottom: 8px;
+}
+
+.mode-card h3 {
+  font-size: 1.2rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.mode-card p {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+  flex: 1;
+}
+
+/* 遊戲進行中 HUD 與題目區 */
+.game-top-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.hud-left, .hud-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hud-mode-tag {
+  background: var(--simpson-yellow);
+  border: 2.5px solid var(--ink);
+  font-weight: 900;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+}
+
+.hud-progress {
+  font-weight: 900;
+  font-size: 1rem;
+}
+
+.hud-timer {
+  background: var(--alert-red);
+  color: var(--white);
+  border: 2.5px solid var(--ink);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.progress-bar-wrap {
+  width: 100%;
+  height: 16px;
+  background: #E2E8F0;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--grass-green);
+  transition: width 0.3s ease;
+}
+
+.q-visual-center {
+  width: 154px;
+  height: 154px;
+  margin: 0 auto 18px;
+  background: #FFFBEB;
+  border: 3.5px solid var(--ink);
+  box-shadow: var(--shadow-comic-sm);
+  border-radius: 20px;
+  padding: 14px;
+  display: grid;
+  place-items: center;
+}
+
+.q-visual-center.is-marking {
+  width: 286px;
+  height: 144px;
+  background: #334155;
+}
+
+.q-visual-center.is-signal {
+  background: #1E293B;
+}
+
+.q-prompt-title {
+  font-size: 1.26rem;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* 文字四選一選項 */
+.text-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.opt-choice-btn {
+  text-align: left;
+  padding: 15px 18px;
+  border-radius: 16px;
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow-comic-sm);
+  background: var(--white);
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.opt-choice-btn:hover:not(:disabled) {
+  background: #FEF9C3;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.opt-choice-btn.is-correct {
+  background: var(--grass-green-soft);
+  border-color: var(--ink);
+}
+
+.opt-choice-btn.is-wrong {
+  background: var(--alert-red-soft);
+  border-color: var(--ink);
+}
+
+.opt-key {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--simpson-yellow);
+  border: 2.5px solid var(--ink);
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+/* 模式 B：看意思找圖片 */
+.pic-options-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.pic-choice-btn {
+  background: var(--white);
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow-comic-sm);
+  border-radius: 18px;
+  padding: 16px 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pic-choice-btn:hover:not(:disabled) {
+  background: #FEF9C3;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.pic-choice-btn.is-correct {
+  background: var(--grass-green-soft);
+}
+
+.pic-choice-btn.is-wrong {
+  background: var(--alert-red-soft);
+}
+
+.pic-choice-svg {
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+}
+
+/* 模式 C：真假辨識卡片 */
+.tf-statement-box {
+  background: #FFFBEB;
+  border: 3.5px solid var(--ink);
+  box-shadow: var(--shadow-comic-sm);
+  border-radius: 18px;
+  padding: 18px 22px;
+  max-width: 650px;
+  margin: 0 auto 20px;
+  text-align: center;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.tf-buttons-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.tf-btn {
+  padding: 18px;
+  font-size: 1.15rem;
+  border-radius: 16px;
+}
+
+/* 答題漫畫對話框解析區 */
+.answer-feedback-area {
+  margin-top: 22px;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--white);
+  border: 3.5px solid var(--ink);
+  box-shadow: var(--shadow-comic);
+}
+
+.answer-feedback-area.fb-pass {
+  background: var(--grass-green-soft);
+}
+
+.answer-feedback-area.fb-fail {
+  background: var(--alert-red-soft);
+}
+
+.fb-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.fb-headline {
+  font-size: 1.18rem;
+  font-weight: 900;
+}
+
+.fb-points {
+  background: var(--simpson-yellow);
+  border: 2.5px solid var(--ink);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 0.88rem;
+}
+
+.fb-explanation {
+  margin-bottom: 10px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.fb-law {
+  display: inline-block;
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  padding: 4px 12px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 900;
+  margin-bottom: 14px;
+}
+
+/* 結算卡 */
+.game-summary-card {
+  text-align: center;
+  padding: 36px 24px;
+}
+
+.summary-trophy {
+  font-size: 3.8rem;
+  margin-bottom: 10px;
+}
+
+.summary-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 600px;
+  margin: 22px auto;
+}
+
+.sum-box {
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow-comic-sm);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* ==================== 6. 學習紀錄與成就 ==================== */
+.badges-wall {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.badge-item {
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #F1F5F9;
+  opacity: 0.65;
+}
+
+.badge-item.unlocked {
+  opacity: 1;
+  background: #FEF9C3;
+  box-shadow: var(--shadow-comic-sm);
+}
+
+.badge-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #CBD5E1;
+  border: 3px solid var(--ink);
+  display: grid;
+  place-items: center;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.badge-item.unlocked .badge-circle {
+  background: var(--simpson-yellow);
+}
+
+.badge-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: var(--white);
+}
+
+.badge-item.unlocked .badge-tag {
+  background: var(--grass-green);
+}
+
+.wrong-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.wrong-item-card {
+  background: #FFF1F2;
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow-comic-sm);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.wrong-mini-svg {
+  width: 68px;
+  height: 68px;
+  background: var(--white);
+  border: 2.5px solid var(--ink);
+  border-radius: 12px;
+  padding: 6px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* ==================== 彈窗與頁尾 ==================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.65);
+  display: none;
+  place-items: center;
+  padding: 20px;
+  z-index: 200;
+}
+
+.modal-overlay.open {
+  display: grid;
+}
+
+.modal-dialog {
+  background: var(--white);
+  border: 4px solid var(--ink);
+  box-shadow: 10px 10px 0 var(--ink);
+  border-radius: 24px;
+  max-width: 520px;
+  width: 100%;
+  padding: 28px;
+  position: relative;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  background: var(--simpson-yellow);
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.modal-svg-large {
+  width: 105px;
+  height: 105px;
+  flex-shrink: 0;
+}
+
+.modal-info-block {
+  background: #FFFBEB;
+  border: 2.5px solid var(--ink);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 10px;
+}
+
+.modal-info-block h4 {
+  font-size: 0.94rem;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.footer {
+  background: var(--simpson-yellow);
+  border-top: 4px solid var(--ink);
+  padding: 22px 0;
+  text-align: center;
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.footer-sub {
+  font-size: 0.82rem;
+  margin-top: 6px;
+}
+
+.toast-box {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--simpson-yellow);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 0.95rem;
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+  transition: all 0.22s ease;
+  z-index: 300;
+}
+
+.toast-box.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 閃光號誌動畫 */
+@keyframes flashRed {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.22; }
+}
+@keyframes flashYellow {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.22; }
+}
+.blink-red { animation: flashRed 1s infinite; }
+.blink-yellow { animation: flashYellow 1s infinite; }
+
+/* ==================== RWD 響應式設計 ==================== */
+@media (max-width: 980px) {
+  .hero-card,
+  .signal-simulator-card {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-four,
+  .modes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .badges-wall {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-toggle { display: flex; }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 74px;
+    left: 0;
+    right: 0;
+    background: var(--simpson-yellow);
+    flex-direction: column;
+    padding: 16px;
+    border-bottom: 4px solid var(--ink);
+  }
+
+  .nav-links.open { display: flex; }
+  .nav-btn { width: 100%; text-align: left; }
+
+  .text-options-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pic-options-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .stats-four,
+  .modes-grid,
+  .badges-wall,
+  .summary-stats-grid,
+  .tf-buttons-row {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-text h1 { font-size: 1.54rem; }
+}
